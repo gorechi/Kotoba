@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from 'react'
+import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import type { Card, Route } from '../types'
 import { useStore } from '../state/store'
 import { DeckCard } from '../components/DeckCard'
@@ -85,6 +85,8 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
   const [deletingCard, setDeletingCard] = useState<Card | null>(null)
   const [deletingDeck, setDeletingDeck] = useState(false)
   const [resetting, setResetting] = useState(false)
+  const [activeTags, setActiveTags] = useState<Set<string>>(new Set())
+  const [statusFilter, setStatusFilter] = useState<'all' | 'new' | 'due' | 'learned'>('all')
 
   const deck = data.decks.find((item) => item.id === deckId)
   const now = Date.now()
@@ -103,12 +105,29 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
   const cards = data.cards
     .filter((card) => card.deckId === deckId)
     .sort((a, b) => a.order - b.order || a.createdAt - b.createdAt)
+
+  // Все уникальные теги в колоде для фильтра
+  const allTags = useMemo(() => {
+    const set = new Set<string>()
+    cards.forEach((c) => c.tags.forEach((t) => set.add(t)))
+    return [...set].sort()
+  }, [cards])
+
   const search = query.trim().toLowerCase()
-  const filtered = search
-    ? cards.filter((card) =>
-        `${card.front} ${card.reading} ${card.meaning} ${card.note} ${card.mnemonic}`.toLowerCase().includes(search),
-      )
-    : cards
+  const filtered = cards.filter((card) => {
+    // Поиск по тексту
+    if (search) {
+      const text = `${card.front} ${card.reading} ${card.meaning} ${card.note} ${card.mnemonic}`.toLowerCase()
+      if (!text.includes(search)) return false
+    }
+    // По тегам: если выбраны теги, карточка должна иметь хотя бы один из них
+    if (activeTags.size > 0 && !card.tags.some((t) => activeTags.has(t))) return false
+    // По статусу SRS
+    if (statusFilter === 'new' && card.srs.introduced) return false
+    if (statusFilter === 'due' && (!card.srs.introduced || card.srs.due > now)) return false
+    if (statusFilter === 'learned' && (!card.srs.introduced || card.srs.due <= now)) return false
+    return true
+  })
 
   const stat = deckStat(data.cards, deckId, now)
   const allowance = remainingNewToday(data.history, data.settings, now)
@@ -210,7 +229,7 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
 
       <div className="section-head list-head">
         <h2>
-          Карточки <span className="count">{cards.length}</span>
+          Карточки <span className="count">{filtered.length} из {cards.length}</span>
         </h2>
         <label className="search">
           <Icon name="search" size={16} />
@@ -221,6 +240,79 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
             aria-label="Поиск по карточкам"
           />
         </label>
+      </div>
+
+      {filtered.length === 0 && cards.length > 0 && (
+        <div className="filter-bar">
+          <button className="btn btn-ghost btn-small" onClick={() => setQuery('')}>
+            <Icon name="x" size={14} /> Сбросить поиск
+          </button>
+        </div>
+      )}
+
+      {allTags.length > 0 && (
+        <div className="filter-bar filter-bar--tags">
+          <span className="filter-label">Теги:</span>
+          {allTags.map((tag) => {
+            const active = activeTags.has(tag)
+            return (
+              <button
+                key={tag}
+                type="button"
+                className={`tag-filter-btn ${active ? 'active' : ''}`}
+                onClick={() => {
+                  const next = new Set(activeTags)
+                  if (next.has(tag)) next.delete(tag)
+                  else next.add(tag)
+                  setActiveTags(next)
+                }}
+              >
+                {tag}
+              </button>
+            )
+          })}
+          {activeTags.size > 0 && (
+            <button
+              type="button"
+              className="btn btn-ghost btn-small"
+              onClick={() => setActiveTags(new Set())}
+            >
+              Очистить теги
+            </button>
+          )}
+        </div>
+      )}
+
+      <div className="filter-bar filter-bar--status">
+        <span className="filter-label">Статус:</span>
+        <button
+          type="button"
+          className={`status-filter-btn ${statusFilter === 'all' ? 'active' : ''}`}
+          onClick={() => setStatusFilter('all')}
+        >
+          Все
+        </button>
+        <button
+          type="button"
+          className={`status-filter-btn ${statusFilter === 'new' ? 'active' : ''}`}
+          onClick={() => setStatusFilter('new')}
+        >
+          Новые
+        </button>
+        <button
+          type="button"
+          className={`status-filter-btn ${statusFilter === 'due' ? 'active' : ''}`}
+          onClick={() => setStatusFilter('due')}
+        >
+          К повторению
+        </button>
+        <button
+          type="button"
+          className={`status-filter-btn ${statusFilter === 'learned' ? 'active' : ''}`}
+          onClick={() => setStatusFilter('learned')}
+        >
+          Изучённые
+        </button>
       </div>
 
       {deck.builtin && (
@@ -234,7 +326,9 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
         <p className="empty-note">
           {cards.length === 0
             ? 'В колоде пока нет карточек. Добавь первую!'
-            : 'Ничего не нашлось. Попробуй другой запрос.'}
+            : activeTags.size > 0 || statusFilter !== 'all' || query
+              ? 'Ничего не нашлось по выбранным фильтрам. Попробуй сбросить фильтры.'
+              : 'Ничего не нашлось. Попробуй другой запрос.'}
         </p>
       ) : (
         <div className="card-list">
@@ -258,6 +352,13 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
                     {[card.reading, card.meaning].filter(Boolean).join('  ·  ') || '—'}
                   </div>
                   {card.note && <div className="row-note">{card.note}</div>}
+                  {card.tags.length > 0 && (
+                    <div className="row-tags">
+                      {card.tags.map((tag) => (
+                        <span key={tag} className="row-tag">{tag}</span>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <span className={statusClass}>{dueLabel(card.srs.due, card.srs.introduced, now)}</span>
                 {!deck.builtin && (

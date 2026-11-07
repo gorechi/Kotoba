@@ -118,18 +118,15 @@ export function KanaMap({ onStudyCard }: { onStudyCard: (cardId: string, deckId:
               <div className="kana-section-stats">
                 <span>
                   <b>{stat.learned}</b> из {stat.total} изучено
-                </span>
+                </span>{' '}
                 <span>
-                  <b style={{ color: 'var(--red)' }}>{stat.due}</b>
-                  к повторению
-                </span>
+                  <b style={{ color: 'var(--red)' }}>{stat.due}</b> к повторению
+                </span>{' '}
                 <span>
-                  <b>{stat.fresh}</b>
-                  новых
-                </span>
+                  <b>{stat.fresh}</b> новых
+                </span>{' '}
                 <span>
-                  <b>{learnedPct}%</b>
-                  прогресс
+                  <b>{learnedPct}%</b> прогресс
                 </span>
               </div>
               <div className="kana-grid">

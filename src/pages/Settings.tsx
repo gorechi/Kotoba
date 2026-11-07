@@ -186,108 +186,107 @@ export function Settings() {
           </p>
         </section>
 
-      </div>
-
-      <section className="panel">
-        <div className="panel-head">
-          <div>
-            <h2>Данные</h2>
-            <p>Резервные копии и папка с файлами</p>
+        <section className="panel">
+          <div className="panel-head">
+            <div>
+              <h2>Данные</h2>
+              <p>Резервные копии и папка с файлами</p>
+            </div>
           </div>
-        </div>
 
-        <div className="settings-actions">
-          <button className="btn btn-ghost" onClick={() => void handleExport()}>
-            <Icon name="download" size={17} />
-            Экспорт
-          </button>
-          <button className="btn btn-ghost" onClick={() => void handleImport()}>
-            <Icon name="upload" size={17} />
-            Импорт
-          </button>
-          {window.kotoba && (
-            <button className="btn btn-ghost" onClick={() => void openFolder()}>
-              <Icon name="folder" size={17} />
-              Папка с данными
+          <div className="settings-actions">
+            <button className="btn btn-ghost" onClick={() => void handleExport()}>
+              <Icon name="download" size={17} />
+              Экспорт
             </button>
+            <button className="btn btn-ghost" onClick={() => void handleImport()}>
+              <Icon name="upload" size={17} />
+              Импорт
+            </button>
+            {window.kotoba && (
+              <button className="btn btn-ghost" onClick={() => void openFolder()}>
+                <Icon name="folder" size={17} />
+                Папка с данными
+              </button>
+            )}
+            <input
+              ref={fileRef}
+              type="file"
+              accept="application/json,.json"
+              hidden
+              onChange={(event) => {
+                void handleFile(event.target.files?.[0])
+                event.target.value = ''
+              }}
+            />
+          </div>
+
+          {notice && (
+            <p className="notice">
+              <Icon name="check" size={15} />
+              <span>{notice}</span>
+            </p>
           )}
-          <input
-            ref={fileRef}
-            type="file"
-            accept="application/json,.json"
-            hidden
-            onChange={(event) => {
-              void handleFile(event.target.files?.[0])
-              event.target.value = ''
-            }}
-          />
-        </div>
+          {error && <p className="form-error">{error}</p>}
 
-        {notice && (
-          <p className="notice">
-            <Icon name="check" size={15} />
-            <span>{notice}</span>
+          <p className="hint">
+            Прогресс сохраняется автоматически в JSON-файл на этом компьютере. Экспорт пригодится для
+            бэкапа или переноса обучения на другой ПК.
           </p>
-        )}
-        {error && <p className="form-error">{error}</p>}
+        </section>
 
-        <p className="hint">
-          Прогресс сохраняется автоматически в JSON-файл на этом компьютере. Экспорт пригодится для
-          бэкапа или переноса обучения на другой ПК.
-        </p>
-      </section>
+        <section className="panel">
+          <div className="panel-head">
+            <div>
+              <h2>Горячие клавиши</h2>
+              <p>Во время учёбы</p>
+            </div>
+          </div>
+          <div className="shortcuts">
+            <div>
+              <kbd>пробел</kbd>
+              <span>перевернуть карточку</span>
+            </div>
+            <div>
+              <kbd>1</kbd>
+              <span>снова — карточка вернётся</span>
+            </div>
+            <div>
+              <kbd>2</kbd>
+              <span>трудно</span>
+            </div>
+            <div>
+              <kbd>3</kbd>
+              <span>хорошо</span>
+            </div>
+            <div>
+              <kbd>4</kbd>
+              <span>легко</span>
+            </div>
+            <div>
+              <kbd>esc</kbd>
+              <span>выйти из подхода</span>
+            </div>
+          </div>
+        </section>
 
-      <section className="panel">
-        <div className="panel-head">
-          <div>
-            <h2>Горячие клавиши</h2>
-            <p>Во время учёбы</p>
+        <section className="panel danger-panel">
+          <div className="panel-head">
+            <div>
+              <h2>Сброс</h2>
+              <p>Начать обучение с чистого листа</p>
+            </div>
+            <button className="btn btn-danger-ghost" onClick={() => setConfirmReset(true)}>
+              <Icon name="rotate" size={17} />
+              Сбросить прогресс
+            </button>
           </div>
-        </div>
-        <div className="shortcuts">
-          <div>
-            <kbd>пробел</kbd>
-            <span>перевернуть карточку</span>
-          </div>
-          <div>
-            <kbd>1</kbd>
-            <span>снова — карточка вернётся</span>
-          </div>
-          <div>
-            <kbd>2</kbd>
-            <span>трудно</span>
-          </div>
-          <div>
-            <kbd>3</kbd>
-            <span>хорошо</span>
-          </div>
-          <div>
-            <kbd>4</kbd>
-            <span>легко</span>
-          </div>
-          <div>
-            <kbd>esc</kbd>
-            <span>выйти из подхода</span>
-          </div>
-        </div>
-      </section>
-
-      <section className="panel danger-panel">
-        <div className="panel-head">
-          <div>
-            <h2>Сброс</h2>
-            <p>Начать обучение с чистого листа</p>
-          </div>
-          <button className="btn btn-danger-ghost" onClick={() => setConfirmReset(true)}>
-            <Icon name="rotate" size={17} />
-            Сбросить прогресс
-          </button>
-        </div>
-        <p className="hint">
-          Все карточки снова станут новыми, история и серия обнулятся. Колоды и сами карточки
-          останутся на месте.
-        </p>
-      </section>
+          <p className="hint">
+            Все карточки снова станут новыми, история и серия обнулятся. Колоды и сами карточки
+            останутся на месте.
+          </p>
+        </section>
+      </div>
 
       <footer className="about">
         <span className="brand-mark small">言</span>

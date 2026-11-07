@@ -31,3 +31,4 @@ pnpm-debug.log*
 
 # Electron / builder cache
 electron-builder.json
+.github/workflows/*

@@ -27,6 +27,7 @@ export type IconName =
   | 'sparkles'
   | 'bulb'
   | 'lock'
+  | 'grid'
 
 const paths: Record<IconName, ReactNode> = {
   book: (
@@ -178,6 +179,14 @@ const paths: Record<IconName, ReactNode> = {
     <>
       <rect x="3" y="11" width="18" height="11" rx="2" />
       <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+    </>
+  ),
+  grid: (
+    <>
+      <rect x="3" y="3" width="7" height="7" rx="1" />
+      <rect x="14" y="3" width="7" height="7" rx="1" />
+      <rect x="3" y="14" width="7" height="7" rx="1" />
+      <rect x="14" y="14" width="7" height="7" rx="1" />
     </>
   ),
 }

@@ -2796,3 +2796,187 @@ kbd {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ============================================================
+   Карта каны
+   ============================================================ */
+.kana-map-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(120px, 1fr));
+  gap: 10px;
+  margin: 0 0 26px;
+}
+
+.kana-map-stat {
+  padding: 16px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.kana-map-stat strong {
+  display: block;
+  font-size: 21px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.kana-map-stat span {
+  font-size: 10.5px;
+  color: var(--muted);
+}
+
+.kana-section {
+  margin-bottom: 34px;
+}
+
+.kana-section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.kana-section-head h2 {
+  font-size: 17px;
+  font-weight: 650;
+  margin: 0;
+}
+
+.kana-section-jp {
+  font-family: var(--font-jp);
+  font-size: 19px;
+  color: var(--text-soft);
+}
+
+.kana-section-stats {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 14px;
+  font-size: 12px;
+  color: var(--muted);
+  flex-wrap: wrap;
+}
+
+.kana-section-stat b {
+  color: var(--text);
+}
+
+.kana-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  gap: 8px;
+}
+
+.kana-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 72px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.1s, border-color 0.15s, box-shadow 0.15s;
+}
+
+.kana-cell:hover {
+  transform: translateY(-2px);
+  border-color: var(--line-strong);
+  box-shadow: var(--shadow-sm);
+}
+
+.kana-cell:active {
+  transform: translateY(0);
+}
+
+.kana-cell:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.kana-char {
+  font-family: var(--font-kana);
+  font-size: clamp(22px, 7vw, 36px);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.kana-romaji {
+  margin-top: 4px;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+}
+
+.kana-bulb {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  color: var(--accent);
+  background: color-mix(in srgb, #fff 78%, transparent);
+  border-radius: 6px;
+  padding: 2px;
+  box-shadow: 0 1px 3px rgba(29, 27, 24, 0.1);
+}
+
+[data-theme='dark'] .kana-bulb {
+  background: color-mix(in srgb, #000 45%, transparent);
+}
+
+.kana-cell--due {
+  border-color: var(--red);
+  background: color-mix(in srgb, var(--red) 7%, transparent);
+}
+
+.kana-cell--due .kana-char {
+  color: var(--red);
+  font-weight: 700;
+}
+
+.kana-cell--learned {
+  border-color: var(--green);
+  background: color-mix(in srgb, var(--green) 7%, transparent);
+}
+
+.kana-cell--learned .kana-char {
+  color: var(--green);
+  font-weight: 700;
+}
+
+.kana-legend {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.kana-legend-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.kana-legend-dot.kana-cell--due {
+  border-color: var(--red);
+  background: color-mix(in srgb, var(--red) 7%, transparent);
+}
+
+.kana-legend-dot.kana-cell--learned {
+  border-color: var(--green);
+  background: color-mix(in srgb, var(--green) 7%, transparent);
+}
+
+.kana-legend-icon {
+  color: var(--accent);
+}

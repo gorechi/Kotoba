@@ -6,6 +6,7 @@ export type Route =
   | { name: 'home' }
   | { name: 'decks' }
   | { name: 'deck'; deckId: string }
+  | { name: 'kanamap' }
   | { name: 'stats' }
   | { name: 'settings' }
 

@@ -8,6 +8,7 @@ import { Home } from './pages/Home'
 import { Decks, DeckDetail } from './pages/Decks'
 import { Stats } from './pages/Stats'
 import { Settings } from './pages/Settings'
+import { KanaMap } from './pages/KanaMap'
 import { remainingNewToday } from './lib/stats'
 import { practiceQueue, studyQueue } from './lib/study'
 
@@ -61,6 +62,16 @@ function Shell() {
             )}
             {route.name === 'stats' && <Stats />}
             {route.name === 'settings' && <Settings />}
+            {route.name === 'kanamap' && (
+              <KanaMap
+                onStudyCard={(cardId, deckId) => {
+                  const card = data.cards.find((c) => c.id === cardId)
+                  const items = [{ cardId, isNew: !card?.srs.introduced }]
+                  if (!items.length) return
+                  setSession({ deckId, items })
+                }}
+              />
+            )}
           </main>
         </div>
       )}

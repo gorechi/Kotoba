@@ -9,9 +9,10 @@ interface SidebarProps {
   onNavigate: (route: Route) => void
 }
 
-const NAV: { id: 'home' | 'decks' | 'stats'; label: string; icon: IconName }[] = [
+const NAV: { id: 'home' | 'decks' | 'kanamap' | 'stats'; label: string; icon: IconName }[] = [
   { id: 'home', label: 'Учить', icon: 'book' },
   { id: 'decks', label: 'Колоды', icon: 'layers' },
+  { id: 'kanamap', label: 'Карта каны', icon: 'grid' },
   { id: 'stats', label: 'Статистика', icon: 'chart' },
 ]
 

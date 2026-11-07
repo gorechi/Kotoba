@@ -3174,3 +3174,39 @@ kbd {
   font-weight: 600;
   white-space: nowrap;
 }
+
+.tag-filter-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: flex-start;
+  max-height: 44px;
+  overflow: hidden;
+  transition: max-height 0.25s ease;
+}
+
+.tag-filter-wrap.expanded {
+  max-height: 300px;
+}
+
+.tag-filter-more {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  color: var(--accent-ink);
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--line));
+}
+
+.tag-filter-more:hover {
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border-color: var(--accent);
+}
+
+.tag-filter-less {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  color: var(--accent-ink);
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--line));
+}
+
+.tag-filter-less:hover {
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border-color: var(--accent);
+}

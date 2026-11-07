@@ -87,6 +87,7 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
   const [resetting, setResetting] = useState(false)
   const [activeTags, setActiveTags] = useState<Set<string>>(new Set())
   const [statusFilter, setStatusFilter] = useState<'all' | 'new' | 'due' | 'learned'>('all')
+  const [tagsExpanded, setTagsExpanded] = useState(false)
 
   const deck = data.decks.find((item) => item.id === deckId)
   const now = Date.now()
@@ -106,12 +107,29 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
     .filter((card) => card.deckId === deckId)
     .sort((a, b) => a.order - b.order || a.createdAt - b.createdAt)
 
-  // Все уникальные теги в колоде для фильтра
-  const allTags = useMemo(() => {
-    const set = new Set<string>()
-    cards.forEach((c) => c.tags.forEach((t) => set.add(t)))
-    return [...set].sort()
+  // Частота использования тегов в колоде
+  const tagFrequency = useMemo(() => {
+    const counts = new Map<string, number>()
+    cards.forEach((card) => {
+      card.tags.forEach((tag) => {
+        counts.set(tag, (counts.get(tag) || 0) + 1)
+      })
+    })
+    return counts
   }, [cards])
+
+  // Теги отсортированы по частоте (часто используемые — первыми)
+  const sortedTags = useMemo(() => {
+    const unique = new Set<string>()
+    cards.forEach((card) => card.tags.forEach((t) => unique.add(t)))
+    return [...unique].sort((a, b) => {
+      const countA = tagFrequency.get(a) ?? 0
+      const countB = tagFrequency.get(b) ?? 0
+      return countB - countA || a.localeCompare(b)
+    })
+  }, [cards, tagFrequency])
+
+  const MAX_TAGS_COLLAPSED = 6
 
   const search = query.trim().toLowerCase()
   const filtered = cards.filter((card) => {
@@ -250,27 +268,49 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
         </div>
       )}
 
-      {allTags.length > 0 && (
+      {sortedTags.length > 0 && (
         <div className="filter-bar filter-bar--tags">
           <span className="filter-label">Теги:</span>
-          {allTags.map((tag) => {
-            const active = activeTags.has(tag)
-            return (
+          <div className={`tag-filter-wrap ${tagsExpanded ? 'expanded' : ''}`}>
+            {sortedTags.map((tag, index) => {
+              const active = activeTags.has(tag)
+              const hidden = !tagsExpanded && index >= MAX_TAGS_COLLAPSED
+              if (hidden) return null
+              return (
+                <button
+                  key={tag}
+                  type="button"
+                  className={`tag-filter-btn ${active ? 'active' : ''}`}
+                  onClick={() => {
+                    const next = new Set(activeTags)
+                    if (next.has(tag)) next.delete(tag)
+                    else next.add(tag)
+                    setActiveTags(next)
+                  }}
+                >
+                  {tag}
+                </button>
+              )
+            })}
+            {sortedTags.length > MAX_TAGS_COLLAPSED && !tagsExpanded && (
               <button
-                key={tag}
                 type="button"
-                className={`tag-filter-btn ${active ? 'active' : ''}`}
-                onClick={() => {
-                  const next = new Set(activeTags)
-                  if (next.has(tag)) next.delete(tag)
-                  else next.add(tag)
-                  setActiveTags(next)
-                }}
+                className="tag-filter-btn tag-filter-more"
+                onClick={() => setTagsExpanded(true)}
               >
-                {tag}
+                Ещё {sortedTags.length - MAX_TAGS_COLLAPSED}
               </button>
-            )
-          })}
+            )}
+            {sortedTags.length > MAX_TAGS_COLLAPSED && tagsExpanded && (
+              <button
+                type="button"
+                className="tag-filter-btn tag-filter-less"
+                onClick={() => setTagsExpanded(false)}
+              >
+                Свернуть
+              </button>
+            )}
+          </div>
           {activeTags.size > 0 && (
             <button
               type="button"

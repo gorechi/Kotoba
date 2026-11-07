@@ -8,7 +8,6 @@ import { uid } from '../lib/utils'
 import { FitText } from './FitText'
 import { KanaInput } from './KanaInput'
 import { Modal } from './Modal'
-import { Icon } from './Icon'
 
 interface CardFormProps {
   deckId: string
@@ -30,7 +29,6 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
 
   const [front, setFront] = useState(card?.front ?? '')
   const [reading, setReading] = useState(card?.reading ?? '')
-  const [readingCyrillic, setReadingCyrillic] = useState(card?.readingCyrillic ?? '')
   const [meaning, setMeaning] = useState(card?.meaning ?? '')
   const [note, setNote] = useState(card?.note ?? '')
   const [tags, setTags] = useState<string[]>(card?.tags ?? [])
@@ -39,7 +37,6 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
   const [frontMode, setFrontMode] = useState<KanaMode>(() => guessKanaMode(card?.front, 'hiragana'))
   const [readingMode, setReadingMode] = useState<KanaMode>(() => guessKanaMode(card?.reading, 'abc'))
   const [readingTouched, setReadingTouched] = useState(Boolean(card?.reading))
-  const [transcriptionMode, setTranscriptionMode] = useState<'romaji' | 'cyrillic'>(defaultTranscription)
   const [error, setError] = useState('')
   const frontRef = useRef<HTMLInputElement>(null)
 
@@ -54,21 +51,18 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
     )
   }, [tagInput, deckTags, tags])
 
-  // Автогенерация обеих транскрипций при изменении поля «Слово или знак»
+  // Автогенерация чтения при изменении поля «Слово или знак»
   useEffect(() => {
     if (!front) return
     const cleanFront = front.trim()
     if (!cleanFront) return
 
-    const romaji = suggestReading(cleanFront)
-    const cyrillic = toCyrillic(cleanFront)
-
-    // Обновляем только те транскрипции, которые пользователь ещё не правил вручную
-    if (!readingTouched) {
-      setReading(romaji)
+    if (defaultTranscription === 'cyrillic') {
+      setReading(toCyrillic(cleanFront))
+    } else {
+      setReading(suggestReading(cleanFront))
     }
-    setReadingCyrillic(cyrillic)
-  }, [front, readingTouched])
+  }, [front, defaultTranscription])
 
   const changeFront = (value: string) => {
     setFront(value)
@@ -76,19 +70,9 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
   }
 
   const changeReading = (value: string) => {
-    if (transcriptionMode === 'romaji') {
-      setReading(value)
-    } else {
-      setReadingCyrillic(value)
-    }
+    setReading(value)
     setReadingTouched(true)
   }
-
-  const toggleTranscription = () => {
-    setTranscriptionMode((prev) => (prev === 'romaji' ? 'cyrillic' : 'romaji'))
-  }
-
-  const activeReading = transcriptionMode === 'romaji' ? reading : readingCyrillic
 
   const addTag = (tag: string) => {
     const trimmed = tag.trim()
@@ -113,15 +97,13 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
       frontRef.current?.focus()
       return
     }
-    const cleanReading = finalizeRomajiTail(reading, readingMode).trim()
-    const cleanReadingCyrillic = readingCyrillic.trim()
+    const cleanReading = reading.trim()
     update((draft) => {
       if (card) {
         const target = draft.cards.find((item) => item.id === card.id)
         if (target) {
           target.front = cleanFront
           target.reading = cleanReading
-          target.readingCyrillic = cleanReadingCyrillic
           target.meaning = meaning.trim()
           target.note = note.trim()
           target.tags = tags
@@ -137,7 +119,6 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
         deckId,
         front: cleanFront,
         reading: cleanReading,
-        readingCyrillic: cleanReadingCyrillic,
         meaning: meaning.trim(),
         note: note.trim(),
         mnemonic: '',
@@ -156,12 +137,10 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
 
     setFront('')
     setReading('')
-    setReadingCyrillic('')
     setMeaning('')
     setNote('')
     setError('')
     setReadingTouched(false)
-    setTranscriptionMode(defaultTranscription)
     window.requestAnimationFrame(() => frontRef.current?.focus())
   }
 
@@ -213,7 +192,7 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
             minFontSize={14}
           />
           <span className="card-preview-answer">
-            {[activeReading.trim(), meaning.trim()].filter(Boolean).join(' · ') || 'чтение и перевод'}
+            {[reading.trim(), meaning.trim()].filter(Boolean).join(' · ') || 'чтение и перевод'}
           </span>
         </div>
 
@@ -235,22 +214,13 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
           </div>
           <div className="field">
             <label htmlFor="card-reading">
-              Чтение{' '}
-              <button
-                type="button"
-                className={`transcription-toggle ${transcriptionMode}`}
-                onClick={toggleTranscription}
-                title={`Переключить на ${transcriptionMode === 'romaji' ? 'кириллицу' : 'ромадзи'}`}
-                aria-label={`Переключить на ${transcriptionMode === 'romaji' ? 'кириллицу' : 'ромадзи'}`}
-              >
-                {transcriptionMode === 'romaji' ? 'ромадзи' : 'кириллица'}
-              </button>
+              Чтение
             </label>
             <input
               id="card-reading"
-              value={activeReading}
+              value={reading}
               onChange={(event) => changeReading(event.target.value)}
-              placeholder="mizu"
+              placeholder={defaultTranscription === 'cyrillic' ? 'транскрипция' : 'mizu'}
               maxLength={120}
               spellCheck={false}
             />

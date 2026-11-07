@@ -135,7 +135,7 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
   const filtered = cards.filter((card) => {
     // Поиск по тексту
     if (search) {
-      const text = `${card.front} ${card.reading} ${card.readingCyrillic} ${card.meaning} ${card.note} ${card.mnemonic}`.toLowerCase()
+      const text = `${card.front} ${card.reading} ${card.meaning} ${card.note} ${card.mnemonic}`.toLowerCase()
       if (!text.includes(search)) return false
     }
     // По тегам: если выбраны теги, карточка должна иметь хотя бы один из них
@@ -389,12 +389,7 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
                 />
                 <div className="row-info">
                   <div className="row-main">
-                    {[
-                      data.settings.defaultTranscription === 'cyrillic'
-                        ? card.readingCyrillic
-                        : card.reading,
-                      card.meaning,
-                    ].filter(Boolean).join('  ·  ') || '—'}
+                    {[card.reading, card.meaning].filter(Boolean).join('  ·  ') || '—'}
                   </div>
                   {card.note && <div className="row-note">{card.note}</div>}
                   {card.tags.length > 0 && (

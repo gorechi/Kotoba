@@ -73,7 +73,6 @@ function normalizeCard(raw: unknown): Card | null {
     deckId: raw.deckId,
     front: raw.front,
     reading: str(raw.reading),
-    readingCyrillic: str(raw.readingCyrillic),
     meaning: str(raw.meaning),
     note: str(raw.note),
     mnemonic: str(raw.mnemonic),

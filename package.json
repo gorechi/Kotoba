@@ -1,0 +1,61 @@
+{
+  "name": "kotoba",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Котоба — карточки для изучения японского языка",
+  "author": "Kotoba",
+  "type": "module",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "dev:web": "vite",
+    "build": "tsc --noEmit && vite build",
+    "start": "electron .",
+    "dist": "npm run build && electron-builder --win"
+  },
+  "build": {
+    "appId": "app.kotoba.cards",
+    "productName": "Kotoba",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "build/icon.png",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "Котоба",
+      "artifactName": "Kotoba-Setup-${version}.${ext}"
+    }
+  },
+  "dependencies": {
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "wanakana": "^5.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.2.1",
+    "electron": "^45.2.3",
+    "electron-builder": "^26.18.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.6"
+  }
+}

@@ -1,0 +1,653 @@
+import { useCallback, useEffect, useRef, useState } from 'react'
+import type { QueueItem, Rating, RatingUndo } from '../types'
+import { useStore } from '../state/store'
+import { remainingNewToday } from '../lib/stats'
+import { intervalPreview } from '../lib/srs'
+import { studyQueue } from '../lib/study'
+import { formatDuration, speakJa } from '../lib/utils'
+import { FitText } from './FitText'
+import { Icon } from './Icon'
+
+const RATINGS: { rating: Rating; label: string; key: string }[] = [
+  { rating: 'again', label: 'Снова', key: '1' },
+  { rating: 'hard', label: 'Трудно', key: '2' },
+  { rating: 'good', label: 'Хорошо', key: '3' },
+  { rating: 'easy', label: 'Легко', key: '4' },
+]
+
+interface SessionProps {
+  deckId: string
+  items: QueueItem[]
+  onClose: () => void
+}
+
+interface SessionStats {
+  reviews: number
+  correct: number
+  newCards: number
+  startedAt: number
+}
+
+interface MistakeEntry {
+  cardId: string
+  count: number
+}
+
+interface SessionSnapshot {
+  data: RatingUndo
+  rating: Rating
+  queue: QueueItem[]
+  pos: number
+  revealed: boolean
+  finished: boolean
+  stats: SessionStats
+  mistakes: MistakeEntry[]
+  shownAt: number
+}
+
+const RATING_LABEL: Record<Rating, string> = {
+  again: 'Снова',
+  hard: 'Трудно',
+  good: 'Хорошо',
+  easy: 'Легко',
+}
+
+export function Session({ deckId, items, onClose }: SessionProps) {
+  const { data, rateCard, undoRating, update } = useStore()
+  const [queue, setQueue] = useState<QueueItem[]>(items)
+  const [pos, setPos] = useState(0)
+  const [revealed, setRevealed] = useState(false)
+  const [finished, setFinished] = useState(false)
+  const [stats, setStats] = useState<SessionStats>({
+    reviews: 0,
+    correct: 0,
+    newCards: 0,
+    startedAt: Date.now(),
+  })
+  const [lastRating, setLastRating] = useState<SessionSnapshot | null>(null)
+  const [mistakes, setMistakes] = useState<MistakeEntry[]>([])
+  const [mnemonicOpen, setMnemonicOpen] = useState(false)
+  const [mnemonicEditing, setMnemonicEditing] = useState(false)
+  const [mnemonicDraft, setMnemonicDraft] = useState('')
+  const shownAt = useRef(Date.now())
+
+  const current = finished ? undefined : queue[pos]
+  const card = current ? data.cards.find((item) => item.id === current.cardId) : undefined
+  const cardDeck = card ? data.decks.find((item) => item.id === card.deckId) : undefined
+  const canUseMnemonic = Boolean(cardDeck?.builtin)
+  const mnemonic = card?.mnemonic?.trim() ?? ''
+  const deckName =
+    deckId === 'all' ? 'Все колоды' : data.decks.find((deck) => deck.id === deckId)?.name ?? 'Колода'
+  const total = Math.max(1, queue.length)
+
+  useEffect(() => {
+    return () => {
+      window.speechSynthesis?.cancel()
+    }
+  }, [])
+
+  useEffect(() => {
+    setMnemonicOpen(false)
+    setMnemonicEditing(false)
+    setMnemonicDraft('')
+  }, [card?.id, pos])
+
+  const openMnemonicEditor = () => {
+    if (!card) return
+    setMnemonicDraft(card.mnemonic ?? '')
+    setMnemonicOpen(false)
+    setMnemonicEditing(true)
+  }
+
+  const cancelMnemonicEditor = () => {
+    setMnemonicEditing(false)
+    setMnemonicDraft('')
+  }
+
+  const saveMnemonic = () => {
+    if (!card) return
+    const nextMnemonic = mnemonicDraft.trim()
+    update((draft) => {
+      const target = draft.cards.find((item) => item.id === card.id)
+      if (target) target.mnemonic = nextMnemonic
+    })
+    setMnemonicDraft('')
+    setMnemonicEditing(false)
+    setMnemonicOpen(false)
+  }
+
+  const removeMnemonic = () => {
+    if (!card) return
+    update((draft) => {
+      const target = draft.cards.find((item) => item.id === card.id)
+      if (target) target.mnemonic = ''
+    })
+    setMnemonicDraft('')
+    setMnemonicEditing(false)
+    setMnemonicOpen(false)
+  }
+
+  const toggleMnemonic = () => {
+    if (!card) return
+    if (mnemonicOpen || mnemonicEditing) {
+      setMnemonicOpen(false)
+      setMnemonicEditing(false)
+      setMnemonicDraft('')
+      return
+    }
+    if (!mnemonic) {
+      openMnemonicEditor()
+      return
+    }
+    setMnemonicOpen(true)
+  }
+
+  const rate = useCallback(
+    (rating: Rating) => {
+      if (finished || !current || !card) return
+      const elapsed = Date.now() - shownAt.current
+      const ratingUndo = rateCard(card.id, rating, elapsed)
+      if (ratingUndo) {
+        setLastRating({
+          data: ratingUndo,
+          rating,
+          queue,
+          pos,
+          revealed,
+          finished,
+          stats,
+          mistakes,
+          shownAt: shownAt.current,
+        })
+      }
+      if (rating === 'again') {
+        setMistakes((prev) => {
+          const existing = prev.find((entry) => entry.cardId === card.id)
+          if (existing) {
+            return prev.map((entry) =>
+              entry.cardId === card.id ? { ...entry, count: entry.count + 1 } : entry,
+            )
+          }
+          return [...prev, { cardId: card.id, count: 1 }]
+        })
+      }
+      setStats((prev) => ({
+        ...prev,
+        reviews: prev.reviews + 1,
+        correct: prev.correct + (rating === 'again' ? 0 : 1),
+        newCards: prev.newCards + (current.isNew ? 1 : 0),
+      }))
+
+      let nextQueue = queue
+      if (rating === 'again') {
+        const at = Math.min(queue.length, pos + 4)
+        nextQueue = [
+          ...queue.slice(0, at),
+          { cardId: card.id, isNew: false },
+          ...queue.slice(at),
+        ]
+        setQueue(nextQueue)
+      }
+
+      if (pos + 1 >= nextQueue.length) {
+        setFinished(true)
+      } else {
+        setPos(pos + 1)
+        setRevealed(false)
+        shownAt.current = Date.now()
+      }
+    },
+    [card, current, finished, mistakes, pos, queue, rateCard, revealed, stats],
+  )
+
+  const undoLastRating = useCallback(() => {
+    if (!lastRating) return
+    undoRating(lastRating.data)
+    setQueue(lastRating.queue)
+    setPos(lastRating.pos)
+    setRevealed(lastRating.revealed)
+    setFinished(lastRating.finished)
+    setStats(lastRating.stats)
+    setMistakes(lastRating.mistakes)
+    shownAt.current = lastRating.shownAt
+    setLastRating(null)
+  }, [lastRating, undoRating])
+
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null
+      if (
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.isContentEditable)
+      ) {
+        return
+      }
+      if (event.repeat) return
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        if (mnemonicEditing) {
+          setMnemonicEditing(false)
+          setMnemonicDraft('')
+          return
+        }
+        if (mnemonicOpen) {
+          setMnemonicOpen(false)
+          return
+        }
+        onClose()
+        return
+      }
+      if (
+        (event.ctrlKey || event.metaKey) &&
+        (event.code === 'KeyZ' || event.key.toLowerCase() === 'z')
+      ) {
+        if (!lastRating) return
+        event.preventDefault()
+        undoLastRating()
+        return
+      }
+      if (finished) return
+      if (event.key === ' ' || event.key === 'Enter') {
+        if (target?.closest('button')) return
+        event.preventDefault()
+        setRevealed((prev) => !prev)
+        return
+      }
+      if (!revealed) return
+      const map: Record<string, Rating> = {
+        '1': 'again',
+        '2': 'hard',
+        '3': 'good',
+        '4': 'easy',
+      }
+      const rating = map[event.key]
+      if (rating) {
+        event.preventDefault()
+        rate(rating)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [
+    finished,
+    lastRating,
+    mnemonicEditing,
+    mnemonicOpen,
+    revealed,
+    rate,
+    undoLastRating,
+    onClose,
+  ])
+
+  const restartQueue = finished
+    ? studyQueue(
+        data.cards,
+        deckId,
+        remainingNewToday(data.history, data.settings),
+        Date.now(),
+      )
+    : []
+
+  const restart = () => {
+    if (!restartQueue.length) return
+    setQueue(restartQueue)
+    setPos(0)
+    setRevealed(false)
+    setFinished(false)
+    setStats({ reviews: 0, correct: 0, newCards: 0, startedAt: Date.now() })
+    setLastRating(null)
+    setMistakes([])
+    shownAt.current = Date.now()
+  }
+
+  const mistakeRows = mistakes.flatMap((entry) => {
+    const card = data.cards.find((item) => item.id === entry.cardId)
+    return card ? [{ card, count: entry.count }] : []
+  })
+
+  const practiceMistakes = () => {
+    if (!mistakeRows.length) return
+    setQueue(mistakeRows.map(({ card }) => ({ cardId: card.id, isNew: false })))
+    setPos(0)
+    setRevealed(false)
+    setFinished(false)
+    setStats({ reviews: 0, correct: 0, newCards: 0, startedAt: Date.now() })
+    setLastRating(null)
+    setMistakes([])
+    shownAt.current = Date.now()
+  }
+
+  const accuracy = stats.reviews ? Math.round((stats.correct / stats.reviews) * 100) : 0
+
+  return (
+    <div className="session">
+      <header className="session-head">
+        <button className="icon-btn" onClick={onClose} aria-label="Выйти" title="Выйти (Esc)">
+          <Icon name="x" size={19} />
+        </button>
+        <div className="session-title">
+          <span>{deckName}</span>
+          <span className="session-count">
+            {finished ? queue.length : `${pos + 1} / ${queue.length}`}
+          </span>
+        </div>
+        <div className="session-progress">
+          <span style={{ width: `${finished ? 100 : Math.round((pos / total) * 100)}%` }} />
+        </div>
+      </header>
+
+      {finished ? (
+        <div className="session-done">
+          <div className="done-jp" aria-hidden="true">
+            できました
+          </div>
+          <div className="done-icon">
+            <Icon name="sparkles" size={28} />
+          </div>
+          <h1>Отличная работа!</h1>
+          <p className="done-sub">Подход завершён. Прогресс сохранён.</p>
+
+          <div className="done-stats">
+            <div>
+              <strong>{stats.reviews}</strong>
+              <span>карточек</span>
+            </div>
+            <div>
+              <strong>{accuracy}%</strong>
+              <span>точность</span>
+            </div>
+            <div>
+              <strong>{stats.newCards}</strong>
+              <span>новых</span>
+            </div>
+            <div>
+              <strong>{formatDuration(Date.now() - stats.startedAt)}</strong>
+              <span>время</span>
+            </div>
+          </div>
+
+          {mistakeRows.length > 0 && (
+            <div className="mistake-review">
+              <div className="mistake-head">
+                <h2>Разбор ошибок</h2>
+                <span className="badge badge-soft">{mistakeRows.length}</span>
+              </div>
+              <p className="mistake-sub">Эти карточки ты отметил как «Снова».</p>
+              <div className="mistake-list">
+                {mistakeRows.map(({ card: mistakeCard, count }) => (
+                  <div className="mistake-row" key={mistakeCard.id}>
+                    <span className="mistake-front">{mistakeCard.front}</span>
+                    <span className="mistake-meta">
+                      {mistakeCard.reading && (
+                        <span className="mistake-reading">{mistakeCard.reading}</span>
+                      )}
+                      {mistakeCard.meaning && (
+                        <span className="mistake-meaning">{mistakeCard.meaning}</span>
+                      )}
+                    </span>
+                    {count > 1 && <span className="mistake-count">×{count}</span>}
+                    <button
+                      type="button"
+                      className="icon-btn mistake-say"
+                      onClick={() => speakJa(mistakeCard.front)}
+                      title="Прослушать"
+                      aria-label={`Прослушать ${mistakeCard.front}`}
+                    >
+                      <Icon name="speaker" size={15} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="done-actions">
+            {lastRating && (
+              <button className="btn btn-ghost btn-lg" onClick={undoLastRating}>
+                <Icon name="rotate" size={16} />
+                Отменить: {RATING_LABEL[lastRating.rating]}
+              </button>
+            )}
+            <button
+              className={`btn btn-lg ${mistakeRows.length > 0 ? 'btn-ghost' : 'btn-primary'}`}
+              onClick={onClose}
+            >
+              Готово
+            </button>
+            {mistakeRows.length > 0 && (
+              <button className="btn btn-primary btn-lg" onClick={practiceMistakes}>
+                <Icon name="rotate" size={16} />
+                Проработать ошибки ещё раз
+              </button>
+            )}
+            {restartQueue.length > 0 && (
+              <button className="btn btn-ghost btn-lg" onClick={restart}>
+                Ещё подход
+              </button>
+            )}
+          </div>
+        </div>
+      ) : card ? (
+        <div className="session-body">
+          <div className="flashcard-wrap">
+            <div
+              className={`flashcard${revealed ? ' flipped' : ''}`}
+              onClick={() => setRevealed((prev) => !prev)}
+            >
+              <div className="face face-front">
+                <div className="face-top">
+                  <span className="face-deck">{deckName}</span>
+                  <div className="face-top-right">
+                    {current?.isNew && <span className="badge badge-soft">новое</span>}
+                    {canUseMnemonic && (
+                      <button
+                        type="button"
+                        className={`icon-btn mnemonic-btn${mnemonic ? ' has-mnemonic' : ''}${
+                          mnemonicOpen || mnemonicEditing ? ' active' : ''
+                        }`}
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          toggleMnemonic()
+                        }}
+                        title={
+                          !mnemonic
+                            ? 'Добавить мнемонику'
+                            : mnemonicOpen || mnemonicEditing
+                              ? 'Скрыть мнемонику'
+                              : 'Показать мнемонику'
+                        }
+                        aria-label={
+                          !mnemonic
+                            ? 'Добавить мнемонику'
+                            : mnemonicOpen || mnemonicEditing
+                              ? 'Скрыть мнемонику'
+                              : 'Показать мнемонику'
+                        }
+                        aria-expanded={mnemonicOpen || mnemonicEditing}
+                      >
+                        <Icon name={mnemonic ? 'bulb' : 'plus'} size={16} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <FitText className="kana-front" text={card.front} maxFontSize={150} minFontSize={18} />
+
+                {canUseMnemonic && (mnemonicEditing || mnemonicOpen) && (
+                  <div className="mnemonic-panel" onClick={(event) => event.stopPropagation()}>
+                    {mnemonicEditing ? (
+                      <form
+                        className="mnemonic-form"
+                        onSubmit={(event) => {
+                          event.preventDefault()
+                          saveMnemonic()
+                        }}
+                      >
+                        <label className="mnemonic-label" htmlFor={`mnemonic-${card.id}`}>
+                          Мнемоника
+                        </label>
+                        <textarea
+                          id={`mnemonic-${card.id}`}
+                          className="mnemonic-input"
+                          value={mnemonicDraft}
+                          onChange={(event) => setMnemonicDraft(event.target.value)}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Escape') {
+                              event.preventDefault()
+                              event.stopPropagation()
+                              cancelMnemonicEditor()
+                            }
+                            if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+                              event.preventDefault()
+                              saveMnemonic()
+                            }
+                          }}
+                          placeholder="Например: «ぬ» похожа на …"
+                          rows={2}
+                          maxLength={240}
+                          autoFocus
+                        />
+                        <div className="mnemonic-actions">
+                          {mnemonic && (
+                            <button
+                              type="button"
+                              className="btn btn-danger-ghost btn-small"
+                              onClick={removeMnemonic}
+                            >
+                              Удалить
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            className="btn btn-ghost btn-small"
+                            onClick={cancelMnemonicEditor}
+                          >
+                            Отмена
+                          </button>
+                          <button type="submit" className="btn btn-primary btn-small">
+                            Сохранить
+                          </button>
+                        </div>
+                      </form>
+                    ) : (
+                      <div className="mnemonic-view">
+                        <p className="mnemonic-text">{mnemonic}</p>
+                        <button
+                          type="button"
+                          className="icon-btn mnemonic-edit-btn"
+                          onClick={openMnemonicEditor}
+                          title="Изменить мнемонику"
+                          aria-label="Изменить мнемонику"
+                        >
+                          <Icon name="pencil" size={15} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="face-bottom">
+                  <button
+                    className="icon-btn speak"
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      speakJa(card.front)
+                    }}
+                    title="Прослушать"
+                    aria-label="Прослушать"
+                  >
+                    <Icon name="speaker" size={19} />
+                  </button>
+                  <span className="face-hint">Нажми на карточку или пробел</span>
+                </div>
+              </div>
+
+              <div className="face face-back">
+                <div className="face-top">
+                  <span className="face-deck">ответ</span>
+                  <span className="face-jp-small">{card.front}</span>
+                </div>
+                <div className="answer">
+                  {card.reading && <div className="answer-reading">{card.reading}</div>}
+                  {card.meaning && <div className="answer-meaning">{card.meaning}</div>}
+                  {card.note && <p className="answer-note">{card.note}</p>}
+                  {!card.reading && !card.meaning && !card.note && (
+                    <div className="answer-meaning">{card.front}</div>
+                  )}
+                </div>
+                <div className="face-bottom">
+                  <button
+                    className="icon-btn speak"
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      speakJa(card.front)
+                    }}
+                    title="Прослушать"
+                    aria-label="Прослушать"
+                  >
+                    <Icon name="speaker" size={19} />
+                  </button>
+                  <span className="face-hint">Нажми, чтобы перевернуть обратно</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="session-actions">
+            <div className="session-actions-main">
+              {revealed ? (
+                <div className="rating-row">
+                  {RATINGS.map((item) => (
+                    <button
+                      key={item.rating}
+                      className={`rate-btn rate-${item.rating}`}
+                      onClick={() => rate(item.rating)}
+                    >
+                      <span className="rate-top">
+                        <b>{item.label}</b>
+                        <kbd>{item.key}</kbd>
+                      </span>
+                      <span className="rate-interval">
+                        {intervalPreview(card.srs, item.rating)}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <button
+                  className="btn btn-primary btn-lg show-answer"
+                  onClick={() => setRevealed(true)}
+                >
+                  Показать ответ
+                  <kbd>пробел</kbd>
+                </button>
+              )}
+            </div>
+
+            <div className="undo-slot">
+              {lastRating && (
+                <button
+                  className="undo-rating"
+                  onClick={undoLastRating}
+                  title="Отменить последнюю оценку (Ctrl+Z)"
+                >
+                  <Icon name="rotate" size={13} />
+                  Отменить: {RATING_LABEL[lastRating.rating]}
+                  <kbd>Ctrl Z</kbd>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="session-done">
+          <h1>Карточки закончились</h1>
+          <button className="btn btn-primary" onClick={onClose}>
+            Готово
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}

@@ -29,6 +29,10 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value))
 }
 
+function strArray(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : []
+}
+
 function normalizeSrs(raw: unknown): SrsState {
   if (!isObj(raw)) return freshSrs()
   const interval = clamp(num(raw.interval, 0), 0, 3650)
@@ -72,6 +76,7 @@ function normalizeCard(raw: unknown): Card | null {
     meaning: str(raw.meaning),
     note: str(raw.note),
     mnemonic: str(raw.mnemonic),
+    tags: strArray(raw.tags),
     group,
     order: num(raw.order, 0),
     srs: normalizeSrs(raw.srs),

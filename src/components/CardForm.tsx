@@ -1,4 +1,4 @@
-import { useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
 import type { Card } from '../types'
 import { useStore } from '../state/store'
 import { freshSrs } from '../lib/srs'
@@ -17,15 +17,37 @@ interface CardFormProps {
 export function CardForm({ deckId, card, onClose }: CardFormProps) {
   const { data, update } = useStore()
   const deck = data.decks.find((item) => item.id === deckId)
+  const deckTags = useMemo(() => {
+    const set = new Set<string>()
+    data.cards
+      .filter((c) => c.deckId === deckId)
+      .forEach((c) => c.tags.forEach((t) => set.add(t)))
+    return [...set].sort()
+  }, [data.cards, deckId])
+
   const [front, setFront] = useState(card?.front ?? '')
   const [reading, setReading] = useState(card?.reading ?? '')
   const [meaning, setMeaning] = useState(card?.meaning ?? '')
   const [note, setNote] = useState(card?.note ?? '')
+  const [tags, setTags] = useState<string[]>(card?.tags ?? [])
+  const [tagInput, setTagInput] = useState('')
+  const [tagSuggestions, setTagSuggestions] = useState<string[]>([])
   const [frontMode, setFrontMode] = useState<KanaMode>(() => guessKanaMode(card?.front, 'hiragana'))
   const [readingMode, setReadingMode] = useState<KanaMode>(() => guessKanaMode(card?.reading, 'abc'))
   const [readingTouched, setReadingTouched] = useState(Boolean(card?.reading))
   const [error, setError] = useState('')
   const frontRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    const input = tagInput.trim().toLowerCase()
+    if (!input) {
+      setTagSuggestions([])
+      return
+    }
+    setTagSuggestions(
+      deckTags.filter((t) => t.toLowerCase().includes(input) && !tags.includes(t)),
+    )
+  }, [tagInput, deckTags, tags])
 
   const changeFront = (value: string) => {
     setFront(value)
@@ -36,6 +58,22 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
   const changeReading = (value: string) => {
     setReading(value)
     setReadingTouched(true)
+  }
+
+  const addTag = (tag: string) => {
+    const trimmed = tag.trim()
+    if (!trimmed || tags.includes(trimmed)) return
+    setTags([...tags, trimmed])
+    setTagInput('')
+    setTagSuggestions([])
+  }
+
+  const removeTag = (tag: string) => {
+    setTags(tags.filter((t) => t !== tag))
+  }
+
+  const selectSuggestion = (tag: string) => {
+    addTag(tag)
   }
 
   const save = (keepOpen: boolean) => {
@@ -54,6 +92,7 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
           target.reading = cleanReading
           target.meaning = meaning.trim()
           target.note = note.trim()
+          target.tags = tags
         }
         return
       }
@@ -69,6 +108,7 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
         meaning: meaning.trim(),
         note: note.trim(),
         mnemonic: '',
+        tags,
         group: 'custom',
         order: maxOrder + 1,
         srs: freshSrs(),
@@ -197,6 +237,76 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
             rows={3}
             maxLength={400}
           />
+        </div>
+
+        <div className="field">
+          <label htmlFor="card-tags">Теги <span className="field-hint">необязательно</span></label>
+          <div className="tag-input" id="card-tags">
+            {tags.map((tag) => (
+              <span
+                key={tag}
+                className="tag-chip"
+              >
+                {tag}
+                <button
+                  type="button"
+                  className="tag-remove"
+                  onClick={() => removeTag(tag)}
+                  title={`Удалить тег «${tag}»`}
+                  aria-label={`Удалить тег ${tag}`}
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+            <input
+              id="card-tag-input"
+              value={tagInput}
+              onChange={(event) => setTagInput(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  event.preventDefault()
+                  addTag(tagInput)
+                }
+                if (event.key === 'Escape') {
+                  setTagInput('')
+                  setTagSuggestions([])
+                }
+              }}
+              onFocus={() => {
+                if (tagInput.trim()) {
+                  const input = tagInput.trim().toLowerCase()
+                  setTagSuggestions(
+                    deckTags.filter((t) => t.toLowerCase().includes(input) && !tags.includes(t)),
+                  )
+                }
+              }}
+              placeholder="Добавить тег и Enter…"
+              maxLength={40}
+              list="deck-tags"
+            />
+            <datalist id="deck-tags">
+              {deckTags.map((tag) => (
+                <option key={tag} value={tag} />
+              ))}
+            </datalist>
+
+            {tagSuggestions.length > 0 && (
+              <div className="tag-suggestions">
+                {tagSuggestions.map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    className="tag-suggestion"
+                    onClick={() => selectSuggestion(tag)}
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <p className="field-hint">Теги помогают находить карточки по теме или части речи.</p>
         </div>
 
         {!card && (

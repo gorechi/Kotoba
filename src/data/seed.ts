@@ -73,6 +73,7 @@ function seedCards(
     meaning: '',
     note: seed.note ?? (seed.example ? `${seed.example} — ${seed.translation ?? ''}` : ''),
     mnemonic: '',
+    tags: [],
     group,
     order: startIndex + index,
     srs: freshSrs(),

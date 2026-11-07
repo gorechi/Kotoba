@@ -35,6 +35,8 @@ export interface Card {
   note: string
   /** Личная мнемоническая ассоциация для запоминания символа. */
   mnemonic: string
+  /** Теги карточки для фильтрации и поиска. */
+  tags: string[]
   group: CardGroup
   order: number
   srs: SrsState

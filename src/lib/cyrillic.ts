@@ -113,7 +113,7 @@ function tokenize(kana: string): string[] {
     }
 
     // слог с дополнительным символом: консонант + малый я/ю/ё
-    if (i + 1 < kana.length && 'ゃゅョ'.includes(kana[i + 1])) {
+    if (i + 1 < kana.length && 'ゃゅょ'.includes(kana[i + 1])) {
       const combo = kana[i] + kana[i + 1]
       if (combo in Y_COMBINATIONS) {
         tokens.push(combo)

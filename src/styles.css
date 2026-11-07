@@ -2454,7 +2454,7 @@ kbd {
 .settings-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 18px;
+  gap: 10px;
 }
 
 .settings-grid .panel {

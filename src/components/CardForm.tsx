@@ -210,6 +210,7 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
               onModeChange={setReadingMode}
               placeholder="mizu"
               maxLength={120}
+              simple
             />
           </div>
         </div>

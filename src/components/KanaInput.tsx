@@ -27,6 +27,8 @@ interface KanaInputProps {
   inputRef?: RefObject<HTMLInputElement | null>
   tip?: string
   onBlur?: () => void
+  /** Скрывает переключатели режимов и панель дополнительных знаков (для поля «Чтение»). */
+  simple?: boolean
 }
 
 export function KanaInput({
@@ -41,6 +43,7 @@ export function KanaInput({
   inputRef,
   tip,
   onBlur,
+  simple = false,
 }: KanaInputProps) {
   const localRef = useRef<HTMLInputElement>(null)
   const ref = inputRef ?? localRef
@@ -146,26 +149,27 @@ export function KanaInput({
           spellCheck={false}
         />
         <div className="kana-modes" role="group" aria-label="Режим ввода">
-          {KANA_MODES.map((option) => (
-            <button
-              key={option.mode}
-              type="button"
-              className={`kana-mode${mode === option.mode ? ' active' : ''}`}
-              aria-pressed={mode === option.mode}
-              tabIndex={-1}
-              title={option.title}
-              onMouseDown={(event) => event.preventDefault()}
-              onClick={() => switchMode(option.mode)}
-            >
-              {option.label}
-            </button>
-          ))}
+          {!simple &&
+            KANA_MODES.map((option) => (
+              <button
+                key={option.mode}
+                type="button"
+                className={`kana-mode${mode === option.mode ? ' active' : ''}`}
+                aria-pressed={mode === option.mode}
+                tabIndex={-1}
+                title={option.title}
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => switchMode(option.mode)}
+              >
+                {option.label}
+              </button>
+            ))}
         </div>
       </div>
 
       {mode !== 'abc' && !value && tip && <p className="kana-tip">{tip}</p>}
 
-      {signs.length > 0 && (
+      {!simple && signs.length > 0 && (
         <div className="kana-signs" role="group" aria-label="Дополнительные знаки">
           <span className="kana-signs-label">знаки</span>
           {signs.map((sign) => (

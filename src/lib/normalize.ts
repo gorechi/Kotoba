@@ -73,6 +73,7 @@ function normalizeCard(raw: unknown): Card | null {
     deckId: raw.deckId,
     front: raw.front,
     reading: str(raw.reading),
+    readingCyrillic: str(raw.readingCyrillic),
     meaning: str(raw.meaning),
     note: str(raw.note),
     mnemonic: str(raw.mnemonic),
@@ -100,11 +101,13 @@ function normalizeHistory(raw: unknown): Record<string, DayStat> {
 }
 
 function normalizeSettings(raw: unknown): Settings {
-  const base: Settings = { theme: 'system', newPerDay: 10 }
+  const base: Settings = { theme: 'system', newPerDay: 10, defaultTranscription: 'romaji' }
   if (!isObj(raw)) return base
   return {
     theme: THEMES.includes(raw.theme as Theme) ? (raw.theme as Theme) : base.theme,
     newPerDay: clamp(Math.round(num(raw.newPerDay, base.newPerDay)), 1, 50),
+    defaultTranscription:
+      raw.defaultTranscription === 'cyrillic' ? 'cyrillic' : 'romaji',
   }
 }
 

@@ -29,6 +29,8 @@ export interface Card {
   front: string
   /** Чтение (ромадзи или кана). */
   reading: string
+  /** Чтение на кириллице (транскрипция). */
+  readingCyrillic: string
   /** Перевод / значение. */
   meaning: string
   /** Пример, подсказка, заметка. */
@@ -63,6 +65,8 @@ export interface DayStat {
 export interface Settings {
   theme: Theme
   newPerDay: number
+  /** Какую транскрипцию показывать по умолчанию в поле «Чтение». */
+  defaultTranscription: 'romaji' | 'cyrillic'
 }
 
 export interface AppData {

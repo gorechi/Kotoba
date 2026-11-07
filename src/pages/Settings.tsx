@@ -158,6 +158,34 @@ export function Settings() {
             Для азбук хватает 5–10 в день. Если чувствуешь, что легко — добавь ещё.
           </p>
         </section>
+
+        <section className="panel">
+          <div className="panel-head">
+            <div>
+              <h2>Транскрипция</h2>
+              <p>Какое чтение показывать по умолчанию</p>
+            </div>
+          </div>
+          <div className="segmented">
+            <button
+              className={data.settings.defaultTranscription === 'romaji' ? 'active' : ''}
+              onClick={() => setSettings({ defaultTranscription: 'romaji' })}
+            >
+              ромадзи
+            </button>
+            <button
+              className={data.settings.defaultTranscription === 'cyrillic' ? 'active' : ''}
+              onClick={() => setSettings({ defaultTranscription: 'cyrillic' })}
+            >
+              кириллица
+            </button>
+          </div>
+          <p className="hint">
+            Выбор влияет на то, какой вариант чтения отображается в поле «Чтение» при создании
+            карточки. Можно переключаться прямо в форме карточки.
+          </p>
+        </section>
+
       </div>
 
       <section className="panel">

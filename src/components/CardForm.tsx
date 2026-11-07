@@ -3,10 +3,12 @@ import type { Card } from '../types'
 import { useStore } from '../state/store'
 import { freshSrs } from '../lib/srs'
 import { finalizeRomajiTail, guessKanaMode, suggestReading, type KanaMode } from '../lib/romaji'
+import { toCyrillic } from '../lib/cyrillic'
 import { uid } from '../lib/utils'
 import { FitText } from './FitText'
 import { KanaInput } from './KanaInput'
 import { Modal } from './Modal'
+import { Icon } from './Icon'
 
 interface CardFormProps {
   deckId: string
@@ -17,6 +19,7 @@ interface CardFormProps {
 export function CardForm({ deckId, card, onClose }: CardFormProps) {
   const { data, update } = useStore()
   const deck = data.decks.find((item) => item.id === deckId)
+  const defaultTranscription: 'romaji' | 'cyrillic' = data.settings.defaultTranscription
   const deckTags = useMemo(() => {
     const set = new Set<string>()
     data.cards
@@ -27,6 +30,7 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
 
   const [front, setFront] = useState(card?.front ?? '')
   const [reading, setReading] = useState(card?.reading ?? '')
+  const [readingCyrillic, setReadingCyrillic] = useState(card?.readingCyrillic ?? '')
   const [meaning, setMeaning] = useState(card?.meaning ?? '')
   const [note, setNote] = useState(card?.note ?? '')
   const [tags, setTags] = useState<string[]>(card?.tags ?? [])
@@ -35,6 +39,7 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
   const [frontMode, setFrontMode] = useState<KanaMode>(() => guessKanaMode(card?.front, 'hiragana'))
   const [readingMode, setReadingMode] = useState<KanaMode>(() => guessKanaMode(card?.reading, 'abc'))
   const [readingTouched, setReadingTouched] = useState(Boolean(card?.reading))
+  const [transcriptionMode, setTranscriptionMode] = useState<'romaji' | 'cyrillic'>(defaultTranscription)
   const [error, setError] = useState('')
   const frontRef = useRef<HTMLInputElement>(null)
 
@@ -49,16 +54,41 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
     )
   }, [tagInput, deckTags, tags])
 
+  // Автогенерация обеих транскрипций при изменении поля «Слово или знак»
+  useEffect(() => {
+    if (!front) return
+    const cleanFront = front.trim()
+    if (!cleanFront) return
+
+    const romaji = suggestReading(cleanFront)
+    const cyrillic = toCyrillic(cleanFront)
+
+    // Обновляем только те транскрипции, которые пользователь ещё не правил вручную
+    if (!readingTouched) {
+      setReading(romaji)
+    }
+    setReadingCyrillic(cyrillic)
+  }, [front, readingTouched])
+
   const changeFront = (value: string) => {
     setFront(value)
     setError('')
-    if (!readingTouched) setReading(suggestReading(value))
   }
 
   const changeReading = (value: string) => {
-    setReading(value)
+    if (transcriptionMode === 'romaji') {
+      setReading(value)
+    } else {
+      setReadingCyrillic(value)
+    }
     setReadingTouched(true)
   }
+
+  const toggleTranscription = () => {
+    setTranscriptionMode((prev) => (prev === 'romaji' ? 'cyrillic' : 'romaji'))
+  }
+
+  const activeReading = transcriptionMode === 'romaji' ? reading : readingCyrillic
 
   const addTag = (tag: string) => {
     const trimmed = tag.trim()
@@ -84,12 +114,14 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
       return
     }
     const cleanReading = finalizeRomajiTail(reading, readingMode).trim()
+    const cleanReadingCyrillic = readingCyrillic.trim()
     update((draft) => {
       if (card) {
         const target = draft.cards.find((item) => item.id === card.id)
         if (target) {
           target.front = cleanFront
           target.reading = cleanReading
+          target.readingCyrillic = cleanReadingCyrillic
           target.meaning = meaning.trim()
           target.note = note.trim()
           target.tags = tags
@@ -105,6 +137,7 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
         deckId,
         front: cleanFront,
         reading: cleanReading,
+        readingCyrillic: cleanReadingCyrillic,
         meaning: meaning.trim(),
         note: note.trim(),
         mnemonic: '',
@@ -123,10 +156,12 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
 
     setFront('')
     setReading('')
+    setReadingCyrillic('')
     setMeaning('')
     setNote('')
     setError('')
     setReadingTouched(false)
+    setTranscriptionMode(defaultTranscription)
     window.requestAnimationFrame(() => frontRef.current?.focus())
   }
 
@@ -178,7 +213,7 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
             minFontSize={14}
           />
           <span className="card-preview-answer">
-            {[reading.trim(), meaning.trim()].filter(Boolean).join(' · ') || 'чтение и перевод'}
+            {[activeReading.trim(), meaning.trim()].filter(Boolean).join(' · ') || 'чтение и перевод'}
           </span>
         </div>
 
@@ -200,17 +235,24 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
           </div>
           <div className="field">
             <label htmlFor="card-reading">
-              Чтение <span className="field-hint">ромадзи</span>
+              Чтение{' '}
+              <button
+                type="button"
+                className={`transcription-toggle ${transcriptionMode}`}
+                onClick={toggleTranscription}
+                title={`Переключить на ${transcriptionMode === 'romaji' ? 'кириллицу' : 'ромадзи'}`}
+                aria-label={`Переключить на ${transcriptionMode === 'romaji' ? 'кириллицу' : 'ромадзи'}`}
+              >
+                {transcriptionMode === 'romaji' ? 'ромадзи' : 'кириллица'}
+              </button>
             </label>
-            <KanaInput
+            <input
               id="card-reading"
-              value={reading}
-              onChange={changeReading}
-              mode={readingMode}
-              onModeChange={setReadingMode}
+              value={activeReading}
+              onChange={(event) => changeReading(event.target.value)}
               placeholder="mizu"
               maxLength={120}
-              simple
+              spellCheck={false}
             />
           </div>
         </div>

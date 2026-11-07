@@ -52,7 +52,7 @@ export function createSeedData(now = Date.now()) {
     decks,
     cards,
     history: {} as Record<string, { reviews: number; correct: number; newCards: number; ms: number }>,
-    settings: { theme: 'system' as const, newPerDay: 10 },
+    settings: { theme: 'system' as const, newPerDay: 10, defaultTranscription: 'romaji' as const },
     createdAt: now,
   }
 }
@@ -74,6 +74,7 @@ function seedCards(
     note: seed.note ?? (seed.example ? `${seed.example} — ${seed.translation ?? ''}` : ''),
     mnemonic: '',
     tags: [],
+    readingCyrillic: '',
     group,
     order: startIndex + index,
     srs: freshSrs(),

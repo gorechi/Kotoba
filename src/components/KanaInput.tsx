@@ -167,7 +167,7 @@ export function KanaInput({
         </div>
       </div>
 
-      {mode !== 'abc' && !value && tip && <p className="kana-tip">{tip}</p>}
+      {mode !== 'abc' && tip && <p className="kana-tip">{tip}</p>}
 
       {!simple && signs.length > 0 && (
         <div className="kana-signs" role="group" aria-label="Дополнительные знаки">

@@ -53,9 +53,11 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
 
   // Автогенерация чтения при изменении поля «Слово или знак»
   useEffect(() => {
-    if (!front) return
     const cleanFront = front.trim()
-    if (!cleanFront) return
+    if (!cleanFront) {
+      setReading('')
+      return
+    }
 
     if (defaultTranscription === 'cyrillic') {
       setReading(toCyrillic(cleanFront))

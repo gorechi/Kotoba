@@ -2989,6 +2989,7 @@ kbd {
   flex-wrap: wrap;
   gap: 6px;
   align-items: flex-start;
+  position: relative;
 }
 
 .tag-chip {

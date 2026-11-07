@@ -283,13 +283,7 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
               }}
               placeholder="Добавить тег и Enter…"
               maxLength={40}
-              list="deck-tags"
             />
-            <datalist id="deck-tags">
-              {deckTags.map((tag) => (
-                <option key={tag} value={tag} />
-              ))}
-            </datalist>
 
             {tagSuggestions.length > 0 && (
               <div className="tag-suggestions">

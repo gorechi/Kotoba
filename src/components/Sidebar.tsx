@@ -9,9 +9,14 @@ interface SidebarProps {
   onNavigate: (route: Route) => void
 }
 
-const NAV: { id: 'home' | 'decks' | 'kanamap' | 'stats'; label: string; icon: IconName }[] = [
+const NAV: {
+  id: 'home' | 'decks' | 'kanji' | 'kanamap' | 'stats'
+  label: string
+  icon: IconName
+}[] = [
   { id: 'home', label: 'Учить', icon: 'book' },
-  { id: 'decks', label: 'Колоды', icon: 'layers' },
+  { id: 'decks', label: 'Азбуки', icon: 'kana' },
+  { id: 'kanji', label: 'Кандзи', icon: 'kanji' },
   { id: 'kanamap', label: 'Карта каны', icon: 'grid' },
   { id: 'stats', label: 'Статистика', icon: 'chart' },
 ]
@@ -20,8 +25,17 @@ export function Sidebar({ route, onNavigate }: SidebarProps) {
   const { data } = useStore()
   const days = streak(data.history)
 
+  const deckKind = route.name === 'deck'
+    ? data.decks.find((deck) => deck.id === route.deckId)?.kind ?? 'kana'
+    : null
+
   const isActive = (id: string) => {
-    if (id === 'decks') return route.name === 'decks' || route.name === 'deck'
+    if (id === 'decks') {
+      return route.name === 'decks' || (route.name === 'deck' && deckKind === 'kana')
+    }
+    if (id === 'kanji') {
+      return route.name === 'kanji' || (route.name === 'deck' && deckKind === 'kanji')
+    }
     return route.name === id
   }
 

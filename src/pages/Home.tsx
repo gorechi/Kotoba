@@ -23,15 +23,20 @@ interface HomeProps {
 export function Home({ onNavigate, onStudy }: HomeProps) {
   const { data } = useStore()
   const [creatingDeck, setCreatingDeck] = useState(false)
+  const [creatingDeckKind, setCreatingDeckKind] = useState<'kana' | 'kanji'>('kana')
   const now = Date.now()
   const overall = overallStat(data.cards, now)
   const allowance = remainingNewToday(data.history, data.settings, now)
   const newCount = Math.min(overall.fresh, allowance)
   const today = todayStat(data, now)
   const days = streak(data.history, now)
-  const decks = [...data.decks].sort(
-    (a, b) => Number(b.builtin) - Number(a.builtin) || a.createdAt - b.createdAt,
-  )
+  const decks = data.decks
+    .filter((deck) => deck.kind !== 'kanji')
+    .sort((a, b) => Number(b.builtin) - Number(a.builtin) || a.createdAt - b.createdAt)
+
+  const kanjiDecks = data.decks
+    .filter((deck) => deck.kind === 'kanji')
+    .sort((a, b) => a.createdAt - b.createdAt)
 
   const due = overall.due
   const ready = due + newCount
@@ -74,10 +79,6 @@ export function Home({ onNavigate, onStudy }: HomeProps) {
               {ctaLabel}
               <Icon name="arrow-right" size={18} />
             </button>
-            <button className="btn btn-ghost btn-lg" onClick={() => onNavigate({ name: 'decks' })}>
-              <Icon name="layers" size={18} />
-              Колоды
-            </button>
           </div>
 
           <div className="hero-meta">
@@ -105,9 +106,9 @@ export function Home({ onNavigate, onStudy }: HomeProps) {
 
       <section className="section">
         <div className="section-head">
-          <h2>Колоды</h2>
+          <h2>Азбуки</h2>
           <button className="link-btn" onClick={() => onNavigate({ name: 'decks' })}>
-            Все колоды
+            Все азбуки
             <Icon name="chevron-right" size={15} />
           </button>
         </div>
@@ -129,19 +130,65 @@ export function Home({ onNavigate, onStudy }: HomeProps) {
 
           <button
             className="deck-new"
-            onClick={() => setCreatingDeck(true)}
+            onClick={() => {
+              setCreatingDeckKind('kana')
+              setCreatingDeck(true)
+            }}
             aria-label="Создать свою колоду"
           >
             <span className="deck-new-icon">
               <Icon name="plus" size={20} />
             </span>
-            <strong>Своя колода</strong>
-            <span>Слова, фразы, кандзи — что угодно</span>
+            <strong>Создать колоду</strong>
+            <span>Слова, фразы и свои примеры</span>
           </button>
         </div>
       </section>
 
-      {creatingDeck && <DeckForm onClose={() => setCreatingDeck(false)} />}
+      {kanjiDecks.length > 0 && (
+        <section className="section">
+          <div className="section-head">
+            <h2>Кандзи</h2>
+            <button className="link-btn" onClick={() => onNavigate({ name: 'kanji' })}>
+              Все кандзи
+              <Icon name="chevron-right" size={15} />
+            </button>
+          </div>
+
+          <div className="deck-grid">
+            {kanjiDecks.map((deck) => {
+              const stat = deckStat(data.cards, deck.id, now)
+              return (
+                <DeckCard
+                  key={deck.id}
+                  deck={deck}
+                  stat={stat}
+                  newCount={Math.min(stat.fresh, allowance)}
+                  onOpen={() => onNavigate({ name: 'deck', deckId: deck.id })}
+                  onStudy={() => onStudy(deck.id)}
+                />
+              )
+            })}
+
+            <button
+              className="deck-new"
+              onClick={() => {
+                setCreatingDeckKind('kanji')
+                setCreatingDeck(true)
+              }}
+              aria-label="Создать свою колоду"
+            >
+              <span className="deck-new-icon">
+                <Icon name="plus" size={20} />
+              </span>
+              <strong>Создать колоду</strong>
+              <span>Кандзи, чтения и примеры</span>
+            </button>
+          </div>
+        </section>
+      )}
+
+      {creatingDeck && <DeckForm kind={creatingDeckKind} onClose={() => setCreatingDeck(false)} />}
     </div>
   )
 }

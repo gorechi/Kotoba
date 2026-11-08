@@ -2,6 +2,7 @@ import type { ReactNode, SVGProps } from 'react'
 
 export type IconName =
   | 'book'
+  | 'kana'
   | 'layers'
   | 'chart'
   | 'sliders'
@@ -28,12 +29,20 @@ export type IconName =
   | 'bulb'
   | 'lock'
   | 'grid'
+  | 'kanji'
 
 const paths: Record<IconName, ReactNode> = {
   book: (
     <>
       <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
       <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+    </>
+  ),
+  kana: (
+    <>
+      <path d="M 5.5 8.5 C 9.5 7.8, 14.5 7.2, 18.5 7" />
+      <path d="M 11.5 4.5 C 11.5 9, 11 15, 9.5 20" />
+      <path d="M 15 10.5 C 13 12, 10 13.5, 8 14.5 C 6.5 15.5, 7 18, 9 18 C 10.5 18, 12 16.5, 12 14.5 C 12 11, 15.5 10, 18 12.5 C 19.5 14, 19 17, 16 19.5" />
     </>
   ),
   layers: (
@@ -187,6 +196,14 @@ const paths: Record<IconName, ReactNode> = {
       <rect x="14" y="3" width="7" height="7" rx="1" />
       <rect x="3" y="14" width="7" height="7" rx="1" />
       <rect x="14" y="14" width="7" height="7" rx="1" />
+    </>
+  ),
+  kanji: (
+    <>
+      <rect x="4" y="3" width="16" height="18" rx="2" />
+      <path d="M8 8h8" />
+      <path d="M8 12h8" />
+      <path d="M12 8v9" />
     </>
   ),
 }

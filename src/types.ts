@@ -1,6 +1,8 @@
 export type Rating = 'again' | 'hard' | 'good' | 'easy'
 export type Theme = 'light' | 'dark' | 'system'
 export type CardGroup = 'basic' | 'voiced' | 'custom'
+/** Тип колоды: обычные карточки (кана/слова) или карточки-иероглифы. */
+export type DeckKind = 'kana' | 'kanji'
 /** Режим сеанса: чтение (японский → ответ) или письмо (перевод → японский). */
 export type StudyMode = 'reading' | 'writing'
 /** Сложность режима письма. */
@@ -9,6 +11,7 @@ export type WritingDifficulty = 'normal' | 'hard'
 export type Route =
   | { name: 'home' }
   | { name: 'decks' }
+  | { name: 'kanji' }
   | { name: 'deck'; deckId: string }
   | { name: 'kanamap' }
   | { name: 'stats' }
@@ -41,10 +44,32 @@ export interface Card {
   mnemonic: string
   /** Теги карточки для фильтрации и поиска. */
   tags: string[]
+  /** Чтения иероглифа: кана + транскрипция (для карточек-иероглифов). */
+  readings: CardReading[]
+  /** Примеры использования (для карточек-иероглифов). */
+  examples: CardExample[]
   group: CardGroup
   order: number
   srs: SrsState
   createdAt: number
+}
+
+/** Пара «слово каной + транскрипция» на обороте карточки-иероглифа. */
+export interface CardReading {
+  id: string
+  kana: string
+  transcription: string
+}
+
+/** Пример использования иероглифа. */
+export interface CardExample {
+  id: string
+  /** Иероглифическое написание слова или фразы. */
+  text: string
+  /** Транскрипция. */
+  transcription: string
+  /** Перевод на русский. */
+  translation: string
 }
 
 export interface Deck {
@@ -54,6 +79,8 @@ export interface Deck {
   description: string
   accent: string
   builtin: boolean
+  /** Обычная колода или колода иероглифов. */
+  kind: DeckKind
   createdAt: number
 }
 

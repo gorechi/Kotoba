@@ -125,6 +125,8 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
         note: note.trim(),
         mnemonic: '',
         tags,
+        readings: [],
+        examples: [],
         group: 'custom',
         order: maxOrder + 1,
         srs: freshSrs(),

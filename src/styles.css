@@ -713,7 +713,7 @@ kbd {
 }
 
 /* ============================================================
-   Колоды
+   Азбуки
    ============================================================ */
 .deck-grid {
   display: grid;
@@ -1432,6 +1432,82 @@ kbd {
   font-size: 12px;
 }
 
+/* Форма карточки-иероглифа */
+.kanji-block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface-2);
+}
+
+.kanji-block-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.kanji-block-head h3 {
+  font-size: 13px;
+}
+
+.kanji-block-head .field-hint {
+  margin-top: 3px;
+}
+
+.kanji-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 32px;
+  gap: 8px;
+  align-items: center;
+}
+
+.kanji-row--example {
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.2fr) minmax(0, 1fr) 32px;
+}
+
+.kanji-row input {
+  width: 100%;
+  height: 40px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 9px;
+  padding: 9px 11px;
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+
+.kanji-row input:focus {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
+  background: var(--surface);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.kanji-row input::placeholder {
+  color: color-mix(in srgb, var(--muted) 75%, transparent);
+}
+
+.kanji-row .icon-btn {
+  justify-self: center;
+}
+
+.kanji-example {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.kanji-example + .kanji-example {
+  padding-top: 10px;
+  border-top: 1px dashed var(--line);
+}
+
 .deck-form-preview {
   position: relative;
   overflow: hidden;
@@ -1915,6 +1991,140 @@ kbd {
   flex: none;
   margin-top: 8px;
   font-size: 12.5px;
+}
+
+/* Оборот карточки-иероглифа */
+.kanji-front {
+  font-family: var(--font-jp);
+}
+
+.kanji-answer {
+  gap: 9px;
+  justify-content: center;
+}
+
+.kanji-answer .answer-meaning {
+  margin-top: 0;
+  font-size: 24px;
+}
+
+.kanji-readings {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px 14px;
+  margin-top: 2px;
+}
+
+.kanji-reading {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-2);
+}
+
+.kanji-reading-kana {
+  font-family: var(--font-jp);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.kanji-reading-transcription {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.kanji-usages {
+  width: 100%;
+  max-width: 520px;
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+  text-align: left;
+}
+
+.kanji-usage-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: center;
+}
+
+.kanji-usage {
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+
+.kanji-usage-jp {
+  font-family: var(--font-jp);
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.kanji-usage-transcription {
+  margin-left: 8px;
+  font-family: inherit;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.kanji-usage-translation {
+  margin-top: 2px;
+  font-size: 12.5px;
+  color: var(--text-soft);
+}
+
+.kanji-answer.answer-writing {
+  gap: 6px;
+  overflow-y: auto;
+}
+
+.kanji-answer.answer-writing .answer-jp {
+  flex: 0 0 auto;
+  height: 96px;
+}
+
+.kanji-answer.answer-writing .answer-meaning {
+  font-size: 17px;
+}
+
+.kanji-answer.answer-writing .kanji-readings {
+  gap: 4px 8px;
+}
+
+.kanji-answer.answer-writing .kanji-reading {
+  padding: 2px 8px;
+}
+
+.kanji-answer.answer-writing .kanji-reading-kana {
+  font-size: 14px;
+}
+
+.kanji-answer.answer-writing .kanji-reading-transcription {
+  font-size: 11.5px;
+}
+
+.kanji-answer.answer-writing .kanji-usages {
+  max-width: 460px;
+}
+
+.kanji-answer.answer-writing .kanji-usage-jp {
+  font-size: 13.5px;
+}
+
+.kanji-answer.answer-writing .kanji-usage-translation {
+  font-size: 11.5px;
 }
 
 .session-actions {

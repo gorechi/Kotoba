@@ -24,6 +24,7 @@ export function createSeedDecks(now = Date.now()): Deck[] {
       description: 'Основа японской письменности: 46 знаков и озвончённые варианты.',
       accent: '#E1523D',
       builtin: true,
+      kind: 'kana',
       createdAt: now,
     },
     {
@@ -33,6 +34,7 @@ export function createSeedDecks(now = Date.now()): Deck[] {
       description: 'Для заимствованных слов: 46 знаков и озвончённые варианты.',
       accent: '#4A5FC1',
       builtin: true,
+      kind: 'kana',
       createdAt: now,
     },
   ]
@@ -80,6 +82,8 @@ function seedCards(
     note: seed.note ?? (seed.example ? `${seed.example} — ${seed.translation ?? ''}` : ''),
     mnemonic: '',
     tags: [],
+    readings: [],
+    examples: [],
     group,
     order: startIndex + index,
     srs: freshSrs(),

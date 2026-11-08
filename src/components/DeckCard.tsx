@@ -13,11 +13,12 @@ interface DeckCardProps {
 }
 
 export function DeckCard({ deck, stat, newCount, onOpen, onStudy }: DeckCardProps) {
+  const isKanji = deck.kind === 'kanji'
   const nothingToStudy = stat.due === 0 && newCount === 0
   const practice = nothingToStudy && stat.learned > 0
   const empty = nothingToStudy && stat.learned === 0
-  const cta = empty ? 'Нет карточек' : practice ? 'Тренировать' : 'Учить'
-  const watermark = (deck.nameJp || deck.name || '言').slice(0, 1)
+  const cta = empty ? (isKanji ? 'Нет иероглифов' : 'Нет карточек') : practice ? 'Тренировать' : 'Учить'
+  const watermark = (deck.nameJp || deck.name || (isKanji ? '漢' : '言')).slice(0, 1)
 
   const handleKey = (event: KeyboardEvent<HTMLElement>) => {
     if (event.target !== event.currentTarget) return
@@ -41,7 +42,7 @@ export function DeckCard({ deck, stat, newCount, onOpen, onStudy }: DeckCardProp
       </span>
 
       <div className="deck-head">
-        <span className="deck-jp">{deck.nameJp || '言葉'}</span>
+        <span className="deck-jp">{deck.nameJp || (isKanji ? '漢字' : '言葉')}</span>
         <div className="deck-badges">
           {stat.due > 0 && <span className="badge">{stat.due} к повторению</span>}
           {newCount > 0 && <span className="badge badge-soft">{newCount} новых</span>}
@@ -50,7 +51,9 @@ export function DeckCard({ deck, stat, newCount, onOpen, onStudy }: DeckCardProp
       </div>
 
       <h3 className="deck-name">{deck.name}</h3>
-      <p className="deck-desc">{deck.description || 'Своя колода'}</p>
+      <p className="deck-desc">
+        {deck.description || (isKanji ? 'Колода кандзи' : 'Своя колода')}
+      </p>
 
       <div className="deck-progress">
         <div className="deck-progress-bar">
@@ -68,7 +71,11 @@ export function DeckCard({ deck, stat, newCount, onOpen, onStudy }: DeckCardProp
         <span className="deck-count">
           {deck.builtin
             ? 'встроенная'
-            : `${stat.total} ${plural(stat.total, 'карточка', 'карточки', 'карточек')}`}
+            : `${stat.total} ${
+                isKanji
+                  ? plural(stat.total, 'иероглиф', 'иероглифа', 'иероглифов')
+                  : plural(stat.total, 'карточка', 'карточки', 'карточек')
+              }`}
         </span>
         <button
           className="btn btn-small btn-primary"

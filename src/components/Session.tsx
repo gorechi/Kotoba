@@ -79,16 +79,33 @@ export function Session({ deckId, items, mode, onClose }: SessionProps) {
   const canUseMnemonic = Boolean(cardDeck?.builtin)
   const mnemonic = card?.mnemonic?.trim() ?? ''
   const deckName =
-    deckId === 'all' ? 'Все колоды' : data.decks.find((deck) => deck.id === deckId)?.name ?? 'Колода'
+    deckId === 'all' ? 'Все азбуки' : data.decks.find((deck) => deck.id === deckId)?.name ?? 'Колода'
   const total = Math.max(1, queue.length)
+  const isKanji = cardDeck?.kind === 'kanji'
   const isWriting = mode === 'writing'
   const writingDifficulty = data.settings.writingDifficulty
   const hasMeaning = Boolean(card?.meaning.trim())
   const cardReading = card?.reading.trim() ?? ''
-  const writingPrompt = hasMeaning ? card?.meaning.trim() ?? '' : cardReading
-  const writingReading = cardReading && cardReading !== writingPrompt ? cardReading : ''
+  const firstReading = isKanji
+    ? card?.readings.find((item) => item.kana.trim() || item.transcription.trim())
+    : undefined
+  const readingKana = firstReading?.kana.trim() ?? ''
+  const readingTranscription = firstReading?.transcription.trim() ?? ''
+  const writingPrompt = isKanji
+    ? readingKana || readingTranscription || card?.meaning.trim() || ''
+    : hasMeaning
+      ? card?.meaning.trim() ?? ''
+      : cardReading
+  const writingReading = isKanji
+    ? readingKana && readingTranscription
+      ? readingTranscription
+      : ''
+    : cardReading && cardReading !== writingPrompt
+      ? cardReading
+      : ''
   const showWritingReading =
     Boolean(writingReading) && (readingRevealed || writingDifficulty === 'normal')
+  const speakText = isKanji && readingKana ? readingKana : card?.front ?? ''
 
   useEffect(() => {
     return () => {
@@ -316,7 +333,9 @@ export function Session({ deckId, items, mode, onClose }: SessionProps) {
 
   const mistakeRows = mistakes.flatMap((entry) => {
     const card = data.cards.find((item) => item.id === entry.cardId)
-    return card ? [{ card, count: entry.count }] : []
+    if (!card) return []
+    const deck = data.decks.find((item) => item.id === card.deckId)
+    return [{ card, count: entry.count, isKanji: deck?.kind === 'kanji' }]
   })
 
   const practiceMistakes = () => {
@@ -390,12 +409,26 @@ export function Session({ deckId, items, mode, onClose }: SessionProps) {
               </div>
               <p className="mistake-sub">Эти карточки ты отметил как «Снова».</p>
               <div className="mistake-list">
-                {mistakeRows.map(({ card: mistakeCard, count }) => (
+                {mistakeRows.map(({ card: mistakeCard, count, isKanji: mistakeKanji }) => (
                   <div className="mistake-row" key={mistakeCard.id}>
                     <span className="mistake-front">{mistakeCard.front}</span>
                     <span className="mistake-meta">
-                      {mistakeCard.reading && (
-                        <span className="mistake-reading">{mistakeCard.reading}</span>
+                      {mistakeKanji ? (
+                        mistakeCard.readings
+                          .map((item) => item.kana)
+                          .filter(Boolean)
+                          .join('、') && (
+                          <span className="mistake-reading">
+                            {mistakeCard.readings
+                              .map((item) => item.kana)
+                              .filter(Boolean)
+                              .join('、')}
+                          </span>
+                        )
+                      ) : (
+                        mistakeCard.reading && (
+                          <span className="mistake-reading">{mistakeCard.reading}</span>
+                        )
                       )}
                       {mistakeCard.meaning && (
                         <span className="mistake-meaning">{mistakeCard.meaning}</span>
@@ -405,7 +438,13 @@ export function Session({ deckId, items, mode, onClose }: SessionProps) {
                     <button
                       type="button"
                       className="icon-btn mistake-say"
-                      onClick={() => speakJa(mistakeCard.front)}
+                      onClick={() =>
+                        speakJa(
+                          mistakeKanji && mistakeCard.readings[0]?.kana
+                            ? mistakeCard.readings[0].kana
+                            : mistakeCard.front,
+                        )
+                      }
                       title="Прослушать"
                       aria-label={`Прослушать ${mistakeCard.front}`}
                     >
@@ -489,16 +528,22 @@ export function Session({ deckId, items, mode, onClose }: SessionProps) {
                 {isWriting ? (
                   <div className="writing-prompt">
                     <span className="writing-instruction">
-                      {hasMeaning
-                        ? 'Напиши по-японски в тетради'
-                        : cardReading
-                          ? 'Напиши эту кану'
-                          : 'Подсказки нет'}
+                      {isKanji
+                        ? 'Напиши иероглиф'
+                        : hasMeaning
+                          ? 'Напиши по-японски в тетради'
+                          : cardReading
+                            ? 'Напиши эту кану'
+                            : 'Подсказки нет'}
                     </span>
                     {writingPrompt ? (
                       <div className="writing-word">{writingPrompt}</div>
                     ) : (
-                      <div className="writing-empty">У карточки нет перевода и чтения</div>
+                      <div className="writing-empty">
+                        {isKanji
+                          ? 'У карточки нет чтения и перевода'
+                          : 'У карточки нет перевода и чтения'}
+                      </div>
                     )}
                     {showWritingReading && (
                       <div className="writing-reading">{writingReading}</div>
@@ -520,7 +565,7 @@ export function Session({ deckId, items, mode, onClose }: SessionProps) {
                 ) : (
                   <>
                     <FitText
-                      className="kana-front"
+                      className={`kana-front${isKanji ? ' kanji-front' : ''}`}
                       text={card.front}
                       maxFontSize={150}
                       minFontSize={18}
@@ -607,7 +652,7 @@ export function Session({ deckId, items, mode, onClose }: SessionProps) {
                       className="icon-btn speak"
                       onClick={(event) => {
                         event.stopPropagation()
-                        speakJa(card.front)
+                        speakJa(speakText)
                       }}
                       title="Прослушать"
                       aria-label="Прослушать"
@@ -628,28 +673,84 @@ export function Session({ deckId, items, mode, onClose }: SessionProps) {
                   <span className="face-deck">ответ</span>
                   {!isWriting && <span className="face-jp-small">{card.front}</span>}
                 </div>
-                <div className={`answer${isWriting ? ' answer-writing' : ''}`}>
-                  {isWriting && (
-                    <FitText
-                      className="answer-jp"
-                      text={card.front}
-                      maxFontSize={110}
-                      minFontSize={20}
-                    />
-                  )}
-                  {card.reading && <div className="answer-reading">{card.reading}</div>}
-                  {card.meaning && <div className="answer-meaning">{card.meaning}</div>}
-                  {card.note && <p className="answer-note">{card.note}</p>}
-                  {!isWriting && !card.reading && !card.meaning && !card.note && (
-                    <div className="answer-meaning">{card.front}</div>
-                  )}
-                </div>
+                {isKanji ? (
+                  <div className={`answer kanji-answer${isWriting ? ' answer-writing' : ''}`}>
+                    {isWriting && (
+                      <FitText
+                        className="answer-jp"
+                        text={card.front}
+                        maxFontSize={110}
+                        minFontSize={20}
+                      />
+                    )}
+                    {card.meaning && <div className="answer-meaning">{card.meaning}</div>}
+                    {card.readings.length > 0 && (
+                      <div className="kanji-readings">
+                        {card.readings.map((item) => (
+                          <div className="kanji-reading" key={item.id}>
+                            {item.kana && (
+                              <span className="kanji-reading-kana">{item.kana}</span>
+                            )}
+                            {item.transcription && (
+                              <span className="kanji-reading-transcription">
+                                {item.transcription}
+                              </span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {card.examples.length > 0 && (
+                      <div className="kanji-usages">
+                        <div className="kanji-usage-label">Примеры</div>
+                        {card.examples.map((item) => (
+                          <div className="kanji-usage" key={item.id}>
+                            <div className="kanji-usage-jp">
+                              {item.text}
+                              {item.transcription && (
+                                <span className="kanji-usage-transcription">
+                                  {item.transcription}
+                                </span>
+                              )}
+                            </div>
+                            {item.translation && (
+                              <div className="kanji-usage-translation">{item.translation}</div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {card.note && <p className="answer-note">{card.note}</p>}
+                    {!isWriting &&
+                      !card.meaning &&
+                      card.readings.length === 0 &&
+                      card.examples.length === 0 &&
+                      !card.note && <div className="answer-meaning">{card.front}</div>}
+                  </div>
+                ) : (
+                  <div className={`answer${isWriting ? ' answer-writing' : ''}`}>
+                    {isWriting && (
+                      <FitText
+                        className="answer-jp"
+                        text={card.front}
+                        maxFontSize={110}
+                        minFontSize={20}
+                      />
+                    )}
+                    {card.reading && <div className="answer-reading">{card.reading}</div>}
+                    {card.meaning && <div className="answer-meaning">{card.meaning}</div>}
+                    {card.note && <p className="answer-note">{card.note}</p>}
+                    {!isWriting && !card.reading && !card.meaning && !card.note && (
+                      <div className="answer-meaning">{card.front}</div>
+                    )}
+                  </div>
+                )}
                 <div className="face-bottom">
                   <button
                     className="icon-btn speak"
                     onClick={(event) => {
                       event.stopPropagation()
-                      speakJa(card.front)
+                      speakJa(speakText)
                     }}
                     title="Прослушать"
                     aria-label="Прослушать"

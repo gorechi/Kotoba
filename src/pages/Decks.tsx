@@ -4,6 +4,7 @@ import { useStore } from '../state/store'
 import { DeckCard } from '../components/DeckCard'
 import { DeckForm } from '../components/DeckForm'
 import { CardForm } from '../components/CardForm'
+import { KanjiCardForm } from '../components/KanjiCardForm'
 import { ConfirmDialog } from '../components/Modal'
 import { FitText } from '../components/FitText'
 import { Icon } from '../components/Icon'
@@ -22,16 +23,16 @@ export function Decks({ onNavigate, onStudy }: DecksProps) {
   const [creating, setCreating] = useState(false)
   const now = Date.now()
   const allowance = remainingNewToday(data.history, data.settings, now)
-  const decks = [...data.decks].sort(
-    (a, b) => Number(b.builtin) - Number(a.builtin) || a.createdAt - b.createdAt,
-  )
+  const decks = data.decks
+    .filter((deck) => deck.kind !== 'kanji')
+    .sort((a, b) => Number(b.builtin) - Number(a.builtin) || a.createdAt - b.createdAt)
 
   return (
     <div className="page">
       <header className="page-head">
         <div>
-          <div className="eyebrow">Колоды</div>
-          <h1>Мои колоды</h1>
+          <div className="eyebrow">Азбуки</div>
+          <h1>Мои азбуки</h1>
           <p className="page-sub">
             Встроенные азбуки и твои собственные наборы. Всё хранится на этом компьютере.
           </p>
@@ -65,7 +66,7 @@ export function Decks({ onNavigate, onStudy }: DecksProps) {
             <Icon name="plus" size={20} />
           </span>
           <strong>Создать колоду</strong>
-          <span>Слова, фразы, кандзи — что угодно</span>
+          <span>Слова, фразы и свои примеры</span>
         </button>
       </div>
 
@@ -100,12 +101,16 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
     return (
       <div className="page">
         <button className="back-btn" onClick={() => onNavigate({ name: 'decks' })}>
-          <Icon name="chevron-left" size={16} /> Все колоды
+          <Icon name="chevron-left" size={16} /> Все азбуки
         </button>
         <p className="empty-note">Колода не найдена.</p>
       </div>
     )
   }
+
+  const isKanji = deck.kind === 'kanji'
+  const listRoute: Route = isKanji ? { name: 'kanji' } : { name: 'decks' }
+  const listLabel = isKanji ? 'Все кандзи' : 'Все азбуки'
 
   const cards = data.cards
     .filter((card) => card.deckId === deckId)
@@ -139,7 +144,14 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
   const filtered = cards.filter((card) => {
     // Поиск по тексту
     if (search) {
-      const text = `${card.front} ${card.reading} ${card.meaning} ${card.note} ${card.mnemonic}`.toLowerCase()
+      const readingsText = card.readings
+        .map((item) => `${item.kana} ${item.transcription}`)
+        .join(' ')
+      const examplesText = card.examples
+        .map((item) => `${item.text} ${item.transcription} ${item.translation}`)
+        .join(' ')
+      const text =
+        `${card.front} ${card.reading} ${card.meaning} ${card.note} ${card.mnemonic} ${readingsText} ${examplesText}`.toLowerCase()
       if (!text.includes(search)) return false
     }
     // По тегам: если выбраны теги, карточка должна иметь хотя бы один из них
@@ -163,7 +175,7 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
       draft.decks = draft.decks.filter((item) => item.id !== deckId)
       draft.cards = draft.cards.filter((card) => card.deckId !== deckId)
     })
-    onNavigate({ name: 'decks' })
+    onNavigate(listRoute)
   }
 
   const resetDeck = () => {
@@ -176,8 +188,8 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
 
   return (
     <div className="page">
-      <button className="back-btn" onClick={() => onNavigate({ name: 'decks' })}>
-        <Icon name="chevron-left" size={16} /> Все колоды
+      <button className="back-btn" onClick={() => onNavigate(listRoute)}>
+        <Icon name="chevron-left" size={16} /> {listLabel}
       </button>
 
       <section className="deck-hero" style={{ '--accent': deck.accent } as CSSProperties}>
@@ -185,7 +197,15 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
           {watermark}
         </span>
         <div className="deck-hero-copy">
-          <div className="eyebrow">{deck.builtin ? 'Встроенная колода' : 'Своя колода'}</div>
+          <div className="eyebrow">
+            {deck.builtin
+              ? isKanji
+                ? 'Встроенная колода кандзи'
+                : 'Встроенная колода'
+              : isKanji
+                ? 'Колода кандзи'
+                : 'Своя колода'}
+          </div>
           <h1>
             {deck.name}
             {deck.nameJp && <span className="title-jp">{deck.nameJp}</span>}
@@ -219,7 +239,7 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
             {!deck.builtin && (
               <button className="btn btn-ghost" onClick={() => setAdding(true)}>
                 <Icon name="plus" size={17} />
-                Карточка
+                {isKanji ? 'Кандзи' : 'Карточка'}
               </button>
             )}
             {!deck.builtin && (
@@ -256,7 +276,8 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
 
       <div className="section-head list-head">
         <h2>
-          Карточки <span className="count">{filtered.length} из {cards.length}</span>
+          {isKanji ? 'Кандзи' : 'Карточки'}{' '}
+          <span className="count">{filtered.length} из {cards.length}</span>
         </h2>
         <label className="search">
           <Icon name="search" size={16} />
@@ -374,7 +395,9 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
       {filtered.length === 0 ? (
         <p className="empty-note">
           {cards.length === 0
-            ? 'В колоде пока нет карточек. Добавь первую!'
+            ? isKanji
+              ? 'В колоде пока нет иероглифов. Добавь первый!'
+              : 'В колоде пока нет карточек. Добавь первую!'
             : activeTags.size > 0 || statusFilter !== 'all' || query
               ? 'Ничего не нашлось по выбранным фильтрам. Попробуй сбросить фильтры.'
               : 'Ничего не нашлось. Попробуй другой запрос.'}
@@ -398,9 +421,27 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
                 />
                 <div className="row-info">
                   <div className="row-main">
-                    {[card.reading, card.meaning].filter(Boolean).join('  ·  ') || '—'}
+                    {(isKanji
+                      ? [
+                          card.meaning,
+                          card.readings
+                            .map((item) => item.kana)
+                            .filter(Boolean)
+                            .join('、'),
+                        ]
+                      : [card.reading, card.meaning]
+                    )
+                      .filter(Boolean)
+                      .join('  ·  ') || '—'}
                   </div>
-                  {card.note && <div className="row-note">{card.note}</div>}
+                  {isKanji && card.examples[0] && (
+                    <div className="row-note">
+                      {[card.examples[0].text, card.examples[0].translation]
+                        .filter(Boolean)
+                        .join(' — ')}
+                    </div>
+                  )}
+                  {!isKanji && card.note && <div className="row-note">{card.note}</div>}
                   {card.tags.length > 0 && (
                     <div className="row-tags">
                       {card.tags.map((tag) => (
@@ -438,14 +479,34 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
 
       {!deck.builtin && (
         <p className="list-total">
-          {cards.length} {plural(cards.length, 'карточка', 'карточки', 'карточек')} в колоде
+          {cards.length}{' '}
+          {isKanji
+            ? plural(cards.length, 'иероглиф', 'иероглифа', 'иероглифов')
+            : plural(cards.length, 'карточка', 'карточки', 'карточек')}{' '}
+          в колоде
         </p>
       )}
 
-      {adding && <CardForm deckId={deck.id} onClose={() => setAdding(false)} />}
-      {editingCard && (
-        <CardForm deckId={deck.id} card={editingCard} onClose={() => setEditingCard(null)} />
-      )}
+      {adding &&
+        (isKanji ? (
+          <KanjiCardForm deckId={deck.id} onClose={() => setAdding(false)} />
+        ) : (
+          <CardForm deckId={deck.id} onClose={() => setAdding(false)} />
+        ))}
+      {editingCard &&
+        (isKanji ? (
+          <KanjiCardForm
+            deckId={deck.id}
+            card={editingCard}
+            onClose={() => setEditingCard(null)}
+          />
+        ) : (
+          <CardForm
+            deckId={deck.id}
+            card={editingCard}
+            onClose={() => setEditingCard(null)}
+          />
+        ))}
       {editingDeck && <DeckForm deck={deck} onClose={() => setEditingDeck(false)} />}
 
       {deletingCard && (

@@ -1,5 +1,5 @@
 import { useState, type CSSProperties, type FormEvent } from 'react'
-import type { Deck } from '../types'
+import type { Deck, DeckKind } from '../types'
 import { useStore } from '../state/store'
 import { finalizeRomajiTail, guessKanaMode, type KanaMode } from '../lib/romaji'
 import { uid } from '../lib/utils'
@@ -10,11 +10,15 @@ const ACCENTS = ['#E1523D', '#4A5FC1', '#5C8A5A', '#C98A2E', '#D96A93', '#3E8FA8
 
 interface DeckFormProps {
   deck?: Deck
+  /** Тип создаваемой колоды. При редактировании берётся из deck. */
+  kind?: DeckKind
   onClose: () => void
 }
 
-export function DeckForm({ deck, onClose }: DeckFormProps) {
+export function DeckForm({ deck, kind = 'kana', onClose }: DeckFormProps) {
   const { update } = useStore()
+  const deckKind: DeckKind = deck?.kind ?? kind
+  const isKanji = deckKind === 'kanji'
   const [name, setName] = useState(deck?.name ?? '')
   const [nameJp, setNameJp] = useState(deck?.nameJp ?? '')
   const [nameJpMode, setNameJpMode] = useState<KanaMode>(() => guessKanaMode(deck?.nameJp, 'hiragana'))
@@ -47,6 +51,7 @@ export function DeckForm({ deck, onClose }: DeckFormProps) {
           description: description.trim(),
           accent,
           builtin: false,
+          kind: deckKind,
           createdAt: Date.now(),
         })
       }
@@ -56,8 +61,22 @@ export function DeckForm({ deck, onClose }: DeckFormProps) {
 
   return (
     <Modal
-      title={deck ? 'Изменить колоду' : 'Новая колода'}
-      subtitle={deck ? undefined : 'Например «Слова из учебника» или «Кандзи N5»'}
+      title={
+        deck
+          ? isKanji
+            ? 'Изменить колоду иероглифов'
+            : 'Изменить колоду'
+          : isKanji
+            ? 'Новая колода иероглифов'
+            : 'Новая колода'
+      }
+      subtitle={
+        deck
+          ? undefined
+          : isKanji
+            ? 'Например «Кандзи N5» или «Кандзи из учебника»'
+            : 'Например «Слова из учебника» или «Фразы»'
+      }
       onClose={onClose}
       footer={
         <>
@@ -73,11 +92,11 @@ export function DeckForm({ deck, onClose }: DeckFormProps) {
       <form id="deck-form" className="form" onSubmit={submit}>
         <div className="deck-form-preview" style={{ '--accent': accent } as CSSProperties}>
           <span className="deck-form-watermark" aria-hidden="true">
-            {(nameJp.trim() || name.trim() || '言').slice(0, 1)}
+            {(nameJp.trim() || name.trim() || (isKanji ? '漢' : '言')).slice(0, 1)}
           </span>
           <span className="deck-form-preview-copy">
-            <strong>{name.trim() || 'Новая колода'}</strong>
-            <span>{nameJp.trim() || 'свои карточки'}</span>
+            <strong>{name.trim() || (isKanji ? 'Новая колода иероглифов' : 'Новая колода')}</strong>
+            <span>{nameJp.trim() || (isKanji ? '漢字' : 'свои карточки')}</span>
           </span>
         </div>
 
@@ -90,7 +109,7 @@ export function DeckForm({ deck, onClose }: DeckFormProps) {
               setName(event.target.value)
               setError('')
             }}
-            placeholder="Например: Слова N5"
+            placeholder={isKanji ? 'Например: Кандзи N5' : 'Например: Слова N5'}
             autoFocus
             maxLength={60}
           />

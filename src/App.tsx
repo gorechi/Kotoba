@@ -6,6 +6,7 @@ import { Sidebar } from './components/Sidebar'
 import { Session } from './components/Session'
 import { Home } from './pages/Home'
 import { Decks, DeckDetail } from './pages/Decks'
+import { KanjiDecks } from './pages/KanjiDecks'
 import { Stats } from './pages/Stats'
 import { Settings } from './pages/Settings'
 import { KanaMap } from './pages/KanaMap'
@@ -59,6 +60,7 @@ function Shell() {
           <main className="main" ref={mainRef}>
             {route.name === 'home' && <Home onNavigate={navigate} onStudy={startStudy} />}
             {route.name === 'decks' && <Decks onNavigate={navigate} onStudy={startStudy} />}
+            {route.name === 'kanji' && <KanjiDecks onNavigate={navigate} onStudy={startStudy} />}
             {route.name === 'deck' && (
               <DeckDetail deckId={route.deckId} onNavigate={navigate} onStudy={startStudy} />
             )}

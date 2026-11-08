@@ -1,9 +1,12 @@
 import type {
   AppData,
   Card,
+  CardExample,
   CardGroup,
+  CardReading,
   DayStat,
   Deck,
+  DeckKind,
   Settings,
   SrsState,
   StudyMode,
@@ -12,9 +15,11 @@ import type {
   WritingDifficulty,
 } from '../types'
 import { freshSrs } from './srs'
+import { uid } from './utils'
 import { createSeedData } from '../data/seed'
 
 const THEMES: Theme[] = ['light', 'dark', 'system']
+const DECK_KINDS: DeckKind[] = ['kana', 'kanji']
 const STUDY_MODES: StudyMode[] = ['reading', 'writing']
 const WRITING_DIFFICULTIES: WritingDifficulty[] = ['normal', 'hard']
 
@@ -61,11 +66,48 @@ function normalizeDeck(raw: unknown): Deck | null {
     description: str(raw.description, ''),
     accent: /^#[0-9a-f]{6}$/i.test(str(raw.accent)) ? str(raw.accent) : '#E1523D',
     builtin: Boolean(raw.builtin),
+    kind: DECK_KINDS.includes(raw.kind as DeckKind) ? (raw.kind as DeckKind) : 'kana',
     createdAt: num(raw.createdAt, Date.now()),
   }
 }
 
 const CARD_GROUPS: CardGroup[] = ['basic', 'voiced', 'custom']
+
+function normalizeReadings(raw: unknown): CardReading[] {
+  if (!Array.isArray(raw)) return []
+  const result: CardReading[] = []
+  for (const item of raw) {
+    if (!isObj(item)) continue
+    const kana = str(item.kana).trim()
+    const transcription = str(item.transcription).trim()
+    if (!kana && !transcription) continue
+    result.push({
+      id: typeof item.id === 'string' && item.id ? item.id : uid('reading'),
+      kana,
+      transcription,
+    })
+  }
+  return result
+}
+
+function normalizeExamples(raw: unknown): CardExample[] {
+  if (!Array.isArray(raw)) return []
+  const result: CardExample[] = []
+  for (const item of raw) {
+    if (!isObj(item)) continue
+    const text = str(item.text).trim()
+    const transcription = str(item.transcription).trim()
+    const translation = str(item.translation).trim()
+    if (!text && !transcription && !translation) continue
+    result.push({
+      id: typeof item.id === 'string' && item.id ? item.id : uid('example'),
+      text,
+      transcription,
+      translation,
+    })
+  }
+  return result
+}
 
 function normalizeCard(raw: unknown): Card | null {
   if (!isObj(raw) || typeof raw.id !== 'string' || typeof raw.deckId !== 'string') return null
@@ -82,6 +124,8 @@ function normalizeCard(raw: unknown): Card | null {
     note: str(raw.note),
     mnemonic: str(raw.mnemonic),
     tags: strArray(raw.tags),
+    readings: normalizeReadings(raw.readings),
+    examples: normalizeExamples(raw.examples),
     group,
     order: num(raw.order, 0),
     srs: normalizeSrs(raw.srs),

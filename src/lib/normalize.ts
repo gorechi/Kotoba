@@ -6,12 +6,17 @@ import type {
   Deck,
   Settings,
   SrsState,
+  StudyMode,
+  StudyTotals,
   Theme,
+  WritingDifficulty,
 } from '../types'
 import { freshSrs } from './srs'
 import { createSeedData } from '../data/seed'
 
 const THEMES: Theme[] = ['light', 'dark', 'system']
+const STUDY_MODES: StudyMode[] = ['reading', 'writing']
+const WRITING_DIFFICULTIES: WritingDifficulty[] = ['normal', 'hard']
 
 function isObj(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -84,29 +89,56 @@ function normalizeCard(raw: unknown): Card | null {
   }
 }
 
+function normalizeTotals(raw: unknown): StudyTotals | null {
+  if (!isObj(raw)) return null
+  return {
+    reviews: Math.max(0, Math.round(num(raw.reviews, 0))),
+    correct: Math.max(0, Math.round(num(raw.correct, 0))),
+    newCards: Math.max(0, Math.round(num(raw.newCards, 0))),
+    ms: Math.max(0, num(raw.ms, 0)),
+  }
+}
+
 function normalizeHistory(raw: unknown): Record<string, DayStat> {
   if (!isObj(raw)) return {}
   const history: Record<string, DayStat> = {}
   for (const [key, value] of Object.entries(raw)) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(key) || !isObj(value)) continue
-    history[key] = {
-      reviews: Math.max(0, Math.round(num(value.reviews, 0))),
-      correct: Math.max(0, Math.round(num(value.correct, 0))),
-      newCards: Math.max(0, Math.round(num(value.newCards, 0))),
-      ms: Math.max(0, num(value.ms, 0)),
+    const day: DayStat = normalizeTotals(value) ?? { reviews: 0, correct: 0, newCards: 0, ms: 0 }
+    const writing = normalizeTotals(value.writing)
+    if (writing && (writing.reviews || writing.correct || writing.newCards || writing.ms)) {
+      // Письмо — подмножество общего счётчика дня.
+      day.reviews = Math.max(day.reviews, writing.reviews)
+      day.correct = Math.max(day.correct, writing.correct)
+      day.newCards = Math.max(day.newCards, writing.newCards)
+      day.ms = Math.max(day.ms, writing.ms)
+      day.writing = writing
     }
+    history[key] = day
   }
   return history
 }
 
 function normalizeSettings(raw: unknown): Settings {
-  const base: Settings = { theme: 'system', newPerDay: 10, defaultTranscription: 'romaji' }
+  const base: Settings = {
+    theme: 'system',
+    newPerDay: 10,
+    defaultTranscription: 'romaji',
+    studyMode: 'reading',
+    writingDifficulty: 'normal',
+  }
   if (!isObj(raw)) return base
   return {
     theme: THEMES.includes(raw.theme as Theme) ? (raw.theme as Theme) : base.theme,
     newPerDay: clamp(Math.round(num(raw.newPerDay, base.newPerDay)), 1, 50),
     defaultTranscription:
       raw.defaultTranscription === 'cyrillic' ? 'cyrillic' : 'romaji',
+    studyMode: STUDY_MODES.includes(raw.studyMode as StudyMode)
+      ? (raw.studyMode as StudyMode)
+      : base.studyMode,
+    writingDifficulty: WRITING_DIFFICULTIES.includes(raw.writingDifficulty as WritingDifficulty)
+      ? (raw.writingDifficulty as WritingDifficulty)
+      : base.writingDifficulty,
   }
 }
 

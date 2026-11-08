@@ -2,11 +2,14 @@ import { useStore } from '../state/store'
 import { Icon } from '../components/Icon'
 import {
   accuracy,
+  dayModeStat,
   deckStat,
   lastDays,
+  modeAccuracy,
   overallStat,
   streak,
   todayStat,
+  totalModeStudyTime,
   totalReviews,
   totalStudyTime,
 } from '../lib/stats'
@@ -26,6 +29,10 @@ export function Stats() {
   const timeTotal = totalStudyTime(data.history)
   const last14 = points.reduce((sum, point) => sum + point.reviews, 0)
   const todayKey = points[points.length - 1]?.key
+  const writingToday = dayModeStat(todayKey ? data.history[todayKey] : undefined, 'writing')
+  const writing14 = points.reduce((sum, point) => sum + point.writingReviews, 0)
+  const writingAccuracy = modeAccuracy(data.history, 'writing', 7, now)
+  const writingTimeTotal = totalModeStudyTime(data.history, 'writing')
   const decks = [...data.decks].sort(
     (a, b) => Number(b.builtin) - Number(a.builtin) || a.createdAt - b.createdAt,
   )
@@ -77,23 +84,46 @@ export function Stats() {
             <h2>Активность</h2>
             <p>Повторения за последние 14 дней</p>
           </div>
-          <span className="chart-total">{last14} за две недели</span>
+          <span className="chart-total">
+            {last14} за две недели
+            {writing14 > 0 ? ` · письмо ${writing14}` : ''}
+          </span>
+        </div>
+
+        <div className="chart-legend">
+          <span>
+            <i className="legend-dot reading" />
+            чтение
+          </span>
+          <span>
+            <i className="legend-dot writing" />
+            письмо
+          </span>
         </div>
 
         <div className="chart">
           {points.map((point) => {
             const height = Math.max(3, Math.round((point.reviews / max) * 100))
+            const writingShare = point.reviews
+              ? (point.writingReviews / point.reviews) * 100
+              : 0
             return (
               <div
                 className={`chart-col${point.key === todayKey ? ' today' : ''}`}
                 key={point.key}
-                title={`${point.key}: ${point.reviews} повторений`}
+                title={`${point.key}: ${point.reviews} повторений — чтение ${point.readingReviews}, письмо ${point.writingReviews}`}
               >
                 <div className="chart-bar-track">
                   <div
                     className={`chart-bar${point.reviews === 0 ? ' empty' : ''}`}
                     style={{ height: `${height}%` }}
                   >
+                    {point.writingReviews > 0 && (
+                      <span
+                        className="chart-bar-writing"
+                        style={{ height: `${writingShare}%` }}
+                      />
+                    )}
                     {point.reviews > 0 && <span className="chart-value">{point.reviews}</span>}
                   </div>
                 </div>
@@ -108,6 +138,38 @@ export function Stats() {
             Пока нет повторений — начни учиться, и здесь появится история.
           </p>
         )}
+      </section>
+
+      <section className="panel writing-panel">
+        <div className="panel-head">
+          <div>
+            <h2>
+              <i className="legend-dot writing" />
+              Письмо
+            </h2>
+            <p>Отдельная статистика режима письма</p>
+          </div>
+          <span className="chart-total">сегодня {writingToday.reviews}</span>
+        </div>
+
+        <div className="mode-stats">
+          <div>
+            <strong>{writingToday.reviews}</strong>
+            <span>повторений сегодня</span>
+          </div>
+          <div>
+            <strong>{writing14}</strong>
+            <span>за две недели</span>
+          </div>
+          <div>
+            <strong>{writingAccuracy === null ? '—' : `${writingAccuracy}%`}</strong>
+            <span>точность за 7 дней</span>
+          </div>
+          <div>
+            <strong>{formatDuration(writingTimeTotal)}</strong>
+            <span>время письма</span>
+          </div>
+        </div>
       </section>
 
       <div className="stats-columns">

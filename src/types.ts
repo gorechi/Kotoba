@@ -1,6 +1,10 @@
 export type Rating = 'again' | 'hard' | 'good' | 'easy'
 export type Theme = 'light' | 'dark' | 'system'
 export type CardGroup = 'basic' | 'voiced' | 'custom'
+/** Режим сеанса: чтение (японский → ответ) или письмо (перевод → японский). */
+export type StudyMode = 'reading' | 'writing'
+/** Сложность режима письма. */
+export type WritingDifficulty = 'normal' | 'hard'
 
 export type Route =
   | { name: 'home' }
@@ -53,11 +57,16 @@ export interface Deck {
   createdAt: number
 }
 
-export interface DayStat {
+export interface StudyTotals {
   reviews: number
   correct: number
   newCards: number
   ms: number
+}
+
+export interface DayStat extends StudyTotals {
+  /** Подмножество счётчиков за режим письма (входит в общие значения выше). */
+  writing?: StudyTotals
 }
 
 export interface Settings {
@@ -65,6 +74,10 @@ export interface Settings {
   newPerDay: number
   /** Какую транскрипцию показывать по умолчанию в поле «Чтение». */
   defaultTranscription: 'romaji' | 'cyrillic'
+  /** Последний выбранный режим сеанса. */
+  studyMode: StudyMode
+  /** Сложность режима письма. */
+  writingDifficulty: WritingDifficulty
 }
 
 export interface AppData {

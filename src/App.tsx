@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import type { QueueItem, Route } from './types'
+import type { QueueItem, Route, StudyMode } from './types'
 import { StoreProvider, useStore } from './state/store'
 import { TitleBar } from './components/TitleBar'
 import { Sidebar } from './components/Sidebar'
@@ -15,6 +15,7 @@ import { practiceQueue, studyQueue } from './lib/study'
 interface ActiveSession {
   deckId: string
   items: QueueItem[]
+  mode: StudyMode
 }
 
 function Shell() {
@@ -38,7 +39,7 @@ function Shell() {
     let items = studyQueue(data.cards, deckId, limit, now)
     if (!items.length) items = practiceQueue(data.cards, deckId, now)
     if (!items.length) return
-    setSession({ deckId, items })
+    setSession({ deckId, items, mode: data.settings.studyMode })
   }
 
   return (
@@ -46,9 +47,10 @@ function Shell() {
       <TitleBar />
       {session ? (
         <Session
-          key={`${session.deckId}-${session.items[0]?.cardId ?? 'empty'}`}
+          key={`${session.deckId}-${session.mode}-${session.items[0]?.cardId ?? 'empty'}`}
           deckId={session.deckId}
           items={session.items}
+          mode={session.mode}
           onClose={() => setSession(null)}
         />
       ) : (
@@ -68,7 +70,7 @@ function Shell() {
                   const card = data.cards.find((c) => c.id === cardId)
                   const items = [{ cardId, isNew: !card?.srs.introduced }]
                   if (!items.length) return
-                  setSession({ deckId, items })
+                  setSession({ deckId, items, mode: data.settings.studyMode })
                 }}
               />
             )}

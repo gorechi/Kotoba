@@ -1,6 +1,57 @@
-import type { AppData, Card, DayStat, Settings } from '../types'
+import type { AppData, Card, DayStat, Settings, StudyMode, StudyTotals } from '../types'
 import { DAY } from './srs'
 import { dayKey } from './utils'
+
+const ZERO_TOTALS: StudyTotals = { reviews: 0, correct: 0, newCards: 0, ms: 0 }
+
+/** Делит счётчики дня на чтение и письмо. Верхние значения дня — общие. */
+export function splitDayStat(day: DayStat | undefined): {
+  reading: StudyTotals
+  writing: StudyTotals
+} {
+  const total = day ?? ZERO_TOTALS
+  const writing = day?.writing ?? ZERO_TOTALS
+  return {
+    writing: { ...writing },
+    reading: {
+      reviews: Math.max(0, total.reviews - writing.reviews),
+      correct: Math.max(0, total.correct - writing.correct),
+      newCards: Math.max(0, total.newCards - writing.newCards),
+      ms: Math.max(0, total.ms - writing.ms),
+    },
+  }
+}
+
+export function dayModeStat(day: DayStat | undefined, mode: StudyMode): StudyTotals {
+  return splitDayStat(day)[mode]
+}
+
+export function totalModeReviews(history: Record<string, DayStat>, mode: StudyMode): number {
+  return Object.values(history).reduce((sum, day) => sum + dayModeStat(day, mode).reviews, 0)
+}
+
+export function totalModeStudyTime(history: Record<string, DayStat>, mode: StudyMode): number {
+  return Object.values(history).reduce((sum, day) => sum + dayModeStat(day, mode).ms, 0)
+}
+
+export function modeAccuracy(
+  history: Record<string, DayStat>,
+  mode: StudyMode,
+  days: number,
+  now = Date.now(),
+): number | null {
+  let reviews = 0
+  let correct = 0
+  const cursor = new Date(now)
+  for (let i = 0; i < days; i += 1) {
+    const stat = dayModeStat(history[dayKey(cursor.getTime())], mode)
+    reviews += stat.reviews
+    correct += stat.correct
+    cursor.setDate(cursor.getDate() - 1)
+  }
+  if (!reviews) return null
+  return Math.round((correct / reviews) * 100)
+}
 
 export interface DeckStat {
   total: number
@@ -77,6 +128,8 @@ export interface DayPoint {
   day: number
   reviews: number
   correct: number
+  readingReviews: number
+  writingReviews: number
 }
 
 export function lastDays(history: Record<string, DayStat>, count: number, now = Date.now()): DayPoint[] {
@@ -88,6 +141,7 @@ export function lastDays(history: Record<string, DayStat>, count: number, now = 
     const ts = cursor.getTime()
     const key = dayKey(ts)
     const stat = history[key]
+    const split = splitDayStat(stat)
     points.push({
       key,
       ts,
@@ -95,6 +149,8 @@ export function lastDays(history: Record<string, DayStat>, count: number, now = 
       day: cursor.getDate(),
       reviews: stat?.reviews ?? 0,
       correct: stat?.correct ?? 0,
+      readingReviews: split.reading.reviews,
+      writingReviews: split.writing.reviews,
     })
     cursor.setDate(cursor.getDate() + 1)
   }

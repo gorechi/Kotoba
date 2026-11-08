@@ -8,7 +8,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import type { AppData, Rating, RatingUndo, Settings } from '../types'
+import type { AppData, Rating, RatingUndo, Settings, StudyMode } from '../types'
 import { normalizeData } from '../lib/normalize'
 import { applyRating, freshSrs } from '../lib/srs'
 import { dayKey } from '../lib/utils'
@@ -18,7 +18,12 @@ const STORAGE_KEY = 'kotoba-data-v1'
 interface StoreValue {
   data: AppData
   update: (fn: (draft: AppData) => void) => void
-  rateCard: (cardId: string, rating: Rating, elapsedMs: number) => RatingUndo | null
+  rateCard: (
+    cardId: string,
+    rating: Rating,
+    elapsedMs: number,
+    mode: StudyMode,
+  ) => RatingUndo | null
   undoRating: (snapshot: RatingUndo) => void
   setSettings: (patch: Partial<Settings>) => void
   replaceData: (raw: unknown) => void
@@ -103,7 +108,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const rateCard = useCallback(
-    (cardId: string, rating: Rating, elapsedMs: number): RatingUndo | null => {
+    (
+      cardId: string,
+      rating: Rating,
+      elapsedMs: number,
+      mode: StudyMode,
+    ): RatingUndo | null => {
       const prev = dataRef.current
       const card = prev?.cards.find((item) => item.id === cardId)
       if (!prev || !card) return null
@@ -130,11 +140,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const wasNew = !nextTarget.srs.introduced
         nextTarget.srs = applyRating(nextTarget.srs, rating, now)
 
+        const elapsed = Math.min(Math.max(0, elapsedMs), 120_000)
         const day = next.history[historyKey] ?? { reviews: 0, correct: 0, newCards: 0, ms: 0 }
         day.reviews += 1
         if (rating !== 'again') day.correct += 1
         if (wasNew) day.newCards += 1
-        day.ms += Math.min(Math.max(0, elapsedMs), 120_000)
+        day.ms += elapsed
+
+        if (mode === 'writing') {
+          const writing = day.writing ?? { reviews: 0, correct: 0, newCards: 0, ms: 0 }
+          writing.reviews += 1
+          if (rating !== 'again') writing.correct += 1
+          if (wasNew) writing.newCards += 1
+          writing.ms += elapsed
+          day.writing = writing
+        }
+
         next.history[historyKey] = day
 
         return next

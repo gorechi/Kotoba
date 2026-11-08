@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { QueueItem, Rating, RatingUndo } from '../types'
+import type { QueueItem, Rating, RatingUndo, StudyMode } from '../types'
 import { useStore } from '../state/store'
 import { remainingNewToday } from '../lib/stats'
 import { intervalPreview } from '../lib/srs'
@@ -18,6 +18,7 @@ const RATINGS: { rating: Rating; label: string; key: string }[] = [
 interface SessionProps {
   deckId: string
   items: QueueItem[]
+  mode: StudyMode
   onClose: () => void
 }
 
@@ -52,7 +53,7 @@ const RATING_LABEL: Record<Rating, string> = {
   easy: 'Легко',
 }
 
-export function Session({ deckId, items, onClose }: SessionProps) {
+export function Session({ deckId, items, mode, onClose }: SessionProps) {
   const { data, rateCard, undoRating, update } = useStore()
   const [queue, setQueue] = useState<QueueItem[]>(items)
   const [pos, setPos] = useState(0)
@@ -69,6 +70,7 @@ export function Session({ deckId, items, onClose }: SessionProps) {
   const [mnemonicOpen, setMnemonicOpen] = useState(false)
   const [mnemonicEditing, setMnemonicEditing] = useState(false)
   const [mnemonicDraft, setMnemonicDraft] = useState('')
+  const [readingRevealed, setReadingRevealed] = useState(false)
   const shownAt = useRef(Date.now())
 
   const current = finished ? undefined : queue[pos]
@@ -79,6 +81,14 @@ export function Session({ deckId, items, onClose }: SessionProps) {
   const deckName =
     deckId === 'all' ? 'Все колоды' : data.decks.find((deck) => deck.id === deckId)?.name ?? 'Колода'
   const total = Math.max(1, queue.length)
+  const isWriting = mode === 'writing'
+  const writingDifficulty = data.settings.writingDifficulty
+  const hasMeaning = Boolean(card?.meaning.trim())
+  const cardReading = card?.reading.trim() ?? ''
+  const writingPrompt = hasMeaning ? card?.meaning.trim() ?? '' : cardReading
+  const writingReading = cardReading && cardReading !== writingPrompt ? cardReading : ''
+  const showWritingReading =
+    Boolean(writingReading) && (readingRevealed || writingDifficulty === 'normal')
 
   useEffect(() => {
     return () => {
@@ -90,6 +100,7 @@ export function Session({ deckId, items, onClose }: SessionProps) {
     setMnemonicOpen(false)
     setMnemonicEditing(false)
     setMnemonicDraft('')
+    setReadingRevealed(false)
   }, [card?.id, pos])
 
   const openMnemonicEditor = () => {
@@ -146,7 +157,7 @@ export function Session({ deckId, items, onClose }: SessionProps) {
     (rating: Rating) => {
       if (finished || !current || !card) return
       const elapsed = Date.now() - shownAt.current
-      const ratingUndo = rateCard(card.id, rating, elapsed)
+      const ratingUndo = rateCard(card.id, rating, elapsed, mode)
       if (ratingUndo) {
         setLastRating({
           data: ratingUndo,
@@ -197,7 +208,7 @@ export function Session({ deckId, items, onClose }: SessionProps) {
         shownAt.current = Date.now()
       }
     },
-    [card, current, finished, mistakes, pos, queue, rateCard, revealed, stats],
+    [card, current, finished, mistakes, mode, pos, queue, rateCard, revealed, stats],
   )
 
   const undoLastRating = useCallback(() => {
@@ -299,6 +310,7 @@ export function Session({ deckId, items, onClose }: SessionProps) {
     setStats({ reviews: 0, correct: 0, newCards: 0, startedAt: Date.now() })
     setLastRating(null)
     setMistakes([])
+    setReadingRevealed(false)
     shownAt.current = Date.now()
   }
 
@@ -316,6 +328,7 @@ export function Session({ deckId, items, onClose }: SessionProps) {
     setStats({ reviews: 0, correct: 0, newCards: 0, startedAt: Date.now() })
     setLastRating(null)
     setMistakes([])
+    setReadingRevealed(false)
     shownAt.current = Date.now()
   }
 
@@ -329,6 +342,7 @@ export function Session({ deckId, items, onClose }: SessionProps) {
         </button>
         <div className="session-title">
           <span>{deckName}</span>
+          <span className={`mode-badge ${mode}`}>{isWriting ? 'письмо' : 'чтение'}</span>
           <span className="session-count">
             {finished ? queue.length : `${pos + 1} / ${queue.length}`}
           </span>
@@ -441,7 +455,7 @@ export function Session({ deckId, items, onClose }: SessionProps) {
                   <span className="face-deck">{deckName}</span>
                   <div className="face-top-right">
                     {current?.isNew && <span className="badge badge-soft">новое</span>}
-                    {canUseMnemonic && (
+                    {canUseMnemonic && !isWriting && (
                       <button
                         type="button"
                         className={`icon-btn mnemonic-btn${mnemonic ? ' has-mnemonic' : ''}${
@@ -472,107 +486,161 @@ export function Session({ deckId, items, onClose }: SessionProps) {
                     )}
                   </div>
                 </div>
-                <FitText className="kana-front" text={card.front} maxFontSize={150} minFontSize={18} />
-
-                {canUseMnemonic && (mnemonicEditing || mnemonicOpen) && (
-                  <div className="mnemonic-panel" onClick={(event) => event.stopPropagation()}>
-                    {mnemonicEditing ? (
-                      <form
-                        className="mnemonic-form"
-                        onSubmit={(event) => {
-                          event.preventDefault()
-                          saveMnemonic()
+                {isWriting ? (
+                  <div className="writing-prompt">
+                    <span className="writing-instruction">
+                      {hasMeaning
+                        ? 'Напиши по-японски в тетради'
+                        : cardReading
+                          ? 'Напиши эту кану'
+                          : 'Подсказки нет'}
+                    </span>
+                    {writingPrompt ? (
+                      <div className="writing-word">{writingPrompt}</div>
+                    ) : (
+                      <div className="writing-empty">У карточки нет перевода и чтения</div>
+                    )}
+                    {showWritingReading && (
+                      <div className="writing-reading">{writingReading}</div>
+                    )}
+                    {!showWritingReading && writingReading && (
+                      <button
+                        type="button"
+                        className="writing-reveal"
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          setReadingRevealed(true)
                         }}
                       >
-                        <label className="mnemonic-label" htmlFor={`mnemonic-${card.id}`}>
-                          Мнемоника
-                        </label>
-                        <textarea
-                          id={`mnemonic-${card.id}`}
-                          className="mnemonic-input"
-                          value={mnemonicDraft}
-                          onChange={(event) => setMnemonicDraft(event.target.value)}
-                          onKeyDown={(event) => {
-                            if (event.key === 'Escape') {
-                              event.preventDefault()
-                              event.stopPropagation()
-                              cancelMnemonicEditor()
-                            }
-                            if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
-                              event.preventDefault()
-                              saveMnemonic()
-                            }
-                          }}
-                          placeholder="Например: «ぬ» похожа на …"
-                          rows={2}
-                          maxLength={240}
-                          autoFocus
-                        />
-                        <div className="mnemonic-actions">
-                          {mnemonic && (
-                            <button
-                              type="button"
-                              className="btn btn-danger-ghost btn-small"
-                              onClick={removeMnemonic}
-                            >
-                              Удалить
-                            </button>
-                          )}
-                          <button
-                            type="button"
-                            className="btn btn-ghost btn-small"
-                            onClick={cancelMnemonicEditor}
-                          >
-                            Отмена
-                          </button>
-                          <button type="submit" className="btn btn-primary btn-small">
-                            Сохранить
-                          </button>
-                        </div>
-                      </form>
-                    ) : (
-                      <div className="mnemonic-view">
-                        <p className="mnemonic-text">{mnemonic}</p>
-                        <button
-                          type="button"
-                          className="icon-btn mnemonic-edit-btn"
-                          onClick={openMnemonicEditor}
-                          title="Изменить мнемонику"
-                          aria-label="Изменить мнемонику"
-                        >
-                          <Icon name="pencil" size={15} />
-                        </button>
-                      </div>
+                        <Icon name="bulb" size={15} />
+                        Показать транскрипцию
+                      </button>
                     )}
                   </div>
+                ) : (
+                  <>
+                    <FitText
+                      className="kana-front"
+                      text={card.front}
+                      maxFontSize={150}
+                      minFontSize={18}
+                    />
+
+                    {canUseMnemonic && (mnemonicEditing || mnemonicOpen) && (
+                      <div className="mnemonic-panel" onClick={(event) => event.stopPropagation()}>
+                        {mnemonicEditing ? (
+                          <form
+                            className="mnemonic-form"
+                            onSubmit={(event) => {
+                              event.preventDefault()
+                              saveMnemonic()
+                            }}
+                          >
+                            <label className="mnemonic-label" htmlFor={`mnemonic-${card.id}`}>
+                              Мнемоника
+                            </label>
+                            <textarea
+                              id={`mnemonic-${card.id}`}
+                              className="mnemonic-input"
+                              value={mnemonicDraft}
+                              onChange={(event) => setMnemonicDraft(event.target.value)}
+                              onKeyDown={(event) => {
+                                if (event.key === 'Escape') {
+                                  event.preventDefault()
+                                  event.stopPropagation()
+                                  cancelMnemonicEditor()
+                                }
+                                if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+                                  event.preventDefault()
+                                  saveMnemonic()
+                                }
+                              }}
+                              placeholder="Например: «ぬ» похожа на …"
+                              rows={2}
+                              maxLength={240}
+                              autoFocus
+                            />
+                            <div className="mnemonic-actions">
+                              {mnemonic && (
+                                <button
+                                  type="button"
+                                  className="btn btn-danger-ghost btn-small"
+                                  onClick={removeMnemonic}
+                                >
+                                  Удалить
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                className="btn btn-ghost btn-small"
+                                onClick={cancelMnemonicEditor}
+                              >
+                                Отмена
+                              </button>
+                              <button type="submit" className="btn btn-primary btn-small">
+                                Сохранить
+                              </button>
+                            </div>
+                          </form>
+                        ) : (
+                          <div className="mnemonic-view">
+                            <p className="mnemonic-text">{mnemonic}</p>
+                            <button
+                              type="button"
+                              className="icon-btn mnemonic-edit-btn"
+                              onClick={openMnemonicEditor}
+                              title="Изменить мнемонику"
+                              aria-label="Изменить мнемонику"
+                            >
+                              <Icon name="pencil" size={15} />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </>
                 )}
 
                 <div className="face-bottom">
-                  <button
-                    className="icon-btn speak"
-                    onClick={(event) => {
-                      event.stopPropagation()
-                      speakJa(card.front)
-                    }}
-                    title="Прослушать"
-                    aria-label="Прослушать"
-                  >
-                    <Icon name="speaker" size={19} />
-                  </button>
-                  <span className="face-hint">Нажми на карточку или пробел</span>
+                  {!isWriting && (
+                    <button
+                      className="icon-btn speak"
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        speakJa(card.front)
+                      }}
+                      title="Прослушать"
+                      aria-label="Прослушать"
+                    >
+                      <Icon name="speaker" size={19} />
+                    </button>
+                  )}
+                  <span className="face-hint">
+                    {isWriting
+                      ? 'Проверь себя: нажми на карточку или пробел'
+                      : 'Нажми на карточку или пробел'}
+                  </span>
                 </div>
               </div>
 
               <div className="face face-back">
                 <div className="face-top">
                   <span className="face-deck">ответ</span>
-                  <span className="face-jp-small">{card.front}</span>
+                  {!isWriting && <span className="face-jp-small">{card.front}</span>}
                 </div>
-                <div className="answer">
+                <div className={`answer${isWriting ? ' answer-writing' : ''}`}>
+                  {isWriting && (
+                    <FitText
+                      className="answer-jp"
+                      text={card.front}
+                      maxFontSize={110}
+                      minFontSize={20}
+                    />
+                  )}
                   {card.reading && <div className="answer-reading">{card.reading}</div>}
                   {card.meaning && <div className="answer-meaning">{card.meaning}</div>}
                   {card.note && <p className="answer-note">{card.note}</p>}
-                  {!card.reading && !card.meaning && !card.note && (
+                  {!isWriting && !card.reading && !card.meaning && !card.note && (
                     <div className="answer-meaning">{card.front}</div>
                   )}
                 </div>

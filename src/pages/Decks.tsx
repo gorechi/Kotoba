@@ -7,6 +7,7 @@ import { CardForm } from '../components/CardForm'
 import { ConfirmDialog } from '../components/Modal'
 import { FitText } from '../components/FitText'
 import { Icon } from '../components/Icon'
+import { ModeSwitch } from '../components/ModeSwitch'
 import { deckStat, remainingNewToday } from '../lib/stats'
 import { freshSrs, plural } from '../lib/srs'
 import { dueLabel } from '../lib/utils'
@@ -35,10 +36,13 @@ export function Decks({ onNavigate, onStudy }: DecksProps) {
             Встроенные азбуки и твои собственные наборы. Всё хранится на этом компьютере.
           </p>
         </div>
-        <button className="btn btn-primary" onClick={() => setCreating(true)}>
-          <Icon name="plus" size={18} />
-          Новая колода
-        </button>
+        <div className="page-head-actions">
+          <ModeSwitch />
+          <button className="btn btn-primary" onClick={() => setCreating(true)}>
+            <Icon name="plus" size={18} />
+            Новая колода
+          </button>
+        </div>
       </header>
 
       <div className="deck-grid">
@@ -200,6 +204,11 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
             <span className="stat-chip">
               <b>{newCount}</b> новых сегодня
             </span>
+          </div>
+
+          <div className="mode-row">
+            <span className="mode-row-label">Режим</span>
+            <ModeSwitch />
           </div>
 
           <div className="deck-hero-actions">

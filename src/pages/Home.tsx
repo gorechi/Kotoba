@@ -4,6 +4,7 @@ import { useStore } from '../state/store'
 import { DeckCard } from '../components/DeckCard'
 import { DeckForm } from '../components/DeckForm'
 import { Icon } from '../components/Icon'
+import { ModeSwitch } from '../components/ModeSwitch'
 import {
   deckStat,
   overallStat,
@@ -62,6 +63,11 @@ export function Home({ onNavigate, onStudy }: HomeProps) {
           </div>
           <h1>{greeting(now)}</h1>
           <p className="hero-sub">{subline}</p>
+
+          <div className="mode-row">
+            <span className="mode-row-label">Режим</span>
+            <ModeSwitch />
+          </div>
 
           <div className="hero-actions">
             <button className="btn btn-primary btn-lg" onClick={ctaAction}>

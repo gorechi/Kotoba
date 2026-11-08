@@ -181,8 +181,35 @@ export function Settings() {
             </button>
           </div>
           <p className="hint">
-            Выбор влияет на то, какой вариант чтения отображается в поле «Чтение» при создании
-            карточки. Можно переключаться прямо в форме карточки.
+            Выбор влияет на то, какое чтение показывается в карточках и подставляется при их
+            создании.
+          </p>
+        </section>
+
+        <section className="panel">
+          <div className="panel-head">
+            <div>
+              <h2>Режим письма</h2>
+              <p>Насколько сложными будут сеансы письма</p>
+            </div>
+          </div>
+          <div className="segmented">
+            <button
+              className={data.settings.writingDifficulty === 'normal' ? 'active' : ''}
+              onClick={() => setSettings({ writingDifficulty: 'normal' })}
+            >
+              Нормальный
+            </button>
+            <button
+              className={data.settings.writingDifficulty === 'hard' ? 'active' : ''}
+              onClick={() => setSettings({ writingDifficulty: 'hard' })}
+            >
+              Сложный
+            </button>
+          </div>
+          <p className="hint">
+            Нормальный: на карточке сразу видны перевод и транскрипция. Сложный: только перевод,
+            транскрипцию можно открыть кнопкой. Сам режим выбирается рядом с кнопкой «Учить».
           </p>
         </section>
 

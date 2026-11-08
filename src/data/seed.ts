@@ -52,7 +52,13 @@ export function createSeedData(now = Date.now()) {
     decks,
     cards,
     history: {} as Record<string, { reviews: number; correct: number; newCards: number; ms: number }>,
-    settings: { theme: 'system' as const, newPerDay: 10, defaultTranscription: 'romaji' as const },
+    settings: {
+      theme: 'system' as const,
+      newPerDay: 10,
+      defaultTranscription: 'romaji' as const,
+      studyMode: 'reading' as const,
+      writingDifficulty: 'normal' as const,
+    },
     createdAt: now,
   }
 }

@@ -32,6 +32,7 @@ export type Route =
   | { name: 'cards' }
   | { name: 'kanamap' }
   | { name: 'stats' }
+  | { name: 'data' }
   | { name: 'settings' }
 
 export interface SrsState {

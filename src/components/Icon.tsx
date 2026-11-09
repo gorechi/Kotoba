@@ -20,6 +20,7 @@ export type IconName =
   | 'download'
   | 'upload'
   | 'folder'
+  | 'database'
   | 'rotate'
   | 'arrow-right'
   | 'minus'
@@ -141,6 +142,13 @@ const paths: Record<IconName, ReactNode> = {
   ),
   folder: (
     <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7l-2-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z" />
+  ),
+  database: (
+    <>
+      <ellipse cx="12" cy="5" rx="8" ry="3" />
+      <path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5" />
+      <path d="M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6" />
+    </>
   ),
   rotate: (
     <>

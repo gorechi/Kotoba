@@ -11,7 +11,7 @@ interface SidebarProps {
 }
 
 const NAV: {
-  id: 'home' | 'decks' | 'kanji' | 'cards' | 'kanamap' | 'stats'
+  id: 'home' | 'decks' | 'kanji' | 'cards' | 'kanamap' | 'stats' | 'data'
   labelKey: string
   icon: IconName
 }[] = [
@@ -21,6 +21,7 @@ const NAV: {
   { id: 'cards', labelKey: 'nav.cards', icon: 'layers' },
   { id: 'kanamap', labelKey: 'nav.kanamap', icon: 'grid' },
   { id: 'stats', labelKey: 'nav.stats', icon: 'chart' },
+  { id: 'data', labelKey: 'nav.data', icon: 'database' },
 ]
 
 export function Sidebar({ route, onNavigate, onZen }: SidebarProps) {

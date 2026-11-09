@@ -34,6 +34,7 @@ A simple desktop app for learning Japanese with flashcards. Hiragana and katakan
 - **Statistics**: streak, accuracy, 14-day review activity, and progress by deck.
 - **Themes**: light, dark, or system.
 - **Zen mode**: full-screen review with no interface. The card shows the Japanese side, flips to the translation after 10 seconds, and fades out and is replaced by the next card after another 10 seconds. The mode can be started from the menu or automatically after a configurable period of inactivity; exit with the button or `Esc`.
+- **CSV/TSV card import**: separate sections for kana and kanji. Upload a file, choose or create a deck, and map columns to card fields.
 - **Backups**: JSON export and import, and progress reset.
 
 ## Adding cards
@@ -129,8 +130,8 @@ src/
   components/      study card, decks, forms, modals
   assets/          bundled fonts and SVG masks
   data/            hiragana, katakana, and seed data
-  lib/             SRS, statistics, study queues, data validation, romaji→kana
-  pages/           Home, Decks, Statistics, Settings
+  lib/             SRS, statistics, study queues, data validation, romaji→kana, CSV/TSV parsing
+  pages/           Home, Decks, Statistics, Data, Settings
   state/           data store and autosave
   styles.css       theme and all styles
 scripts/           dev launcher and icon generation

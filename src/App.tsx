@@ -10,6 +10,7 @@ import { Decks, DeckDetail } from './pages/Decks'
 import { KanjiDecks } from './pages/KanjiDecks'
 import { CardBrowser } from './pages/CardBrowser'
 import { Stats } from './pages/Stats'
+import { Data } from './pages/Data'
 import { Settings } from './pages/Settings'
 import { KanaMap } from './pages/KanaMap'
 import { ZenMode } from './components/ZenMode'
@@ -125,6 +126,7 @@ function Shell() {
               <DeckDetail deckId={route.deckId} onNavigate={navigate} onStudy={startStudy} />
             )}
             {route.name === 'stats' && <Stats />}
+            {route.name === 'data' && <Data />}
             {route.name === 'settings' && <Settings onZen={() => setZen(true)} />}
             {route.name === 'kanamap' && (
               <KanaMap

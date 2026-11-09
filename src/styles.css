@@ -3657,6 +3657,234 @@ kbd {
   gap: 8px;
 }
 
+/* ============================================================
+   Данные: импорт CSV/TSV
+   ============================================================ */
+.data-tabs {
+  width: min(560px, 100%);
+  margin-bottom: 16px;
+}
+
+.data-content,
+.data-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.data-file-picker {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+}
+
+.data-file-picker .hint {
+  margin: 0;
+  max-width: 460px;
+}
+
+.data-mapping-head {
+  align-items: flex-start;
+}
+
+.data-file-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin: 12px 0 14px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 11.5px;
+}
+
+.data-file-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.data-file-options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 14px 24px;
+  margin-bottom: 16px;
+}
+
+.data-option {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 210px;
+}
+
+.data-option > span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.data-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 9px;
+  color: var(--text-soft);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.data-check input {
+  width: 15px;
+  height: 15px;
+}
+
+.data-target {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  margin-bottom: 18px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+
+.data-target > .label {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.data-target-switch {
+  max-width: 440px;
+}
+
+.data-target > input,
+.data-target > .select {
+  max-width: 440px;
+}
+
+.data-target .hint {
+  margin: 0;
+}
+
+.data-import-panel input:not([type='checkbox']):not([type='file']),
+.data-import-panel select {
+  width: 100%;
+  height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-2);
+  color: var(--text);
+  padding: 0 12px;
+  font: inherit;
+  font-size: 13.5px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+
+.data-import-panel .select select {
+  padding-right: 38px;
+}
+
+.data-import-panel input:not([type='checkbox']):not([type='file']):focus,
+.data-import-panel select:focus {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
+  background: var(--surface);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.data-import-panel input::placeholder {
+  color: color-mix(in srgb, var(--muted) 75%, transparent);
+}
+
+.mapping-list {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.mapping-row {
+  display: grid;
+  grid-template-columns: minmax(160px, 1fr) minmax(240px, 1.25fr);
+  align-items: center;
+  gap: 16px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.mapping-row:last-child {
+  border-bottom: 0;
+}
+
+.mapping-row:nth-child(odd) {
+  background: color-mix(in srgb, var(--surface-2) 55%, transparent);
+}
+
+.mapping-label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.mapping-label strong {
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.mapping-required {
+  color: var(--accent-ink);
+  font-size: 10px;
+}
+
+.mapping-optional {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.mapping-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.data-import-panel .hint {
+  margin-top: 12px;
+}
+
+@media (max-width: 700px) {
+  .mapping-row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .mapping-actions {
+    flex-direction: column-reverse;
+  }
+
+  .mapping-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .data-file-options {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .data-option {
+    min-width: 0;
+  }
+}
+
 .notice {
   display: flex;
   align-items: flex-start;
@@ -4672,6 +4900,10 @@ kbd {
   border-color: var(--green);
   color: var(--green);
   transform: translateX(2px);
+}
+
+.browser-layout.is-dragging .browser-deck-item.is-drop-disabled {
+  opacity: 0.4;
 }
 
 .browser-deck-icon {

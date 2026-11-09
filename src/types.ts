@@ -110,7 +110,7 @@ export interface Settings {
 }
 
 export interface AppData {
-  version: 1
+  version: 2
   decks: Deck[]
   cards: Card[]
   history: Record<string, DayStat>
@@ -139,8 +139,8 @@ export interface ImportResult {
 
 export interface KotobaApi {
   load: () => Promise<unknown>
-  save: (data: AppData) => Promise<boolean>
-  saveSync: (data: AppData) => void
+  saveParts: (parts: unknown) => Promise<boolean>
+  savePartsSync: (parts: unknown) => void
   exportData: (data: AppData, title?: string) => Promise<string | null>
   importData: (title?: string) => Promise<ImportResult | null>
   openDataFolder: () => Promise<string>

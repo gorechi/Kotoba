@@ -12,7 +12,6 @@ import { FitText } from '../components/FitText'
 import { Icon } from '../components/Icon'
 import { ModeSwitch } from '../components/ModeSwitch'
 import { deckStat, remainingNewToday } from '../lib/stats'
-import { freshSrs } from '../lib/srs'
 import { dueLabel } from '../lib/utils'
 
 interface DecksProps {
@@ -83,7 +82,7 @@ interface DeckDetailProps {
 }
 
 export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
-  const { data, update } = useStore()
+  const { data, update, resetDeckProgress } = useStore()
   const { t } = useI18n()
   const [query, setQuery] = useState('')
   const [adding, setAdding] = useState(false)
@@ -182,11 +181,7 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
   }
 
   const resetDeck = () => {
-    update((draft) => {
-      draft.cards = draft.cards.map((card) =>
-        card.deckId === deckId ? { ...card, srs: freshSrs() } : card,
-      )
-    })
+    resetDeckProgress(deckId)
   }
 
   return (

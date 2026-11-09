@@ -231,7 +231,7 @@ export function normalizeData(raw: unknown): AppData {
   )
 
   return {
-    version: 1,
+    version: 2,
     decks: mergedDecks,
     cards: mergedCards,
     history: normalizeHistory(raw.history),

@@ -44,7 +44,7 @@ export function createSeedData(now = Date.now()) {
   ]
 
   return {
-    version: 1 as const,
+    version: 2 as const,
     decks,
     cards,
     history: {} as Record<string, { reviews: number; correct: number; newCards: number; ms: number }>,

@@ -19,3 +19,29 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+---
+
+## Third-party components
+
+The application bundles the following fonts for offline use. They are not
+covered by the MIT License above and are distributed under the SIL Open Font
+License, Version 1.1.
+
+### Klee One
+
+Copyright 2020 The Klee Project Authors (https://github.com/fontworks-fonts/Klee)
+
+License: SIL Open Font License 1.1.
+Full license text: `public/fonts/OFL-KleeOne.txt`.
+
+### Caveat
+
+Copyright 2014 The Caveat Project Authors (https://github.com/googlefonts/caveat)
+
+License: SIL Open Font License 1.1.
+Full license text: `public/fonts/OFL-Caveat.txt`.
+
+The full text of the SIL Open Font License 1.1 is included in the files above
+and is also available at https://scripts.sil.org/OFL.
+

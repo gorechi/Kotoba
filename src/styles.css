@@ -3158,6 +3158,7 @@ kbd {
 }
 
 .kana-char {
+  display: block;
   font-family: var(--font-kana);
   font-size: clamp(22px, 7vw, 36px);
   font-weight: 700;

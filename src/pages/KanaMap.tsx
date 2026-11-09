@@ -1,8 +1,7 @@
-import { useCallback, useMemo } from 'react'
+import { useMemo } from 'react'
 import type { Card } from '../types'
 import { useStore } from '../state/store'
 import { useI18n } from '../lib/i18n-react'
-import { FitText } from '../components/FitText'
 import { Icon } from '../components/Icon'
 import {
   HIRAGANA_BASIC,
@@ -12,12 +11,31 @@ import {
 } from '../data/kana'
 
 type KanaDeckId = 'hiragana' | 'katakana'
+type KanaStatus = 'new' | 'due' | 'learned'
+
+interface KanaSeed {
+  kana: string
+  romaji: string
+}
 
 interface KanaSection {
   id: KanaDeckId
   labelKey: string
   labelJp: string
-  seeds: { kana: string; romaji: string }[]
+  seeds: KanaSeed[]
+}
+
+interface KanaCell {
+  seed: KanaSeed
+  card: Card | undefined
+  status: KanaStatus
+  hasMnemonic: boolean
+}
+
+interface SectionView {
+  section: KanaSection
+  cells: KanaCell[]
+  stat: { total: number; learned: number; due: number; fresh: number }
 }
 
 const SECTIONS: KanaSection[] = [
@@ -25,59 +43,108 @@ const SECTIONS: KanaSection[] = [
     id: 'hiragana',
     labelKey: 'kana.hiragana',
     labelJp: 'ひらがな',
-    seeds: [...HIRAGANA_BASIC, ...HIRAGANA_VOICED].map((s) => ({ kana: s.kana, romaji: s.romaji })),
+    seeds: [...HIRAGANA_BASIC, ...HIRAGANA_VOICED].map((s) => ({
+      kana: s.kana,
+      romaji: s.romaji,
+    })),
   },
   {
     id: 'katakana',
     labelKey: 'kana.katakana',
     labelJp: 'カタカナ',
-    seeds: [...KATAKANA_BASIC, ...KATAKANA_VOICED].map((s) => ({ kana: s.kana, romaji: s.romaji })),
+    seeds: [...KATAKANA_BASIC, ...KATAKANA_VOICED].map((s) => ({
+      kana: s.kana,
+      romaji: s.romaji,
+    })),
   },
 ]
+
+/** Ключ не зависит от данных карточки: колода + символ. */
+function cardKey(deckId: string, kana: string): string {
+  return `${deckId}\u0000${kana}`
+}
 
 export function KanaMap({ onStudyCard }: { onStudyCard: (cardId: string, deckId: string) => void }) {
   const { data } = useStore()
   const { t } = useI18n()
-  const now = Date.now()
 
-  const findCard = useCallback(
-    (deckId: string, kana: string): Card | undefined =>
-      data.cards.find((card) => card.deckId === deckId && card.front === kana),
-    [data.cards],
-  )
+  // Карточки каны ищутся по Map, а не линейным перебором на каждую ячейку.
+  const cardIndex = useMemo(() => {
+    const index = new Map<string, Card>()
+    for (const card of data.cards) {
+      index.set(cardKey(card.deckId, card.front), card)
+    }
+    return index
+  }, [data.cards])
 
-  const cardStatus = useCallback((card: Card | undefined): 'new' | 'due' | 'learned' => {
-    if (!card) return 'new'
-    if (!card.srs.introduced) return 'new'
-    if (card.srs.due <= now) return 'due'
-    return 'learned'
-  }, [now])
+  // Один проход по 142 знакам: сразу и статусы ячеек, и статистика секций.
+  const { sections, totals } = useMemo(() => {
+    const now = Date.now()
+    let totalLearned = 0
+    let totalDue = 0
+    let totalFresh = 0
+    let totalChars = 0
 
-  const sectionStat = useCallback(
-    (seeds: { kana: string; romaji: string }[], deckId: string) => {
-      const cards = seeds.map((s) => findCard(deckId, s.kana)).filter(Boolean) as Card[]
-      const learned = cards.filter((c) => c.srs.introduced).length
-      const due = cards.filter((c) => c.srs.introduced && c.srs.due <= now).length
-      const fresh = cards.filter((c) => !c.srs.introduced).length
-      return { total: seeds.length, learned, due, fresh }
-    },
-    [findCard, now],
-  )
+    const views: SectionView[] = SECTIONS.map((section) => {
+      let learned = 0
+      let due = 0
+      let fresh = 0
 
-  const statusLabel = (status: 'new' | 'due' | 'learned') =>
+      const cells: KanaCell[] = section.seeds.map((seed) => {
+        const card = cardIndex.get(cardKey(section.id, seed.kana))
+        let status: KanaStatus = 'new'
+
+        if (card) {
+          totalChars += 1
+          if (!card.srs.introduced) {
+            fresh += 1
+          } else {
+            learned += 1
+            if (card.srs.due <= now) {
+              due += 1
+              status = 'due'
+            } else {
+              status = 'learned'
+            }
+          }
+        }
+
+        return {
+          seed,
+          card,
+          status,
+          hasMnemonic: Boolean(card?.mnemonic?.trim()),
+        }
+      })
+
+      totalLearned += learned
+      totalDue += due
+      totalFresh += fresh
+
+      return {
+        section,
+        cells,
+        stat: { total: section.seeds.length, learned, due, fresh },
+      }
+    })
+
+    return {
+      sections: views,
+      totals: {
+        chars: totalChars,
+        learned: totalLearned,
+        due: totalDue,
+        fresh: totalFresh,
+      },
+    }
+  }, [cardIndex])
+
+  const statusLabel = (status: KanaStatus) =>
     status === 'due'
       ? t('kanaMap.statusDue')
       : status === 'learned'
         ? t('kanaMap.statusLearned')
         : t('kanaMap.statusNew')
-
-  const allCards = data.cards.filter(
-    (c) => c.deckId === 'hiragana' || c.deckId === 'katakana',
-  )
-  const totalLearned = allCards.filter((c) => c.srs.introduced).length
-  const totalDue = allCards.filter((c) => c.srs.introduced && c.srs.due <= now).length
-  const totalFresh = allCards.filter((c) => !c.srs.introduced).length
-  const totalChars = allCards.length
 
   return (
     <div className="page">
@@ -91,26 +158,25 @@ export function KanaMap({ onStudyCard }: { onStudyCard: (cardId: string, deckId:
 
       <div className="kana-map-stats">
         <div className="kana-map-stat">
-          <strong>{totalChars}</strong>
+          <strong>{totals.chars}</strong>
           <span>{t('kanaMap.signs')}</span>
         </div>
         <div className="kana-map-stat">
-          <strong style={{ color: 'var(--green)' }}>{totalLearned}</strong>
+          <strong style={{ color: 'var(--green)' }}>{totals.learned}</strong>
           <span>{t('kanaMap.learned')}</span>
         </div>
         <div className="kana-map-stat">
-          <strong style={{ color: 'var(--red)' }}>{totalDue}</strong>
+          <strong style={{ color: 'var(--red)' }}>{totals.due}</strong>
           <span>{t('kanaMap.due')}</span>
         </div>
         <div className="kana-map-stat">
-          <strong>{totalFresh}</strong>
+          <strong>{totals.fresh}</strong>
           <span>{t('kanaMap.new')}</span>
         </div>
       </div>
 
       <div className="kana-grid-wrap">
-        {SECTIONS.map((section) => {
-          const stat = sectionStat(section.seeds, section.id)
+        {sections.map(({ section, cells, stat }) => {
           const learnedPct = stat.total ? Math.round((stat.learned / stat.total) * 100) : 0
 
           return (
@@ -134,44 +200,32 @@ export function KanaMap({ onStudyCard }: { onStudyCard: (cardId: string, deckId:
                 </span>
               </div>
               <div className="kana-grid">
-                {section.seeds.map((seed) => {
-                  const card = findCard(section.id, seed.kana)
-                  const status = cardStatus(card)
-                  const hasMnemonic = Boolean(card?.mnemonic?.trim())
-                  return (
-                    <button
-                      type="button"
-                      className={`kana-cell kana-cell--${status}`}
-                      key={seed.kana}
-                      disabled={!card}
-                      onClick={() => {
-                        if (!card) return
-                        onStudyCard(card.id, section.id)
-                      }}
-                      title={
-                        !card
-                          ? t('kanaMap.notFound')
-                          : t('kanaMap.tooltip', {
-                              kana: seed.kana,
-                              romaji: seed.romaji,
-                              status: statusLabel(status),
-                            }) + (hasMnemonic ? t('kanaMap.hasMnemonic') : '')
-                      }
-                      aria-label={`${seed.kana} — ${statusLabel(status)}`}
-                    >
-                      <FitText
-                        className="kana-char"
-                        text={seed.kana}
-                        maxFontSize={40}
-                        minFontSize={16}
-                      />
-                      <span className="kana-romaji">{seed.romaji}</span>
-                      {hasMnemonic && (
-                        <Icon name="bulb" size={13} className="kana-bulb" />
-                      )}
-                    </button>
-                  )
-                })}
+                {cells.map(({ seed, card, status, hasMnemonic }) => (
+                  <button
+                    type="button"
+                    className={`kana-cell kana-cell--${status}`}
+                    key={seed.kana}
+                    disabled={!card}
+                    onClick={() => {
+                      if (!card) return
+                      onStudyCard(card.id, section.id)
+                    }}
+                    title={
+                      !card
+                        ? t('kanaMap.notFound')
+                        : t('kanaMap.tooltip', {
+                            kana: seed.kana,
+                            romaji: seed.romaji,
+                            status: statusLabel(status),
+                          }) + (hasMnemonic ? t('kanaMap.hasMnemonic') : '')
+                    }
+                    aria-label={`${seed.kana} — ${statusLabel(status)}`}
+                  >
+                    <span className="kana-char">{seed.kana}</span>
+                    <span className="kana-romaji">{seed.romaji}</span>
+                    {hasMnemonic && <Icon name="bulb" size={13} className="kana-bulb" />}
+                  </button>
+                ))}
               </div>
             </section>
           )

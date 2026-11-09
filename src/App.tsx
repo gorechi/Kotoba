@@ -8,6 +8,7 @@ import { Session } from './components/Session'
 import { Home } from './pages/Home'
 import { Decks, DeckDetail } from './pages/Decks'
 import { KanjiDecks } from './pages/KanjiDecks'
+import { CardBrowser } from './pages/CardBrowser'
 import { Stats } from './pages/Stats'
 import { Settings } from './pages/Settings'
 import { KanaMap } from './pages/KanaMap'
@@ -62,6 +63,7 @@ function Shell() {
             {route.name === 'home' && <Home onNavigate={navigate} onStudy={startStudy} />}
             {route.name === 'decks' && <Decks onNavigate={navigate} onStudy={startStudy} />}
             {route.name === 'kanji' && <KanjiDecks onNavigate={navigate} onStudy={startStudy} />}
+            {route.name === 'cards' && <CardBrowser />}
             {route.name === 'deck' && (
               <DeckDetail deckId={route.deckId} onNavigate={navigate} onStudy={startStudy} />
             )}

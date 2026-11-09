@@ -65,8 +65,10 @@ export interface DeckStat {
 export function deckStat(cards: Card[], deckId: string, now = Date.now()): DeckStat {
   const pool = cards.filter((card) => card.deckId === deckId)
   const learned = pool.filter((card) => card.srs.introduced).length
-  const due = pool.filter((card) => card.srs.introduced && card.srs.due <= now).length
-  const fresh = pool.filter((card) => !card.srs.introduced).length
+  const due = pool.filter(
+    (card) => !card.suspended && card.srs.introduced && card.srs.due <= now,
+  ).length
+  const fresh = pool.filter((card) => !card.suspended && !card.srs.introduced).length
   return {
     total: pool.length,
     learned,
@@ -78,8 +80,10 @@ export function deckStat(cards: Card[], deckId: string, now = Date.now()): DeckS
 
 export function overallStat(cards: Card[], now = Date.now()): DeckStat {
   const learned = cards.filter((card) => card.srs.introduced).length
-  const due = cards.filter((card) => card.srs.introduced && card.srs.due <= now).length
-  const fresh = cards.filter((card) => !card.srs.introduced).length
+  const due = cards.filter(
+    (card) => !card.suspended && card.srs.introduced && card.srs.due <= now,
+  ).length
+  const fresh = cards.filter((card) => !card.suspended && !card.srs.introduced).length
   return {
     total: cards.length,
     learned,
@@ -475,7 +479,8 @@ export function paceForecast(
   now = Date.now(),
   windowDays = 14,
 ): PaceForecast {
-  const remaining = cards.filter((card) => !card.srs.introduced).length
+  const active = cards.filter((card) => !card.suspended)
+  const remaining = active.filter((card) => !card.srs.introduced).length
   const points = lastDays(history, windowDays, now)
   const newCards = points.reduce((sum, point) => sum + point.newCards, 0)
   const recentPace = newCards / windowDays
@@ -485,8 +490,8 @@ export function paceForecast(
   const days = remaining === 0 ? 0 : pace > 0 ? Math.ceil(remaining / pace) : null
 
   return {
-    total: cards.length,
-    learned: cards.length - remaining,
+    total: active.length,
+    learned: active.length - remaining,
     remaining,
     pace,
     days,
@@ -523,7 +528,7 @@ export function upcomingLoad(
 
     let count = 0
     for (const card of cards) {
-      if (!card.srs.introduced || card.srs.due <= 0) continue
+      if (card.suspended || !card.srs.introduced || card.srs.due <= 0) continue
       if (index === 0 ? card.srs.due < endTs : card.srs.due >= startTs && card.srs.due < endTs) {
         count += 1
       }

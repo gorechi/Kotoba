@@ -127,6 +127,7 @@ function normalizeCard(raw: unknown): Card | null {
     note: str(raw.note),
     mnemonic: str(raw.mnemonic),
     tags: strArray(raw.tags),
+    suspended: Boolean(raw.suspended),
     readings: normalizeReadings(raw.readings),
     examples: normalizeExamples(raw.examples),
     group,

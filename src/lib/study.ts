@@ -7,7 +7,9 @@ export function studyQueue(
   newLimit: number,
   now = Date.now(),
 ): QueueItem[] {
-  const pool = deckId === 'all' ? cards : cards.filter((card) => card.deckId === deckId)
+  const pool = (deckId === 'all' ? cards : cards.filter((card) => card.deckId === deckId)).filter(
+    (card) => !card.suspended,
+  )
   const due = pool
     .filter((card) => card.srs.introduced && card.srs.due <= now)
     .sort((a, b) => a.srs.due - b.srs.due)
@@ -29,7 +31,7 @@ export function practiceQueue(
   size = 10,
 ): QueueItem[] {
   const pool = (deckId === 'all' ? cards : cards.filter((card) => card.deckId === deckId)).filter(
-    (card) => card.srs.introduced,
+    (card) => !card.suspended && card.srs.introduced,
   )
   if (!pool.length) return []
   return shuffle(pool)
@@ -39,6 +41,6 @@ export function practiceQueue(
 
 export function dueCount(cards: Card[], deckId: string, now = Date.now()): number {
   return (deckId === 'all' ? cards : cards.filter((card) => card.deckId === deckId)).filter(
-    (card) => card.srs.introduced && card.srs.due <= now,
+    (card) => !card.suspended && card.srs.introduced && card.srs.due <= now,
   ).length
 }

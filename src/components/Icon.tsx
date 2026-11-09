@@ -34,6 +34,7 @@ export type IconName =
   | 'trophy'
   | 'target'
   | 'calendar'
+  | 'eye'
 
 const paths: Record<IconName, ReactNode> = {
   book: (
@@ -237,6 +238,12 @@ const paths: Record<IconName, ReactNode> = {
       <path d="M8 2v4" />
       <path d="M3 10h18" />
       <path d="m8.5 16 2.2 2.2 4.3-4.3" />
+    </>
+  ),
+  eye: (
+    <>
+      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
+      <circle cx="12" cy="12" r="3" />
     </>
   ),
 }

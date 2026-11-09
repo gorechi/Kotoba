@@ -15,6 +15,7 @@ export type Route =
   | { name: 'decks' }
   | { name: 'kanji' }
   | { name: 'deck'; deckId: string }
+  | { name: 'cards' }
   | { name: 'kanamap' }
   | { name: 'stats' }
   | { name: 'settings' }
@@ -46,6 +47,8 @@ export interface Card {
   mnemonic: string
   /** Теги карточки для фильтрации и поиска. */
   tags: string[]
+  /** Карточка временно исключена из учёбы. */
+  suspended?: boolean
   /** Чтения иероглифа: кана + транскрипция (для карточек-иероглифов). */
   readings: CardReading[]
   /** Примеры использования (для карточек-иероглифов). */

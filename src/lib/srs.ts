@@ -16,6 +16,19 @@ export function freshSrs(): SrsState {
   }
 }
 
+/** Состояние «выучено вручную»: карточка уходит из активного изучения. */
+export function knownSrs(now = Date.now()): SrsState {
+  return {
+    due: now + 365 * DAY,
+    interval: 365,
+    ease: 2.8,
+    reps: 1,
+    lapses: 0,
+    introduced: true,
+    lastReviewed: now,
+  }
+}
+
 export function applyRating(prev: SrsState, rating: Rating, now: number): SrsState {
   const next: SrsState = { ...prev, reps: prev.reps + 1, introduced: true, lastReviewed: now }
 

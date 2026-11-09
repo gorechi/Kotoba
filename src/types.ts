@@ -146,6 +146,10 @@ export interface Settings {
   goalCards: number
   /** Личная цель по серии дней. */
   goalStreak: number
+  /** Автоматически включать режим Дзен при бездействии. */
+  zenAuto: boolean
+  /** Через сколько минут бездействия включать Дзен. */
+  zenIdleMinutes: number
   /** Код языка интерфейса. */
   language: string
 }

@@ -60,6 +60,8 @@ export function createSeedData(now = Date.now()) {
       goalReviews: 1000,
       goalCards: 100,
       goalStreak: 30,
+      zenAuto: true,
+      zenIdleMinutes: 5,
       language: DEFAULT_LOCALE,
     },
     createdAt: now,

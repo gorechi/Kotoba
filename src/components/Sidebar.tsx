@@ -7,6 +7,7 @@ import { Icon, type IconName } from './Icon'
 interface SidebarProps {
   route: Route
   onNavigate: (route: Route) => void
+  onZen: () => void
 }
 
 const NAV: {
@@ -22,7 +23,7 @@ const NAV: {
   { id: 'stats', labelKey: 'nav.stats', icon: 'chart' },
 ]
 
-export function Sidebar({ route, onNavigate }: SidebarProps) {
+export function Sidebar({ route, onNavigate, onZen }: SidebarProps) {
   const { data } = useStore()
   const { t } = useI18n()
   const days = streak(data.history)
@@ -54,6 +55,10 @@ export function Sidebar({ route, onNavigate }: SidebarProps) {
             <span>{t(item.labelKey)}</span>
           </button>
         ))}
+        <button type="button" className="nav-item nav-zen" onClick={onZen}>
+          <Icon name="sparkles" size={19} />
+          <span>{t('nav.zen')}</span>
+        </button>
       </nav>
 
       <div className="sidebar-bottom">

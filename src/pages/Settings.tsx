@@ -18,7 +18,11 @@ interface PendingImport {
   name: string
 }
 
-export function Settings() {
+interface SettingsProps {
+  onZen: () => void
+}
+
+export function Settings({ onZen }: SettingsProps) {
   const { data, setSettings, resetProgress, replaceData } = useStore()
   const { t, locales, language, setLanguage } = useI18n()
   const [confirmReset, setConfirmReset] = useState(false)
@@ -246,6 +250,63 @@ export function Settings() {
           </div>
 
           <p className="hint">{t('settings.goalsHint')}</p>
+        </section>
+
+        <section className="panel panel-wide">
+          <div className="panel-head">
+            <div>
+              <h2>{t('settings.zen')}</h2>
+              <p>{t('settings.zenSub')}</p>
+            </div>
+            <button type="button" className="btn btn-ghost btn-small" onClick={onZen}>
+              <Icon name="sparkles" size={15} />
+              {t('settings.zenStart')}
+            </button>
+          </div>
+
+          <div className="zen-settings-row">
+            <label className="settings-check">
+              <input
+                type="checkbox"
+                checked={data.settings.zenAuto}
+                onChange={(event) => setSettings({ zenAuto: event.target.checked })}
+              />
+              <span>{t('settings.zenAuto')}</span>
+            </label>
+
+            {data.settings.zenAuto && (
+              <div className="zen-idle-control">
+                <span>{t('settings.zenIdle')}</span>
+                <strong>{data.settings.zenIdleMinutes}</strong>
+                <div className="stepper small">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setSettings({
+                        zenIdleMinutes: Math.max(1, data.settings.zenIdleMinutes - 1),
+                      })
+                    }
+                    aria-label={t('settings.lessAria')}
+                  >
+                    <Icon name="minus" size={14} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setSettings({
+                        zenIdleMinutes: Math.min(120, data.settings.zenIdleMinutes + 1),
+                      })
+                    }
+                    aria-label={t('settings.moreAria')}
+                  >
+                    <Icon name="plus" size={14} />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <p className="hint">{t('settings.zenHint')}</p>
         </section>
 
         <section className="panel">

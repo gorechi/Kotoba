@@ -234,6 +234,8 @@ function normalizeSettings(raw: unknown): Settings {
     goalReviews: 1000,
     goalCards: 100,
     goalStreak: 30,
+    zenAuto: true,
+    zenIdleMinutes: 5,
     language: DEFAULT_LOCALE,
   }
   if (!isObj(raw)) return base
@@ -264,6 +266,12 @@ function normalizeSettings(raw: unknown): Settings {
     goalReviews: clamp(Math.round(num(raw.goalReviews, base.goalReviews)), 10, 1_000_000),
     goalCards: clamp(Math.round(num(raw.goalCards, base.goalCards)), 1, 100_000),
     goalStreak: clamp(Math.round(num(raw.goalStreak, base.goalStreak)), 1, 10_000),
+    zenAuto: raw.zenAuto !== false,
+    zenIdleMinutes: clamp(
+      Math.round(num(raw.zenIdleMinutes, base.zenIdleMinutes)),
+      1,
+      120,
+    ),
     language: isLocaleCode(raw.language) ? raw.language : base.language,
   }
 }

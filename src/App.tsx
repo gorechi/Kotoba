@@ -12,6 +12,7 @@ import { CardBrowser } from './pages/CardBrowser'
 import { Stats } from './pages/Stats'
 import { Settings } from './pages/Settings'
 import { KanaMap } from './pages/KanaMap'
+import { ZenMode } from './components/ZenMode'
 import { effectiveStudyMode } from './lib/deck-settings'
 import { practiceQueue, buildStudyQueue } from './lib/study'
 
@@ -25,11 +26,55 @@ function Shell() {
   const { data } = useStore()
   const [route, setRoute] = useState<Route>({ name: 'home' })
   const [session, setSession] = useState<ActiveSession | null>(null)
+  const [zen, setZen] = useState(false)
   const mainRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
     mainRef.current?.scrollTo({ top: 0 })
   }, [route])
+
+  useEffect(() => {
+    if (!data.settings.zenAuto || zen) return
+
+    const delay = Math.max(1, data.settings.zenIdleMinutes) * 60_000
+    let timer: number | undefined
+    let lastActivity = 0
+
+    const schedule = () => {
+      if (timer) window.clearTimeout(timer)
+      timer = window.setTimeout(() => {
+        if (document.visibilityState === 'visible') setZen(true)
+      }, delay)
+    }
+
+    const onActivity = () => {
+      const now = Date.now()
+      if (now - lastActivity < 1000) return
+      lastActivity = now
+      schedule()
+    }
+
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') schedule()
+    }
+
+    const events: (keyof WindowEventMap)[] = [
+      'pointerdown',
+      'pointermove',
+      'keydown',
+      'wheel',
+      'touchstart',
+    ]
+    events.forEach((name) => window.addEventListener(name, onActivity, { passive: true }))
+    document.addEventListener('visibilitychange', onVisibility)
+    schedule()
+
+    return () => {
+      if (timer) window.clearTimeout(timer)
+      events.forEach((name) => window.removeEventListener(name, onActivity))
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
+  }, [data.settings.zenAuto, data.settings.zenIdleMinutes, zen])
 
   const navigate = (next: Route) => {
     setSession(null)
@@ -57,8 +102,9 @@ function Shell() {
   }
 
   return (
-    <div className="app">
-      <TitleBar />
+    <>
+      <div className="app" inert={zen ? true : undefined}>
+        <TitleBar />
       {session ? (
         <Session
           key={`${session.deckId}-${session.mode}-${session.items[0]?.cardId ?? 'empty'}`}
@@ -69,7 +115,7 @@ function Shell() {
         />
       ) : (
         <div className="app-body">
-          <Sidebar route={route} onNavigate={navigate} />
+          <Sidebar route={route} onNavigate={navigate} onZen={() => setZen(true)} />
           <main className="main" ref={mainRef}>
             {route.name === 'home' && <Home onNavigate={navigate} onStudy={startStudy} />}
             {route.name === 'decks' && <Decks onNavigate={navigate} onStudy={startStudy} />}
@@ -79,7 +125,7 @@ function Shell() {
               <DeckDetail deckId={route.deckId} onNavigate={navigate} onStudy={startStudy} />
             )}
             {route.name === 'stats' && <Stats />}
-            {route.name === 'settings' && <Settings />}
+            {route.name === 'settings' && <Settings onZen={() => setZen(true)} />}
             {route.name === 'kanamap' && (
               <KanaMap
                 onStudyCard={(cardId, deckId) => {
@@ -98,7 +144,9 @@ function Shell() {
           </main>
         </div>
       )}
-    </div>
+      </div>
+      {zen && <ZenMode cards={data.cards} onClose={() => setZen(false)} />}
+    </>
   )
 }
 

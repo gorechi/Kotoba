@@ -8,6 +8,9 @@ import type {
   DayStat,
   Deck,
   DeckKind,
+  DeckOrder,
+  DeckStudyMode,
+  DeckStudySettings,
   Settings,
   SrsState,
   StudyMode,
@@ -25,6 +28,8 @@ const DECK_KINDS: DeckKind[] = ['kana', 'kanji']
 const STUDY_MODES: StudyMode[] = ['reading', 'writing']
 const WRITING_DIFFICULTIES: WritingDifficulty[] = ['normal', 'hard']
 const DAILY_GOAL_TYPES: DailyGoalType[] = ['reviews', 'minutes']
+const DECK_ORDERS: DeckOrder[] = ['order', 'random', 'frequency', 'jlpt']
+const DECK_STUDY_MODES: DeckStudyMode[] = ['global', 'reading', 'writing']
 
 function isObj(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -60,6 +65,35 @@ function normalizeSrs(raw: unknown): SrsState {
   }
 }
 
+function normalizeDeckSettings(raw: unknown): DeckStudySettings {
+  const base: DeckStudySettings = {
+    newPerDay: null,
+    reviewLimit: null,
+    order: 'order',
+    allowNew: true,
+    studyMode: 'global',
+  }
+  if (!isObj(raw)) return base
+
+  return {
+    newPerDay:
+      raw.newPerDay === null || raw.newPerDay === undefined
+        ? null
+        : clamp(Math.round(num(raw.newPerDay, 1)), 1, 500),
+    reviewLimit:
+      raw.reviewLimit === null || raw.reviewLimit === undefined
+        ? null
+        : clamp(Math.round(num(raw.reviewLimit, 1)), 1, 2000),
+    order: DECK_ORDERS.includes(raw.order as DeckOrder)
+      ? (raw.order as DeckOrder)
+      : base.order,
+    allowNew: raw.allowNew !== false,
+    studyMode: DECK_STUDY_MODES.includes(raw.studyMode as DeckStudyMode)
+      ? (raw.studyMode as DeckStudyMode)
+      : base.studyMode,
+  }
+}
+
 function normalizeDeck(raw: unknown): Deck | null {
   if (!isObj(raw) || typeof raw.id !== 'string' || !raw.id.trim()) return null
   return {
@@ -70,6 +104,7 @@ function normalizeDeck(raw: unknown): Deck | null {
     accent: /^#[0-9a-f]{6}$/i.test(str(raw.accent)) ? str(raw.accent) : '#E1523D',
     builtin: Boolean(raw.builtin),
     kind: DECK_KINDS.includes(raw.kind as DeckKind) ? (raw.kind as DeckKind) : 'kana',
+    settings: normalizeDeckSettings(raw.settings),
     createdAt: num(raw.createdAt, Date.now()),
   }
 }
@@ -118,6 +153,8 @@ function normalizeCard(raw: unknown): Card | null {
   const group = CARD_GROUPS.includes(raw.group as CardGroup)
     ? (raw.group as CardGroup)
     : 'custom'
+  const jlpt = Math.round(num(raw.jlpt, 0))
+  const frequency = Math.round(num(raw.frequency, 0))
   return {
     id: raw.id,
     deckId: raw.deckId,
@@ -127,6 +164,8 @@ function normalizeCard(raw: unknown): Card | null {
     note: str(raw.note),
     mnemonic: str(raw.mnemonic),
     tags: strArray(raw.tags),
+    jlpt: jlpt >= 1 && jlpt <= 5 ? jlpt : undefined,
+    frequency: frequency > 0 ? frequency : undefined,
     suspended: Boolean(raw.suspended),
     readings: normalizeReadings(raw.readings),
     examples: normalizeExamples(raw.examples),
@@ -147,6 +186,17 @@ function normalizeTotals(raw: unknown): StudyTotals | null {
   }
 }
 
+function normalizeDeckCounts(raw: unknown): Record<string, number> | undefined {
+  if (!isObj(raw)) return undefined
+  const counts: Record<string, number> = {}
+  for (const [key, value] of Object.entries(raw)) {
+    if (!key || typeof value !== 'number' || !Number.isFinite(value)) continue
+    const count = Math.max(0, Math.round(value))
+    if (count > 0) counts[key] = count
+  }
+  return Object.keys(counts).length ? counts : undefined
+}
+
 function normalizeHistory(raw: unknown): Record<string, DayStat> {
   if (!isObj(raw)) return {}
   const history: Record<string, DayStat> = {}
@@ -162,6 +212,10 @@ function normalizeHistory(raw: unknown): Record<string, DayStat> {
       day.ms = Math.max(day.ms, writing.ms)
       day.writing = writing
     }
+    const newByDeck = normalizeDeckCounts(value.newByDeck)
+    if (newByDeck) day.newByDeck = newByDeck
+    const reviewByDeck = normalizeDeckCounts(value.reviewByDeck)
+    if (reviewByDeck) day.reviewByDeck = reviewByDeck
     history[key] = day
   }
   return history

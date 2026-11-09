@@ -6,13 +6,12 @@ import { DeckCard } from '../components/DeckCard'
 import { DeckForm } from '../components/DeckForm'
 import { Icon } from '../components/Icon'
 import { ModeSwitch } from '../components/ModeSwitch'
+import { deckStat, overallStat, streak, todayStat } from '../lib/stats'
 import {
-  deckStat,
-  overallStat,
-  remainingNewToday,
-  streak,
-  todayStat,
-} from '../lib/stats'
+  remainingNewForDeck,
+  remainingReviewForDeck,
+} from '../lib/deck-settings'
+import { buildStudyQueue } from '../lib/study'
 import { formatDate, greeting } from '../lib/utils'
 
 interface HomeProps {
@@ -27,8 +26,16 @@ export function Home({ onNavigate, onStudy }: HomeProps) {
   const [creatingDeckKind, setCreatingDeckKind] = useState<'kana' | 'kanji'>('kana')
   const now = Date.now()
   const overall = overallStat(data.cards, now)
-  const allowance = remainingNewToday(data.history, data.settings, now)
-  const newCount = Math.min(overall.fresh, allowance)
+  const queue = buildStudyQueue(
+    data.cards,
+    data.decks,
+    'all',
+    data.history,
+    data.settings,
+    now,
+  )
+  const due = queue.filter((item) => !item.isNew).length
+  const newCount = queue.filter((item) => item.isNew).length
   const today = todayStat(data, now)
   const days = streak(data.history, now)
   const decks = data.decks
@@ -39,8 +46,7 @@ export function Home({ onNavigate, onStudy }: HomeProps) {
     .filter((deck) => deck.kind === 'kanji')
     .sort((a, b) => a.createdAt - b.createdAt)
 
-  const due = overall.due
-  const ready = due + newCount
+  const ready = queue.length
   const canPractice = overall.learned > 0
 
   const ctaLabel =
@@ -112,7 +118,11 @@ export function Home({ onNavigate, onStudy }: HomeProps) {
                 key={deck.id}
                 deck={deck}
                 stat={stat}
-                newCount={Math.min(stat.fresh, allowance)}
+                newCount={Math.min(
+                  stat.fresh,
+                  remainingNewForDeck(data.history, deck, data.settings, now),
+                )}
+                dueCount={Math.min(stat.due, remainingReviewForDeck(data.history, deck, now))}
                 onOpen={() => onNavigate({ name: 'deck', deckId: deck.id })}
                 onStudy={() => onStudy(deck.id)}
               />
@@ -154,7 +164,11 @@ export function Home({ onNavigate, onStudy }: HomeProps) {
                   key={deck.id}
                   deck={deck}
                   stat={stat}
-                  newCount={Math.min(stat.fresh, allowance)}
+                  newCount={Math.min(
+                    stat.fresh,
+                    remainingNewForDeck(data.history, deck, data.settings, now),
+                  )}
+                  dueCount={Math.min(stat.due, remainingReviewForDeck(data.history, deck, now))}
                   onOpen={() => onNavigate({ name: 'deck', deckId: deck.id })}
                   onStudy={() => onStudy(deck.id)}
                 />

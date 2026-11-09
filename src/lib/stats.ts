@@ -546,15 +546,6 @@ export function upcomingLoad(
   return result
 }
 
-export function remainingNewToday(
-  history: Record<string, DayStat>,
-  settings: Settings,
-  now = Date.now(),
-): number {
-  const used = history[dayKey(now)]?.newCards ?? 0
-  return Math.max(0, settings.newPerDay - used)
-}
-
 export function todayRange(now = Date.now()): number {
   return now - DAY
 }

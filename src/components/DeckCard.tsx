@@ -9,14 +9,16 @@ interface DeckCardProps {
   deck: Deck
   stat: DeckStat
   newCount: number
+  dueCount?: number
   onOpen: () => void
   onStudy: () => void
 }
 
-export function DeckCard({ deck, stat, newCount, onOpen, onStudy }: DeckCardProps) {
+export function DeckCard({ deck, stat, newCount, dueCount, onOpen, onStudy }: DeckCardProps) {
   const { t } = useI18n()
   const isKanji = deck.kind === 'kanji'
-  const nothingToStudy = stat.due === 0 && newCount === 0
+  const due = dueCount ?? stat.due
+  const nothingToStudy = due === 0 && newCount === 0
   const practice = nothingToStudy && stat.learned > 0
   const empty = nothingToStudy && stat.learned === 0
   const cta = empty
@@ -54,7 +56,7 @@ export function DeckCard({ deck, stat, newCount, onOpen, onStudy }: DeckCardProp
       <div className="deck-head">
         <span className="deck-jp">{deck.nameJp || (isKanji ? '漢字' : '言葉')}</span>
         <div className="deck-badges">
-          {stat.due > 0 && <span className="badge">{t('deckCard.dueBadge', { n: stat.due })}</span>}
+          {due > 0 && <span className="badge">{t('deckCard.dueBadge', { n: due })}</span>}
           {newCount > 0 && (
             <span className="badge badge-soft">{t('deckCard.newBadge', { n: newCount })}</span>
           )}

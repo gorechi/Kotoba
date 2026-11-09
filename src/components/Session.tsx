@@ -3,9 +3,8 @@ import type { QueueItem, Rating, RatingUndo, StudyMode } from '../types'
 import { useStore } from '../state/store'
 import { useI18n } from '../lib/i18n-react'
 import { deckTitle } from '../lib/content'
-import { remainingNewToday } from '../lib/stats'
 import { intervalPreview } from '../lib/srs'
-import { studyQueue } from '../lib/study'
+import { buildStudyQueue } from '../lib/study'
 import { formatDuration, speakJa } from '../lib/utils'
 import { FitText } from './FitText'
 import { Icon } from './Icon'
@@ -318,10 +317,12 @@ export function Session({ deckId, items, mode, onClose }: SessionProps) {
   ])
 
   const restartQueue = finished
-    ? studyQueue(
+    ? buildStudyQueue(
         data.cards,
+        data.decks,
         deckId,
-        remainingNewToday(data.history, data.settings),
+        data.history,
+        data.settings,
         Date.now(),
       )
     : []

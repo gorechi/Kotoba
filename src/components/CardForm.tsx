@@ -34,6 +34,10 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
   const [reading, setReading] = useState(card?.reading ?? '')
   const [meaning, setMeaning] = useState(card?.meaning ?? '')
   const [note, setNote] = useState(card?.note ?? '')
+  const [jlpt, setJlpt] = useState(card?.jlpt ?? 0)
+  const [frequency, setFrequency] = useState(
+    card?.frequency ? String(card.frequency) : '',
+  )
   const [tags, setTags] = useState<string[]>(card?.tags ?? [])
   const [tagInput, setTagInput] = useState('')
   const [tagSuggestions, setTagSuggestions] = useState<string[]>([])
@@ -103,6 +107,7 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
       return
     }
     const cleanReading = reading.trim()
+    const parsedFrequency = Math.round(Number(frequency))
     update((draft) => {
       if (card) {
         const target = draft.cards.find((item) => item.id === card.id)
@@ -112,6 +117,8 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
           target.meaning = meaning.trim()
           target.note = note.trim()
           target.tags = tags
+          target.jlpt = jlpt >= 1 && jlpt <= 5 ? jlpt : undefined
+          target.frequency = parsedFrequency > 0 ? parsedFrequency : undefined
         }
         return
       }
@@ -128,6 +135,8 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
         note: note.trim(),
         mnemonic: '',
         tags,
+        jlpt: jlpt >= 1 && jlpt <= 5 ? jlpt : undefined,
+        frequency: parsedFrequency > 0 ? parsedFrequency : undefined,
         readings: [],
         examples: [],
         group: 'custom',
@@ -146,6 +155,8 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
     setReading('')
     setMeaning('')
     setNote('')
+    setJlpt(0)
+    setFrequency('')
     setError('')
     setReadingTouched(false)
     window.requestAnimationFrame(() => frontRef.current?.focus())
@@ -246,6 +257,41 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
             placeholder={t('cardForm.meaningPlaceholder')}
             maxLength={160}
           />
+        </div>
+
+        <div className="form-row">
+          <div className="field">
+            <label htmlFor="card-jlpt">
+              {t('cardForm.jlpt')} <span className="field-hint">{t('common.optional')}</span>
+            </label>
+            <select
+              id="card-jlpt"
+              value={jlpt}
+              onChange={(event) => setJlpt(Number(event.target.value))}
+            >
+              <option value={0}>{t('cardForm.jlptNone')}</option>
+              <option value={5}>N5</option>
+              <option value={4}>N4</option>
+              <option value={3}>N3</option>
+              <option value={2}>N2</option>
+              <option value={1}>N1</option>
+            </select>
+          </div>
+          <div className="field">
+            <label htmlFor="card-frequency">
+              {t('cardForm.frequency')}{' '}
+              <span className="field-hint">{t('common.optional')}</span>
+            </label>
+            <input
+              id="card-frequency"
+              type="number"
+              min={1}
+              value={frequency}
+              onChange={(event) => setFrequency(event.target.value)}
+              placeholder={t('cardForm.frequencyPlaceholder')}
+            />
+            <p className="field-hint">{t('cardForm.frequencyHint')}</p>
+          </div>
         </div>
 
         <div className="field">

@@ -5177,6 +5177,49 @@ kbd {
   margin-top: 6px;
 }
 
+.deck-settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.deck-settings-section + .deck-settings-section {
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.deck-settings-section h3 {
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.deck-settings-section > .label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-soft);
+}
+
+.deck-settings-section .field {
+  gap: 5px;
+}
+
+.deck-settings-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-soft);
+  font-size: 12px;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.deck-settings-check input {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--accent);
+  flex: none;
+}
+
 @media (max-width: 1060px) {
   .browser-layout {
     grid-template-columns: 1fr;

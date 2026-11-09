@@ -1,27 +1,71 @@
-import type { Card, QueueItem } from '../types'
+import type { Card, DayStat, Deck, QueueItem, Settings } from '../types'
+import {
+  getDeckSettings,
+  orderNewCards,
+  remainingNewForDeck,
+  remainingReviewForDeck,
+} from './deck-settings'
 import { shuffle } from './utils'
 
-export function studyQueue(
+/**
+ * Собирает очередь с учётом настроек каждой колоды:
+ * дневных лимитов новых карточек и повторений, порядка и разрешения новых.
+ */
+export function buildStudyQueue(
   cards: Card[],
+  decks: Deck[],
   deckId: string,
-  newLimit: number,
+  history: Record<string, DayStat>,
+  settings: Settings,
   now = Date.now(),
 ): QueueItem[] {
-  const pool = (deckId === 'all' ? cards : cards.filter((card) => card.deckId === deckId)).filter(
-    (card) => !card.suspended,
-  )
-  const due = pool
-    .filter((card) => card.srs.introduced && card.srs.due <= now)
-    .sort((a, b) => a.srs.due - b.srs.due)
-    .map<QueueItem>((card) => ({ cardId: card.id, isNew: false }))
+  const targetDecks = deckId === 'all' ? decks : decks.filter((deck) => deck.id === deckId)
+  if (!targetDecks.length) return []
 
-  const fresh = pool
-    .filter((card) => !card.srs.introduced)
-    .sort((a, b) => a.order - b.order)
-    .slice(0, Math.max(0, newLimit))
-    .map<QueueItem>((card) => ({ cardId: card.id, isNew: true }))
+  const dueCards: Card[] = []
+  const freshByDeck = new Map<string, Card[]>()
 
-  return [...due, ...fresh]
+  for (const deck of targetDecks) {
+    const pool = cards.filter((card) => card.deckId === deck.id && !card.suspended)
+    const reviewRemaining = remainingReviewForDeck(history, deck, now)
+
+    const due = pool
+      .filter((card) => card.srs.introduced && card.srs.due <= now)
+      .sort((a, b) => a.srs.due - b.srs.due)
+    dueCards.push(
+      ...(Number.isFinite(reviewRemaining) ? due.slice(0, reviewRemaining) : due),
+    )
+
+    const deckSettings = getDeckSettings(deck)
+    if (deckSettings.allowNew) {
+      freshByDeck.set(
+        deck.id,
+        orderNewCards(
+          pool.filter((card) => !card.srs.introduced),
+          deckSettings.order,
+        ),
+      )
+    }
+  }
+
+  dueCards.sort((a, b) => a.srs.due - b.srs.due)
+  const dueItems = dueCards.map<QueueItem>((card) => ({ cardId: card.id, isNew: false }))
+  const freshItems: QueueItem[] = []
+
+  for (const deck of targetDecks) {
+    const deckSettings = getDeckSettings(deck)
+    if (!deckSettings.allowNew) continue
+    const remaining = remainingNewForDeck(history, deck, settings, now)
+    const fresh = freshByDeck.get(deck.id) ?? []
+    freshItems.push(
+      ...fresh.slice(0, remaining).map<QueueItem>((card) => ({
+        cardId: card.id,
+        isNew: true,
+      })),
+    )
+  }
+
+  return [...dueItems, ...freshItems]
 }
 
 export function practiceQueue(

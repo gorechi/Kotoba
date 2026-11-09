@@ -192,11 +192,25 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           ? { ...previousDayState }
           : { reviews: 0, correct: 0, newCards: 0, ms: 0 }
         if (previousDayState?.writing) day.writing = { ...previousDayState.writing }
+        if (previousDayState?.newByDeck) day.newByDeck = { ...previousDayState.newByDeck }
+        if (previousDayState?.reviewByDeck) {
+          day.reviewByDeck = { ...previousDayState.reviewByDeck }
+        }
 
         day.reviews += 1
         if (rating !== 'again') day.correct += 1
         if (wasNew) day.newCards += 1
         day.ms += elapsed
+
+        const reviewByDeck = day.reviewByDeck ?? {}
+        reviewByDeck[target.deckId] = (reviewByDeck[target.deckId] ?? 0) + 1
+        day.reviewByDeck = reviewByDeck
+
+        if (wasNew) {
+          const newByDeck = day.newByDeck ?? {}
+          newByDeck[target.deckId] = (newByDeck[target.deckId] ?? 0) + 1
+          day.newByDeck = newByDeck
+        }
 
         if (mode === 'writing') {
           const writing = day.writing ?? { reviews: 0, correct: 0, newCards: 0, ms: 0 }

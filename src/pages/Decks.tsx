@@ -5,13 +5,20 @@ import { useI18n } from '../lib/i18n-react'
 import { cardNote, deckDescription, deckTitle } from '../lib/content'
 import { DeckCard } from '../components/DeckCard'
 import { DeckForm } from '../components/DeckForm'
+import { DeckSettingsForm } from '../components/DeckSettingsForm'
 import { CardForm } from '../components/CardForm'
 import { KanjiCardForm } from '../components/KanjiCardForm'
 import { ConfirmDialog } from '../components/Modal'
 import { FitText } from '../components/FitText'
 import { Icon } from '../components/Icon'
 import { ModeSwitch } from '../components/ModeSwitch'
-import { deckStat, remainingNewToday } from '../lib/stats'
+import { deckStat } from '../lib/stats'
+import {
+  effectiveStudyMode,
+  getDeckSettings,
+  remainingNewForDeck,
+  remainingReviewForDeck,
+} from '../lib/deck-settings'
 import { dueLabel } from '../lib/utils'
 
 interface DecksProps {
@@ -24,7 +31,6 @@ export function Decks({ onNavigate, onStudy }: DecksProps) {
   const { t } = useI18n()
   const [creating, setCreating] = useState(false)
   const now = Date.now()
-  const allowance = remainingNewToday(data.history, data.settings, now)
   const decks = data.decks
     .filter((deck) => deck.kind !== 'kanji')
     .sort((a, b) => Number(b.builtin) - Number(a.builtin) || a.createdAt - b.createdAt)
@@ -54,7 +60,11 @@ export function Decks({ onNavigate, onStudy }: DecksProps) {
               key={deck.id}
               deck={deck}
               stat={stat}
-              newCount={Math.min(stat.fresh, allowance)}
+              newCount={Math.min(
+                stat.fresh,
+                remainingNewForDeck(data.history, deck, data.settings, now),
+              )}
+              dueCount={Math.min(stat.due, remainingReviewForDeck(data.history, deck, now))}
               onOpen={() => onNavigate({ name: 'deck', deckId: deck.id })}
               onStudy={() => onStudy(deck.id)}
             />
@@ -91,6 +101,7 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
   const [deletingCard, setDeletingCard] = useState<Card | null>(null)
   const [deletingDeck, setDeletingDeck] = useState(false)
   const [resetting, setResetting] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const [activeTags, setActiveTags] = useState<Set<string>>(new Set())
   const [statusFilter, setStatusFilter] = useState<'all' | 'new' | 'due' | 'learned'>('all')
   const [tagsExpanded, setTagsExpanded] = useState(false)
@@ -166,10 +177,14 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
   })
 
   const stat = deckStat(data.cards, deckId, now)
-  const allowance = remainingNewToday(data.history, data.settings, now)
-  const newCount = Math.min(stat.fresh, allowance)
-  const canStudy = stat.due + newCount > 0 || stat.learned > 0
-  const studyLabel = stat.due + newCount > 0 ? t('deckDetail.study') : t('deckDetail.practice')
+  const newCount = Math.min(
+    stat.fresh,
+    remainingNewForDeck(data.history, deck, data.settings, now),
+  )
+  const dueCount = Math.min(stat.due, remainingReviewForDeck(data.history, deck, now))
+  const canStudy = dueCount + newCount > 0 || stat.learned > 0
+  const studyLabel =
+    dueCount + newCount > 0 ? t('deckDetail.study') : t('deckDetail.practice')
   const watermark = (deck.nameJp || deck.name || '言').slice(0, 1)
 
   const deleteDeck = () => {
@@ -182,6 +197,14 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
 
   const resetDeck = () => {
     resetDeckProgress(deckId)
+  }
+
+  const changeMode = (mode: 'reading' | 'writing') => {
+    update((draft) => {
+      const target = draft.decks.find((item) => item.id === deckId)
+      if (!target) return
+      target.settings = { ...getDeckSettings(target), studyMode: mode }
+    })
   }
 
   return (
@@ -216,13 +239,16 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
             <span className="stat-chip">
               {t('deckDetail.learnedOf', { learned: stat.learned, total: stat.total })}
             </span>
-            <span className="stat-chip">{t('deckDetail.dueCount', { n: stat.due })}</span>
+            <span className="stat-chip">{t('deckDetail.dueCount', { n: dueCount })}</span>
             <span className="stat-chip">{t('deckDetail.newToday', { n: newCount })}</span>
           </div>
 
           <div className="mode-row">
             <span className="mode-row-label">{t('deckDetail.mode')}</span>
-            <ModeSwitch />
+            <ModeSwitch
+              value={effectiveStudyMode(deck, data.settings.studyMode)}
+              onChange={changeMode}
+            />
           </div>
 
           <div className="deck-hero-actions">
@@ -246,6 +272,14 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
                 <Icon name="pencil" size={17} />
               </button>
             )}
+            <button
+              className="icon-btn bordered"
+              onClick={() => setSettingsOpen(true)}
+              title={t('deckSettings.title')}
+              aria-label={t('deckSettings.title')}
+            >
+              <Icon name="sliders" size={17} />
+            </button>
             <button
               className="icon-btn bordered"
               onClick={() => setResetting(true)}
@@ -535,6 +569,10 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
           onClose={() => setResetting(false)}
           onConfirm={resetDeck}
         />
+      )}
+
+      {settingsOpen && (
+        <DeckSettingsForm deck={deck} onClose={() => setSettingsOpen(false)} />
       )}
     </div>
   )

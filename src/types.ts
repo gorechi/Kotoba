@@ -9,6 +9,20 @@ export type StudyMode = 'reading' | 'writing'
 export type WritingDifficulty = 'normal' | 'hard'
 /** Чем измеряется ежедневная цель. */
 export type DailyGoalType = 'reviews' | 'minutes'
+/** Порядок выдачи новых карточек в колоде. */
+export type DeckOrder = 'order' | 'random' | 'frequency' | 'jlpt'
+/** Режим изучения колоды: общий из настроек или собственный. */
+export type DeckStudyMode = 'global' | StudyMode
+
+export interface DeckStudySettings {
+  /** null — использовать общий лимит новых карточек. */
+  newPerDay: number | null
+  /** null — без ограничения повторений. */
+  reviewLimit: number | null
+  order: DeckOrder
+  allowNew: boolean
+  studyMode: DeckStudyMode
+}
 
 export type Route =
   | { name: 'home' }
@@ -47,6 +61,10 @@ export interface Card {
   mnemonic: string
   /** Теги карточки для фильтрации и поиска. */
   tags: string[]
+  /** Уровень JLPT: 5 = N5, 1 = N1. */
+  jlpt?: number
+  /** Частотный ранг: меньше — чаще встречается. */
+  frequency?: number
   /** Карточка временно исключена из учёбы. */
   suspended?: boolean
   /** Чтения иероглифа: кана + транскрипция (для карточек-иероглифов). */
@@ -86,6 +104,8 @@ export interface Deck {
   builtin: boolean
   /** Обычная колода или колода иероглифов. */
   kind: DeckKind
+  /** Учебные настройки колоды. */
+  settings?: DeckStudySettings
   createdAt: number
 }
 
@@ -99,6 +119,10 @@ export interface StudyTotals {
 export interface DayStat extends StudyTotals {
   /** Подмножество счётчиков за режим письма (входит в общие значения выше). */
   writing?: StudyTotals
+  /** Новые карточки за день по колодам. */
+  newByDeck?: Record<string, number>
+  /** Все повторения за день по колодам. */
+  reviewByDeck?: Record<string, number>
 }
 
 export interface Settings {

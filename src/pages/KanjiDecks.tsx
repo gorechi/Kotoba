@@ -6,7 +6,8 @@ import { DeckCard } from '../components/DeckCard'
 import { DeckForm } from '../components/DeckForm'
 import { Icon } from '../components/Icon'
 import { ModeSwitch } from '../components/ModeSwitch'
-import { deckStat, remainingNewToday } from '../lib/stats'
+import { deckStat } from '../lib/stats'
+import { remainingNewForDeck, remainingReviewForDeck } from '../lib/deck-settings'
 
 interface KanjiDecksProps {
   onNavigate: (route: Route) => void
@@ -18,7 +19,6 @@ export function KanjiDecks({ onNavigate, onStudy }: KanjiDecksProps) {
   const { t } = useI18n()
   const [creating, setCreating] = useState(false)
   const now = Date.now()
-  const allowance = remainingNewToday(data.history, data.settings, now)
   const decks = data.decks
     .filter((deck) => deck.kind === 'kanji')
     .sort((a, b) => a.createdAt - b.createdAt)
@@ -50,7 +50,11 @@ export function KanjiDecks({ onNavigate, onStudy }: KanjiDecksProps) {
               key={deck.id}
               deck={deck}
               stat={stat}
-              newCount={Math.min(stat.fresh, allowance)}
+              newCount={Math.min(
+                stat.fresh,
+                remainingNewForDeck(data.history, deck, data.settings, now),
+              )}
+              dueCount={Math.min(stat.due, remainingReviewForDeck(data.history, deck, now))}
               onOpen={() => onNavigate({ name: 'deck', deckId: deck.id })}
               onStudy={() => onStudy(deck.id)}
             />

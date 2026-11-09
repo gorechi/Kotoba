@@ -867,6 +867,14 @@ export function CardBrowser() {
                 <strong>{preview.srs.lapses}</strong>
               </div>
               <div>
+                <span>{t('cardForm.jlpt')}</span>
+                <strong>{preview.jlpt ? `N${preview.jlpt}` : t('browser.noValue')}</strong>
+              </div>
+              <div>
+                <span>{t('cardForm.frequency')}</span>
+                <strong>{preview.frequency ?? t('browser.noValue')}</strong>
+              </div>
+              <div>
                 <span>{t('browser.created')}</span>
                 <strong>{formatDate(preview.createdAt)}</strong>
               </div>

@@ -12,8 +12,8 @@ import { CardBrowser } from './pages/CardBrowser'
 import { Stats } from './pages/Stats'
 import { Settings } from './pages/Settings'
 import { KanaMap } from './pages/KanaMap'
-import { remainingNewToday } from './lib/stats'
-import { practiceQueue, studyQueue } from './lib/study'
+import { effectiveStudyMode } from './lib/deck-settings'
+import { practiceQueue, buildStudyQueue } from './lib/study'
 
 interface ActiveSession {
   deckId: string
@@ -38,11 +38,22 @@ function Shell() {
 
   const startStudy = (deckId: string) => {
     const now = Date.now()
-    const limit = remainingNewToday(data.history, data.settings, now)
-    let items = studyQueue(data.cards, deckId, limit, now)
+    let items = buildStudyQueue(
+      data.cards,
+      data.decks,
+      deckId,
+      data.history,
+      data.settings,
+      now,
+    )
     if (!items.length) items = practiceQueue(data.cards, deckId, now)
     if (!items.length) return
-    setSession({ deckId, items, mode: data.settings.studyMode })
+    const deck = deckId === 'all' ? undefined : data.decks.find((item) => item.id === deckId)
+    setSession({
+      deckId,
+      items,
+      mode: effectiveStudyMode(deck, data.settings.studyMode),
+    })
   }
 
   return (
@@ -75,7 +86,12 @@ function Shell() {
                   const card = data.cards.find((c) => c.id === cardId)
                   const items = [{ cardId, isNew: !card?.srs.introduced }]
                   if (!items.length) return
-                  setSession({ deckId, items, mode: data.settings.studyMode })
+                  const deck = data.decks.find((item) => item.id === deckId)
+                  setSession({
+                    deckId,
+                    items,
+                    mode: effectiveStudyMode(deck, data.settings.studyMode),
+                  })
                 }}
               />
             )}

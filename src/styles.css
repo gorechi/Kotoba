@@ -5597,18 +5597,21 @@ kbd {
 
 .zen-card-shadow {
   position: absolute;
-  left: 11%;
-  right: 11%;
-  bottom: -3%;
-  height: 10%;
+  left: 9%;
+  right: 9%;
+  bottom: -4%;
+  height: 13%;
   z-index: 0;
   border-radius: 50%;
-  background: var(--zen-floor-shadow);
-  filter: blur(18px);
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    var(--zen-floor-shadow) 0%,
+    transparent 72%
+  );
   opacity: 0.55;
   pointer-events: none;
   transform-origin: 50% 50%;
-  will-change: transform, opacity, filter;
+  will-change: transform, opacity;
 }
 
 .zen-card-lift {
@@ -5620,11 +5623,11 @@ kbd {
 }
 
 .zen-card-shell.is-flipped .zen-card-lift {
-  animation: zen-card-lift 2.1s both;
+  animation: zen-card-lift 2.2s both;
 }
 
 .zen-card-shell.is-flipped .zen-card-shadow {
-  animation: zen-card-shadow-lift 2.1s both;
+  animation: zen-card-shadow-lift 2.2s both;
 }
 
 .zen-card {
@@ -5632,35 +5635,26 @@ kbd {
   width: 100%;
   height: 100%;
   transform-style: preserve-3d;
-  transition: transform 1.25s cubic-bezier(0.2, 0.8, 0.2, 1);
   will-change: transform;
 }
 
 .zen-card-shell.is-flipped .zen-card {
   transform: rotateY(180deg);
-  animation: zen-card-turn 1.15s cubic-bezier(0.45, 0.05, 0.5, 0.95) 0.55s both;
+  animation: zen-card-turn 1.15s cubic-bezier(0.45, 0, 0.55, 1) 0.6s both;
 }
 
 @keyframes zen-card-lift {
   0% {
     transform: translate3d(0, 0, 0) rotateX(0deg) rotateZ(0deg);
-    animation-timing-function: cubic-bezier(0.22, 0.68, 0.32, 1);
-  }
-  9% {
-    transform: translate3d(0, -4px, 18px) rotateX(-1.2deg) rotateZ(-0.15deg);
-    animation-timing-function: cubic-bezier(0.25, 0.7, 0.35, 1);
+    animation-timing-function: cubic-bezier(0.38, 0, 0.2, 1);
   }
   27% {
-    transform: translate3d(0, -24px, 112px) rotateX(-5deg) rotateZ(-0.5deg);
+    transform: translate3d(0, -24px, 112px) rotateX(-4deg) rotateZ(-0.35deg);
     animation-timing-function: linear;
   }
   80% {
-    transform: translate3d(0, -24px, 112px) rotateX(-5deg) rotateZ(-0.5deg);
-    animation-timing-function: cubic-bezier(0.16, 0.62, 0.3, 1);
-  }
-  92% {
-    transform: translate3d(0, -8px, 38px) rotateX(-1.6deg) rotateZ(-0.1deg);
-    animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1);
+    transform: translate3d(0, -24px, 112px) rotateX(-4deg) rotateZ(-0.35deg);
+    animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
   }
   100% {
     transform: translate3d(0, 0, 0) rotateX(0deg) rotateZ(0deg);
@@ -5680,22 +5674,21 @@ kbd {
   0% {
     opacity: 0.55;
     transform: scale(1);
-    filter: blur(18px);
+    animation-timing-function: cubic-bezier(0.38, 0, 0.2, 1);
   }
   27% {
-    opacity: 0.24;
+    opacity: 0.22;
     transform: scale(1.08);
-    filter: blur(28px);
+    animation-timing-function: linear;
   }
   80% {
-    opacity: 0.26;
-    transform: scale(1.07);
-    filter: blur(26px);
+    opacity: 0.22;
+    transform: scale(1.08);
+    animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
   }
   100% {
     opacity: 0.55;
     transform: scale(1);
-    filter: blur(18px);
   }
 }
 

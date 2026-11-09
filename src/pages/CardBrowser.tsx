@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type DragEvent } from 'react'
-import type { Card, Deck } from '../types'
+import type { Card, Deck, DeckKind } from '../types'
 import { useStore } from '../state/store'
 import { useI18n } from '../lib/i18n-react'
 import { deckTitle } from '../lib/content'
@@ -209,6 +209,26 @@ export function CardBrowser() {
     selectedCards.length > 0 && selectedCards.every((card) => card.suspended)
   const selectionHasProtected = selectedCards.some((card) => isProtectedCard(card))
 
+  const selectedKinds = new Set<DeckKind>()
+  for (const card of selectedCards) {
+    const deck = deckMap.get(card.deckId)
+    if (deck) selectedKinds.add(deck.kind)
+  }
+  const selectedKind = selectedKinds.size === 1 ? [...selectedKinds][0] : null
+  const moveTargetDecks = selectedKind
+    ? movableDecks.filter((deck) => deck.kind === selectedKind)
+    : []
+
+  const draggingCards = draggingIds.length
+    ? data.cards.filter((card) => draggingIds.includes(card.id))
+    : []
+  const draggingKinds = new Set<DeckKind>()
+  for (const card of draggingCards) {
+    const deck = deckMap.get(card.deckId)
+    if (deck) draggingKinds.add(deck.kind)
+  }
+  const draggingKind = draggingKinds.size === 1 ? [...draggingKinds][0] : null
+
   const toggleSelect = (id: string) => {
     setSelected((current) => {
       const next = new Set(current)
@@ -243,11 +263,23 @@ export function CardBrowser() {
   const moveCards = (ids: string[], targetDeckId: string) => {
     const targetDeck = deckMap.get(targetDeckId)
     if (!targetDeck || isProtectedDeck(targetDeck)) return
+    const idSet = new Set(ids)
     const protectedIds = new Set(
       data.cards.filter((card) => isProtectedCard(card)).map((card) => card.id),
     )
     if (ids.some((id) => protectedIds.has(id))) return
-    const idSet = new Set(ids)
+
+    const sourceKinds = new Set<DeckKind>()
+    for (const card of data.cards) {
+      if (!idSet.has(card.id)) continue
+      const deck = deckMap.get(card.deckId)
+      if (deck) sourceKinds.add(deck.kind)
+    }
+    if (sourceKinds.size !== 1 || !sourceKinds.has(targetDeck.kind)) {
+      setNotice(t('browser.noticeWrongDeckKind'))
+      return
+    }
+
     const moved = data.cards.filter(
       (card) => idSet.has(card.id) && card.deckId !== targetDeckId,
     ).length
@@ -348,6 +380,18 @@ export function CardBrowser() {
   const handleDragStart = (event: DragEvent<HTMLDivElement>, card: Card) => {
     if (selectionHasProtected || isProtectedCard(card)) return
     const ids = selected.has(card.id) ? [...selected] : [card.id]
+    const idSet = new Set(ids)
+    const kinds = new Set<DeckKind>()
+    for (const item of data.cards) {
+      if (!idSet.has(item.id)) continue
+      const deck = deckMap.get(item.deckId)
+      if (deck) kinds.add(deck.kind)
+    }
+    if (kinds.size > 1) {
+      event.preventDefault()
+      setNotice(t('browser.noticeMixedKinds'))
+      return
+    }
     event.dataTransfer.effectAllowed = 'move'
     event.dataTransfer.setData('text/plain', ids.join(','))
     setDraggingIds(ids)
@@ -403,35 +447,48 @@ export function CardBrowser() {
 
           {data.decks.map((deck) => {
             const protectedDeck = isProtectedDeck(deck)
+            const dropEnabled =
+              !protectedDeck && draggingKind !== null && deck.kind === draggingKind
+            const dropDisabled = draggingIds.length > 0 && !dropEnabled
+            const wrongKind =
+              draggingIds.length > 0 && draggingKind !== null && deck.kind !== draggingKind
             return (
               <button
                 type="button"
                 key={deck.id}
                 className={`browser-deck-item${deckFilter === deck.id ? ' active' : ''}${
                   dragOverDeck === deck.id ? ' is-drop-target' : ''
-                }${protectedDeck ? ' is-protected' : ''}`}
+                }${protectedDeck ? ' is-protected' : ''}${
+                  dropDisabled ? ' is-drop-disabled' : ''
+                }`}
                 data-deck-id={deck.id}
-                title={protectedDeck ? t('browser.protectedDeck') : undefined}
+                title={
+                  protectedDeck
+                    ? t('browser.protectedDeck')
+                    : wrongKind
+                      ? t('browser.dropWrongKind')
+                      : undefined
+                }
                 onClick={() => setDeckFilter(deck.id)}
                 onDragOver={
-                  protectedDeck
-                    ? undefined
-                    : (event) => {
+                  dropEnabled
+                    ? (event) => {
                         event.preventDefault()
                         event.dataTransfer.dropEffect = 'move'
                         setDragOverDeck(deck.id)
                       }
+                    : undefined
                 }
                 onDragLeave={
-                  protectedDeck
-                    ? undefined
-                    : (event) => {
+                  dropEnabled
+                    ? (event) => {
                         if (!event.currentTarget.contains(event.relatedTarget as Node)) {
                           setDragOverDeck(null)
                         }
                       }
+                    : undefined
                 }
-                onDrop={protectedDeck ? undefined : (event) => handleDrop(event, deck.id)}
+                onDrop={dropEnabled ? (event) => handleDrop(event, deck.id) : undefined}
               >
                 <span className="deck-dot" style={{ background: deck.accent }} />
                 <span className="browser-deck-name">{deckTitle(deck, t)}</span>
@@ -588,7 +645,14 @@ export function CardBrowser() {
                     <Select
                       aria-label={t('browser.moveTo')}
                       value=""
-                      disabled={selectionHasProtected || movableDecks.length === 0}
+                      disabled={selectionHasProtected || moveTargetDecks.length === 0}
+                      title={
+                        !selectionHasProtected &&
+                        selectedKind === null &&
+                        selectedCards.length > 1
+                          ? t('browser.noticeMixedKinds')
+                          : undefined
+                      }
                       onChange={(event) => {
                         if (event.target.value) moveCards([...selected], event.target.value)
                       }}
@@ -596,7 +660,7 @@ export function CardBrowser() {
                       <option value="" disabled>
                         {t('browser.moveTo')}
                       </option>
-                      {movableDecks.map((deck) => (
+                      {moveTargetDecks.map((deck) => (
                         <option key={deck.id} value={deck.id}>
                           {deckTitle(deck, t)}
                         </option>

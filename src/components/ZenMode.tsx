@@ -151,8 +151,8 @@ export function ZenMode({ cards, onClose }: { cards: Card[]; onClose: () => void
                   <FitText
                     className="zen-card-translation"
                     text={backText(card)}
-                    maxFontSize={64}
-                    minFontSize={18}
+                    maxFontSize={96}
+                    minFontSize={20}
                   />
                 </div>
               </div>

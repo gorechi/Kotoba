@@ -6,6 +6,14 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: 'Caveat';
+  src: url('./assets/fonts/Caveat-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* ============================================================
    Котоба — токены
    ============================================================ */
@@ -44,6 +52,7 @@
   --font-kana: 'Yu Mincho', 'YuMincho', 'Hiragino Mincho ProN', serif;
   --font-zen: 'Klee One', 'UD Digi Kyokasho NK-R', 'UD Digi Kyokasho N-R', 'Yu Mincho',
     'YuMincho', 'Hiragino Mincho ProN', serif;
+  --font-zen-translation: 'Caveat', 'Segoe Print', 'Bradley Hand', 'Chalkboard SE', cursive;
 }
 
 [data-theme='dark'] {
@@ -180,6 +189,10 @@ button {
   -webkit-app-region: drag;
   position: relative;
   z-index: 30;
+}
+
+.app--zen .titlebar {
+  -webkit-app-region: no-drag;
 }
 
 .brand {
@@ -5306,6 +5319,7 @@ kbd {
   overflow: hidden;
   color: var(--text);
   user-select: none;
+  -webkit-app-region: no-drag;
   background:
     radial-gradient(
       circle at 50% 42%,
@@ -5775,9 +5789,9 @@ kbd {
 }
 
 .zen-card-translation {
-  font-family: var(--font-ui);
-  font-weight: 500;
-  line-height: 1.35;
+  font-family: var(--font-zen-translation);
+  font-weight: 400;
+  line-height: 1.25;
   color: var(--text-soft);
 }
 
@@ -5802,6 +5816,7 @@ kbd {
   color: var(--muted);
   opacity: 0.45;
   cursor: pointer;
+  -webkit-app-region: no-drag;
   backdrop-filter: blur(8px);
   transition: opacity 0.2s, background 0.2s, color 0.2s;
 }

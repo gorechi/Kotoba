@@ -103,7 +103,7 @@ function Shell() {
 
   return (
     <>
-      <div className="app" inert={zen ? true : undefined}>
+      <div className={`app${zen ? ' app--zen' : ''}`} inert={zen ? true : undefined}>
         <TitleBar />
       {session ? (
         <Session

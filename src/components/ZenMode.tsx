@@ -131,25 +131,30 @@ export function ZenMode({ cards, onClose }: { cards: Card[]; onClose: () => void
       <div className="zen-stage" aria-live="polite" aria-atomic="true">
         {card ? (
           <div
-            className={`zen-card-shell${leaving ? ' is-leaving' : ''}`}
+            className={`zen-card-shell${flipped ? ' is-flipped' : ''}${
+              leaving ? ' is-leaving' : ''
+            }`}
             key={`${card.id}-${cycle}`}
           >
-            <div className={`zen-card${flipped ? ' is-flipped' : ''}`}>
-              <div className="zen-face zen-face--front" aria-hidden={flipped}>
-                <FitText
-                  className="zen-card-jp"
-                  text={card.front}
-                  maxFontSize={140}
-                  minFontSize={28}
-                />
-              </div>
-              <div className="zen-face zen-face--back" aria-hidden={!flipped}>
-                <FitText
-                  className="zen-card-translation"
-                  text={backText(card)}
-                  maxFontSize={64}
-                  minFontSize={18}
-                />
+            <span className="zen-card-shadow" aria-hidden="true" />
+            <div className="zen-card-lift">
+              <div className="zen-card">
+                <div className="zen-face zen-face--front" aria-hidden={flipped}>
+                  <FitText
+                    className="zen-card-jp"
+                    text={card.front}
+                    maxFontSize={140}
+                    minFontSize={28}
+                  />
+                </div>
+                <div className="zen-face zen-face--back" aria-hidden={!flipped}>
+                  <FitText
+                    className="zen-card-translation"
+                    text={backText(card)}
+                    maxFontSize={64}
+                    minFontSize={18}
+                  />
+                </div>
               </div>
             </div>
           </div>

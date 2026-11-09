@@ -5,6 +5,7 @@ import { useI18n } from '../lib/i18n-react'
 import { normalizeData } from '../lib/normalize'
 import { Icon, type IconName } from '../components/Icon'
 import { ConfirmDialog } from '../components/Modal'
+import { Select } from '../components/Select'
 
 const THEMES: { value: Theme; labelKey: string; icon: IconName }[] = [
   { value: 'light', labelKey: 'settings.themeLight', icon: 'sun' },
@@ -36,6 +37,41 @@ export function Settings() {
 
   const changeNewPerDay = (delta: number) => {
     setSettings({ newPerDay: Math.min(50, Math.max(1, data.settings.newPerDay + delta)) })
+  }
+
+  const dailyGoalValue =
+    data.settings.dailyGoalType === 'minutes'
+      ? data.settings.dailyMinuteGoal
+      : data.settings.dailyReviewGoal
+
+  const changeDailyGoal = (direction: -1 | 1) => {
+    if (data.settings.dailyGoalType === 'minutes') {
+      setSettings({
+        dailyMinuteGoal: Math.min(
+          180,
+          Math.max(5, data.settings.dailyMinuteGoal + direction * 5),
+        ),
+      })
+      return
+    }
+    setSettings({
+      dailyReviewGoal: Math.min(
+        200,
+        Math.max(1, data.settings.dailyReviewGoal + direction),
+      ),
+    })
+  }
+
+  const bumpGoal = (
+    key: 'goalReviews' | 'goalCards' | 'goalStreak',
+    delta: number,
+    min: number,
+    max: number,
+  ) => {
+    const value = Math.min(max, Math.max(min, data.settings[key] + delta))
+    if (key === 'goalReviews') setSettings({ goalReviews: value })
+    else if (key === 'goalCards') setSettings({ goalCards: value })
+    else setSettings({ goalStreak: value })
   }
 
   const handleExport = async () => {
@@ -99,17 +135,138 @@ export function Settings() {
       </header>
 
       <div className="settings-grid">
+        <section className="panel panel-wide">
+          <div className="panel-head">
+            <div>
+              <h2>{t('settings.goals')}</h2>
+              <p>{t('settings.goalsSub')}</p>
+            </div>
+          </div>
+
+          <div className="goal-type-row">
+            <span className="goal-type-label">{t('settings.dailyGoal')}</span>
+            <div className="segmented">
+              <button
+                className={data.settings.dailyGoalType === 'reviews' ? 'active' : ''}
+                onClick={() => setSettings({ dailyGoalType: 'reviews' })}
+              >
+                {t('settings.dailyGoalReviews')}
+              </button>
+              <button
+                className={data.settings.dailyGoalType === 'minutes' ? 'active' : ''}
+                onClick={() => setSettings({ dailyGoalType: 'minutes' })}
+              >
+                {t('settings.dailyGoalMinutes')}
+              </button>
+            </div>
+          </div>
+
+          <div className="goal-row">
+            <div className="goal-value">
+              <strong>{dailyGoalValue}</strong>
+              <span>
+                {data.settings.dailyGoalType === 'minutes'
+                  ? t('settings.minutesPerDay')
+                  : t('settings.reviewsPerDay')}
+              </span>
+            </div>
+            <div className="stepper">
+              <button onClick={() => changeDailyGoal(-1)} aria-label={t('settings.lessAria')}>
+                <Icon name="minus" size={16} />
+              </button>
+              <button onClick={() => changeDailyGoal(1)} aria-label={t('settings.moreAria')}>
+                <Icon name="plus" size={16} />
+              </button>
+            </div>
+          </div>
+
+          <div className="goal-settings">
+            <div className="goal-setting-row">
+              <span>{t('settings.goalReviews')}</span>
+              <div className="goal-setting-control">
+                <strong>{data.settings.goalReviews}</strong>
+                <div className="stepper small">
+                  <button
+                    onClick={() => bumpGoal('goalReviews', -100, 100, 1_000_000)}
+                    aria-label={t('settings.lessAria')}
+                  >
+                    <Icon name="minus" size={14} />
+                  </button>
+                  <button
+                    onClick={() => bumpGoal('goalReviews', 100, 100, 1_000_000)}
+                    aria-label={t('settings.moreAria')}
+                  >
+                    <Icon name="plus" size={14} />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="goal-setting-row">
+              <span>{t('settings.goalCards')}</span>
+              <div className="goal-setting-control">
+                <strong>{data.settings.goalCards}</strong>
+                <div className="stepper small">
+                  <button
+                    onClick={() => bumpGoal('goalCards', -10, 10, 100_000)}
+                    aria-label={t('settings.lessAria')}
+                  >
+                    <Icon name="minus" size={14} />
+                  </button>
+                  <button
+                    onClick={() => bumpGoal('goalCards', 10, 10, 100_000)}
+                    aria-label={t('settings.moreAria')}
+                  >
+                    <Icon name="plus" size={14} />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="goal-setting-row">
+              <span>{t('settings.goalStreak')}</span>
+              <div className="goal-setting-control">
+                <strong>{data.settings.goalStreak}</strong>
+                <div className="stepper small">
+                  <button
+                    onClick={() => bumpGoal('goalStreak', -1, 1, 10_000)}
+                    aria-label={t('settings.lessAria')}
+                  >
+                    <Icon name="minus" size={14} />
+                  </button>
+                  <button
+                    onClick={() => bumpGoal('goalStreak', 1, 1, 10_000)}
+                    aria-label={t('settings.moreAria')}
+                  >
+                    <Icon name="plus" size={14} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <p className="hint">{t('settings.goalsHint')}</p>
+        </section>
+
         <section className="panel">
           <div className="panel-head">
             <div>
-              <h2>{t('settings.language')}</h2>
+              <h2>
+                {t('settings.language')}
+                {language !== 'en' && (
+                  <span className="panel-title-note">
+                    {' '}
+                    ({t('settings.languageHint')})
+                  </span>
+                )}
+              </h2>
               <p>{t('settings.languageSub')}</p>
             </div>
           </div>
           <div className="field">
-            <label htmlFor="settings-language">{t('settings.languageAria')}</label>
-            <select
+            <Select
               id="settings-language"
+              aria-label={t('settings.languageAria')}
               value={language}
               onChange={(event) => setLanguage(event.target.value)}
             >
@@ -118,7 +275,7 @@ export function Settings() {
                   {item.name}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
         </section>
 
@@ -329,7 +486,7 @@ export function Settings() {
       <footer className="about">
         <span className="brand-mark small">言</span>
         <div>
-          <strong>Котоба · 言葉</strong>
+          <strong>{t('brand.name')} · 言葉</strong>
           <span>{t('settings.about', { version: '1.1.0' })}</span>
         </div>
       </footer>

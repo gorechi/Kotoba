@@ -4,6 +4,7 @@ import type {
   CardExample,
   CardGroup,
   CardReading,
+  DailyGoalType,
   DayStat,
   Deck,
   DeckKind,
@@ -23,6 +24,7 @@ const THEMES: Theme[] = ['light', 'dark', 'system']
 const DECK_KINDS: DeckKind[] = ['kana', 'kanji']
 const STUDY_MODES: StudyMode[] = ['reading', 'writing']
 const WRITING_DIFFICULTIES: WritingDifficulty[] = ['normal', 'hard']
+const DAILY_GOAL_TYPES: DailyGoalType[] = ['reviews', 'minutes']
 
 function isObj(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -171,6 +173,12 @@ function normalizeSettings(raw: unknown): Settings {
     defaultTranscription: 'romaji',
     studyMode: 'reading',
     writingDifficulty: 'normal',
+    dailyGoalType: 'reviews',
+    dailyReviewGoal: 20,
+    dailyMinuteGoal: 15,
+    goalReviews: 1000,
+    goalCards: 100,
+    goalStreak: 30,
     language: DEFAULT_LOCALE,
   }
   if (!isObj(raw)) return base
@@ -185,6 +193,22 @@ function normalizeSettings(raw: unknown): Settings {
     writingDifficulty: WRITING_DIFFICULTIES.includes(raw.writingDifficulty as WritingDifficulty)
       ? (raw.writingDifficulty as WritingDifficulty)
       : base.writingDifficulty,
+    dailyGoalType: DAILY_GOAL_TYPES.includes(raw.dailyGoalType as DailyGoalType)
+      ? (raw.dailyGoalType as DailyGoalType)
+      : base.dailyGoalType,
+    dailyReviewGoal: clamp(
+      Math.round(num(raw.dailyReviewGoal, base.dailyReviewGoal)),
+      1,
+      500,
+    ),
+    dailyMinuteGoal: clamp(
+      Math.round(num(raw.dailyMinuteGoal, base.dailyMinuteGoal)),
+      5,
+      600,
+    ),
+    goalReviews: clamp(Math.round(num(raw.goalReviews, base.goalReviews)), 10, 1_000_000),
+    goalCards: clamp(Math.round(num(raw.goalCards, base.goalCards)), 1, 100_000),
+    goalStreak: clamp(Math.round(num(raw.goalStreak, base.goalStreak)), 1, 10_000),
     language: isLocaleCode(raw.language) ? raw.language : base.language,
   }
 }

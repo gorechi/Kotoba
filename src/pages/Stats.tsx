@@ -4,23 +4,40 @@ import { deckTitle } from '../lib/content'
 import { Icon } from '../components/Icon'
 import {
   accuracy,
+  buildHeatmap,
+  dailyGoalProgress,
   dayModeStat,
   deckStat,
+  HEATMAP_WEEKS,
   lastDays,
+  memoryStrength,
   modeAccuracy,
+  nearestMilestone,
   overallStat,
+  paceForecast,
+  personalRecords,
   streak,
   todayStat,
   totalModeStudyTime,
   totalReviews,
   totalStudyTime,
+  upcomingLoad,
 } from '../lib/stats'
 import { formatDuration } from '../lib/utils'
+import {
+  DailyGoalCard,
+  MemoryStrengthCard,
+  MilestoneCard,
+  PlanPanel,
+  RecordsCard,
+  WeeklyRecapCard,
+} from '../components/StatsBlocks'
 
 export function Stats() {
   const { data } = useStore()
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const now = Date.now()
+  const heatmap = buildHeatmap(data.history, now, locale.intl)
   const overall = overallStat(data.cards, now)
   const today = todayStat(data, now)
   const days = streak(data.history, now)
@@ -35,6 +52,13 @@ export function Stats() {
   const writing14 = points.reduce((sum, point) => sum + point.writingReviews, 0)
   const writingAccuracy = modeAccuracy(data.history, 'writing', 7, now)
   const writingTimeTotal = totalModeStudyTime(data.history, 'writing')
+  const dailyGoal = dailyGoalProgress(today, data.settings)
+  const milestone = nearestMilestone(reviewsTotal, overall.learned, days, data.settings)
+  const strength = memoryStrength(data.cards)
+  const records = personalRecords(data.history)
+  const forecast = paceForecast(data.cards, data.history, data.settings.newPerDay, now)
+  const upcoming = upcomingLoad(data.cards, now, locale.intl)
+  const weekPoints = points.slice(-7)
   const decks = [...data.decks].sort(
     (a, b) => Number(b.builtin) - Number(a.builtin) || a.createdAt - b.createdAt,
   )
@@ -80,6 +104,99 @@ export function Stats() {
           <strong>{overall.learned}</strong>
           <span>{t('stats.learnedOf', { total: overall.total })}</span>
         </div>
+      </div>
+
+      <div className="motivation-grid">
+        <DailyGoalCard progress={dailyGoal} week={weekPoints} />
+        <MilestoneCard milestone={milestone} />
+      </div>
+
+      <section className="panel">
+        <div className="panel-head">
+          <div>
+            <h2>{t('stats.heatmapTitle')}</h2>
+            <p>{t('stats.heatmapSub')}</p>
+          </div>
+          <span className="chart-total">{t('stats.heatmapTotal', { n: heatmap.total })}</span>
+        </div>
+
+        <div className="heatmap-scroll">
+          <div
+            className="heatmap"
+            style={{
+              gridTemplateColumns: `auto repeat(${HEATMAP_WEEKS}, var(--heatmap-cell))`,
+            }}
+          >
+            <div className="heatmap-corner" aria-hidden="true" />
+            {heatmap.months.map((month) => (
+              <span
+                key={`${month.week}-${month.label}`}
+                className="heatmap-month"
+                style={{
+                  gridColumn: `${month.week + 2} / span ${month.span}`,
+                  gridRow: 1,
+                }}
+                aria-hidden="true"
+              >
+                {month.label}
+              </span>
+            ))}
+            {heatmap.weekdays.map((weekday) => (
+              <span
+                key={weekday.row}
+                className="heatmap-weekday"
+                style={{ gridColumn: 1, gridRow: weekday.row + 2 }}
+                aria-hidden="true"
+              >
+                {weekday.label}
+              </span>
+            ))}
+            {heatmap.weeks.map((days, weekIndex) =>
+              days.map((day, dayIndex) => {
+                const label = day.future
+                  ? undefined
+                  : t('stats.heatmapDay', { date: day.label, n: day.reviews })
+                return (
+                  <span
+                    key={day.key}
+                    className={`heatmap-cell heatmap-level-${day.level}${
+                      day.future ? ' is-future' : ''
+                    }`}
+                    style={{ gridColumn: weekIndex + 2, gridRow: dayIndex + 2 }}
+                    title={label}
+                    aria-label={label}
+                    role={label ? 'img' : undefined}
+                    aria-hidden={day.future || undefined}
+                  />
+                )
+              }),
+            )}
+          </div>
+        </div>
+
+        <div className="heatmap-footer">
+          <span>{t('stats.heatmapActive', { n: heatmap.activeDays })}</span>
+          <div className="heatmap-legend">
+            <span>{t('stats.heatmapLess')}</span>
+            {[0, 1, 2, 3, 4].map((level) => (
+              <span
+                key={level}
+                className={`heatmap-legend-cell heatmap-level-${level}`}
+                aria-hidden="true"
+              />
+            ))}
+            <span>{t('stats.heatmapMore')}</span>
+          </div>
+        </div>
+
+        {heatmap.total === 0 && (
+          <p className="empty-note chart-empty">{t('stats.heatmapEmpty')}</p>
+        )}
+      </section>
+
+      <div className="stats-columns stats-columns--spaced">
+        <MemoryStrengthCard strength={strength} />
+        <RecordsCard records={records} />
       </div>
 
       <section className="panel">
@@ -144,6 +261,10 @@ export function Stats() {
 
         {reviewsTotal === 0 && <p className="empty-note chart-empty">{t('stats.chartEmpty')}</p>}
       </section>
+
+      <WeeklyRecapCard points={points} />
+
+      <PlanPanel forecast={forecast} upcoming={upcoming} />
 
       <section className="panel writing-panel">
         <div className="panel-head">

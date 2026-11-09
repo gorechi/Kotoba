@@ -10,6 +10,7 @@ export type IconName =
   | 'x'
   | 'chevron-left'
   | 'chevron-right'
+  | 'chevron-down'
   | 'check'
   | 'trash'
   | 'pencil'
@@ -30,6 +31,9 @@ export type IconName =
   | 'lock'
   | 'grid'
   | 'kanji'
+  | 'trophy'
+  | 'target'
+  | 'calendar'
 
 const paths: Record<IconName, ReactNode> = {
   book: (
@@ -87,6 +91,7 @@ const paths: Record<IconName, ReactNode> = {
   ),
   'chevron-left': <path d="m15 18-6-6 6-6" />,
   'chevron-right': <path d="m9 18 6-6-6-6" />,
+  'chevron-down': <path d="m6 9 6 6 6-6" />,
   check: <path d="M20 6 9 17l-5-5" />,
   trash: (
     <>
@@ -204,6 +209,34 @@ const paths: Record<IconName, ReactNode> = {
       <path d="M8 8h8" />
       <path d="M8 12h8" />
       <path d="M12 8v9" />
+    </>
+  ),
+  trophy: (
+    <>
+      <path d="M7 4h10v4a5 5 0 0 1-10 0Z" />
+      <path d="M7 6H4v1a4 4 0 0 0 4 4" />
+      <path d="M17 6h3v1a4 4 0 0 1-4 4" />
+      <path d="M12 13v7" />
+      <path d="M8 21h8" />
+    </>
+  ),
+  target: (
+    <>
+      <circle cx="12" cy="12" r="8" />
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2v2" />
+      <path d="M12 20v2" />
+      <path d="M2 12h2" />
+      <path d="M20 12h2" />
+    </>
+  ),
+  calendar: (
+    <>
+      <rect x="3" y="4" width="18" height="18" rx="2" />
+      <path d="M16 2v4" />
+      <path d="M8 2v4" />
+      <path d="M3 10h18" />
+      <path d="m8.5 16 2.2 2.2 4.3-4.3" />
     </>
   ),
 }

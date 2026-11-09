@@ -50,7 +50,7 @@ function collectLocales(): Locale[] {
 export const LOCALES: Locale[] = collectLocales()
 
 /** Язык по умолчанию. */
-export const DEFAULT_LOCALE = 'ru'
+export const DEFAULT_LOCALE = 'en'
 
 export function getLocale(code: string | undefined | null): Locale {
   return (

@@ -7,6 +7,8 @@ export type DeckKind = 'kana' | 'kanji'
 export type StudyMode = 'reading' | 'writing'
 /** Сложность режима письма. */
 export type WritingDifficulty = 'normal' | 'hard'
+/** Чем измеряется ежедневная цель. */
+export type DailyGoalType = 'reviews' | 'minutes'
 
 export type Route =
   | { name: 'home' }
@@ -105,6 +107,18 @@ export interface Settings {
   studyMode: StudyMode
   /** Сложность режима письма. */
   writingDifficulty: WritingDifficulty
+  /** Чем измеряется ежедневная цель. */
+  dailyGoalType: DailyGoalType
+  /** Цель по повторениям в день. */
+  dailyReviewGoal: number
+  /** Цель по минутам учёбы в день. */
+  dailyMinuteGoal: number
+  /** Личная цель по общему числу повторений. */
+  goalReviews: number
+  /** Личная цель по выученным карточкам. */
+  goalCards: number
+  /** Личная цель по серии дней. */
+  goalStreak: number
   /** Код языка интерфейса. */
   language: string
 }

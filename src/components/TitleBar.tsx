@@ -16,7 +16,7 @@ export function TitleBar() {
     <header className="titlebar">
       <div className="brand">
         <span className="brand-mark">言</span>
-        <span className="brand-name">Котоба</span>
+        <span className="brand-name">{t('brand.name')}</span>
         <span className="brand-tag">{t('brand.tag')}</span>
       </div>
       <div className="titlebar-fill" />

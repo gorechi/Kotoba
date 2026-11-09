@@ -4,8 +4,9 @@ import { useStore } from '../state/store'
 import { useI18n } from '../lib/i18n-react'
 import { DeckCard } from '../components/DeckCard'
 import { DeckForm } from '../components/DeckForm'
+import { CustomStudy } from '../components/CustomStudy'
 import { Icon } from '../components/Icon'
-import { ModeSwitch } from '../components/ModeSwitch'
+import type { CustomStudyOptions } from '../lib/custom-study'
 import { deckStat, overallStat, streak, todayStat } from '../lib/stats'
 import {
   remainingNewForDeck,
@@ -17,9 +18,10 @@ import { formatDate, greeting } from '../lib/utils'
 interface HomeProps {
   onNavigate: (route: Route) => void
   onStudy: (deckId: string) => void
+  onCustomStudy: (options: CustomStudyOptions, title: string) => boolean
 }
 
-export function Home({ onNavigate, onStudy }: HomeProps) {
+export function Home({ onNavigate, onStudy, onCustomStudy }: HomeProps) {
   const { data } = useStore()
   const { t } = useI18n()
   const [creatingDeck, setCreatingDeck] = useState(false)
@@ -100,6 +102,8 @@ export function Home({ onNavigate, onStudy }: HomeProps) {
           <div className="hero-kanji">言葉</div>
         </div>
       </section>
+
+      <CustomStudy onStart={onCustomStudy} />
 
       <section className="section">
         <div className="section-head">

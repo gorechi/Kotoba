@@ -68,6 +68,8 @@ export interface Card {
   frequency?: number
   /** Карточка временно исключена из учёбы. */
   suspended?: boolean
+  /** Время последней ошибки (оценки «Снова»), timestamp. */
+  lastMistakeAt?: number
   /** Чтения иероглифа: кана + транскрипция (для карточек-иероглифов). */
   readings: CardReading[]
   /** Примеры использования (для карточек-иероглифов). */
@@ -173,6 +175,7 @@ export interface QueueItem {
 export interface RatingUndo {
   cardId: string
   srs: SrsState
+  lastMistakeAt: number | null
   historyKey: string
   day: DayStat | null
 }

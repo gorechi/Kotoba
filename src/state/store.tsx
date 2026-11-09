@@ -169,12 +169,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const snapshot: RatingUndo = {
         cardId,
         srs: { ...card.srs },
+        lastMistakeAt: card.lastMistakeAt ?? null,
         historyKey,
         day: previousDay ? { ...previousDay } : null,
       }
 
       dirtyRef.current.progress = true
       dirtyRef.current.history = true
+      if (rating === 'again') dirtyRef.current.content = true
 
       setData((current) => {
         if (!current) return current
@@ -184,7 +186,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const target = current.cards[index]
         const wasNew = !target.srs.introduced
         const cards = current.cards.slice()
-        cards[index] = { ...target, srs: applyRating(target.srs, rating, now) }
+        cards[index] = {
+          ...target,
+          srs: applyRating(target.srs, rating, now),
+          lastMistakeAt: rating === 'again' ? now : target.lastMistakeAt,
+        }
 
         const elapsed = Math.min(Math.max(0, elapsedMs), 120_000)
         const previousDayState = current.history[historyKey]
@@ -236,12 +242,19 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const undoRating = useCallback((snapshot: RatingUndo) => {
     dirtyRef.current.progress = true
     dirtyRef.current.history = true
+    dirtyRef.current.content = true
 
     setData((prev) => {
       if (!prev) return prev
       const index = prev.cards.findIndex((item) => item.id === snapshot.cardId)
       const cards = prev.cards.slice()
-      if (index >= 0) cards[index] = { ...cards[index], srs: { ...snapshot.srs } }
+      if (index >= 0) {
+        cards[index] = {
+          ...cards[index],
+          srs: { ...snapshot.srs },
+          lastMistakeAt: snapshot.lastMistakeAt ?? undefined,
+        }
+      }
 
       const history = { ...prev.history }
       if (snapshot.day) {
@@ -269,11 +282,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const resetProgress = useCallback(() => {
     dirtyRef.current.progress = true
     dirtyRef.current.history = true
+    dirtyRef.current.content = true
     setData((prev) =>
       prev
         ? {
             ...prev,
-            cards: prev.cards.map((card) => ({ ...card, srs: freshSrs() })),
+            cards: prev.cards.map((card) => ({
+              ...card,
+              srs: freshSrs(),
+              lastMistakeAt: undefined,
+            })),
             history: {},
           }
         : prev,
@@ -282,12 +300,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const resetDeckProgress = useCallback((deckId: string) => {
     dirtyRef.current.progress = true
+    dirtyRef.current.content = true
     setData((prev) =>
       prev
         ? {
             ...prev,
             cards: prev.cards.map((card) =>
-              card.deckId === deckId ? { ...card, srs: freshSrs() } : card,
+              card.deckId === deckId
+                ? { ...card, srs: freshSrs(), lastMistakeAt: undefined }
+                : card,
             ),
           }
         : prev,

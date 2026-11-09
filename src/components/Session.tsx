@@ -20,6 +20,8 @@ interface SessionProps {
   deckId: string
   items: QueueItem[]
   mode: StudyMode
+  title?: string
+  restartItems?: () => QueueItem[]
   onClose: () => void
 }
 
@@ -54,7 +56,7 @@ const RATING_LABEL_KEY: Record<Rating, string> = {
   easy: 'session.ratings.easy',
 }
 
-export function Session({ deckId, items, mode, onClose }: SessionProps) {
+export function Session({ deckId, items, mode, title, restartItems, onClose }: SessionProps) {
   const { data, rateCard, undoRating, update } = useStore()
   const { t } = useI18n()
   const [queue, setQueue] = useState<QueueItem[]>(items)
@@ -82,11 +84,13 @@ export function Session({ deckId, items, mode, onClose }: SessionProps) {
   const mnemonic = card?.mnemonic?.trim() ?? ''
   const deck =
     deckId === 'all' ? undefined : data.decks.find((item) => item.id === deckId)
-  const deckName = deckId === 'all'
-    ? t('common.allKana')
-    : deck
-      ? deckTitle(deck, t)
-      : t('session.deckFallback')
+  const deckName = title
+    ? title
+    : deckId === 'all'
+      ? t('common.allKana')
+      : deck
+        ? deckTitle(deck, t)
+        : t('session.deckFallback')
   const total = Math.max(1, queue.length)
   const isKanji = cardDeck?.kind === 'kanji'
   const isWriting = mode === 'writing'
@@ -317,14 +321,16 @@ export function Session({ deckId, items, mode, onClose }: SessionProps) {
   ])
 
   const restartQueue = finished
-    ? buildStudyQueue(
-        data.cards,
-        data.decks,
-        deckId,
-        data.history,
-        data.settings,
-        Date.now(),
-      )
+    ? restartItems
+      ? restartItems()
+      : buildStudyQueue(
+          data.cards,
+          data.decks,
+          deckId,
+          data.history,
+          data.settings,
+          Date.now(),
+        )
     : []
 
   const restart = () => {

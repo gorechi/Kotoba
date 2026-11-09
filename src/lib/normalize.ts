@@ -155,6 +155,7 @@ function normalizeCard(raw: unknown): Card | null {
     : 'custom'
   const jlpt = Math.round(num(raw.jlpt, 0))
   const frequency = Math.round(num(raw.frequency, 0))
+  const lastMistakeAt = num(raw.lastMistakeAt, 0)
   return {
     id: raw.id,
     deckId: raw.deckId,
@@ -167,6 +168,7 @@ function normalizeCard(raw: unknown): Card | null {
     jlpt: jlpt >= 1 && jlpt <= 5 ? jlpt : undefined,
     frequency: frequency > 0 ? frequency : undefined,
     suspended: Boolean(raw.suspended),
+    lastMistakeAt: lastMistakeAt > 0 ? lastMistakeAt : undefined,
     readings: normalizeReadings(raw.readings),
     examples: normalizeExamples(raw.examples),
     group,

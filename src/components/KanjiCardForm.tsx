@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
 import type { Card, CardExample, CardReading } from '../types'
 import { useStore } from '../state/store'
+import { useI18n } from '../lib/i18n-react'
+import { deckTitle } from '../lib/content'
 import { freshSrs } from '../lib/srs'
 import { convertRomajiTail, guessKanaMode } from '../lib/romaji'
 import { toCyrillic } from '../lib/cyrillic'
@@ -26,13 +28,14 @@ function emptyExample(): CardExample {
 
 export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
   const { data, update } = useStore()
+  const { t } = useI18n()
   const deck = data.decks.find((item) => item.id === deckId)
   const defaultTranscription: 'romaji' | 'cyrillic' = data.settings.defaultTranscription
   const deckTags = useMemo(() => {
     const set = new Set<string>()
     data.cards
       .filter((c) => c.deckId === deckId)
-      .forEach((c) => c.tags.forEach((t) => set.add(t)))
+      .forEach((c) => c.tags.forEach((tag) => set.add(tag)))
     return [...set].sort()
   }, [data.cards, deckId])
 
@@ -58,7 +61,7 @@ export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
       return
     }
     setTagSuggestions(
-      deckTags.filter((t) => t.toLowerCase().includes(input) && !tags.includes(t)),
+      deckTags.filter((tag) => tag.toLowerCase().includes(input) && !tags.includes(tag)),
     )
   }, [tagInput, deckTags, tags])
 
@@ -74,7 +77,7 @@ export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
   }
 
   const removeTag = (tag: string) => {
-    setTags(tags.filter((t) => t !== tag))
+    setTags(tags.filter((item) => item !== tag))
   }
 
   const updateReading = (id: string, patch: Partial<CardReading>) => {
@@ -113,7 +116,7 @@ export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
   const save = (keepOpen: boolean) => {
     const cleanFront = front.trim()
     if (!cleanFront) {
-      setError('Добавь иероглиф')
+      setError(t('kanjiForm.frontError'))
       frontRef.current?.focus()
       return
     }
@@ -135,7 +138,7 @@ export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
     const cleanMeaning = meaning.trim()
 
     if (!cleanMeaning && !cleanReadings.length) {
-      setError('Добавь перевод или хотя бы одно чтение')
+      setError(t('kanjiForm.contentError'))
       return
     }
 
@@ -200,18 +203,19 @@ export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
   }
 
   const previewAnswer =
-    [meaning.trim(), readings[0]?.kana.trim()].filter(Boolean).join(' · ') || 'перевод и чтения'
+    [meaning.trim(), readings[0]?.kana.trim()].filter(Boolean).join(' · ') ||
+    t('kanjiForm.previewPlaceholder')
 
   return (
     <Modal
-      title={card ? 'Изменить карточку-иероглиф' : 'Новая карточка-иероглиф'}
-      subtitle={deck ? `Колода «${deck.name}»` : undefined}
+      title={card ? t('kanjiForm.edit') : t('kanjiForm.new')}
+      subtitle={deck ? t('kanjiForm.subtitle', { name: deckTitle(deck, t) }) : undefined}
       onClose={onClose}
       wide
       footer={
         <>
           <button type="button" className="btn btn-ghost" onClick={onClose}>
-            Отмена
+            {t('common.cancel')}
           </button>
           {!card && (
             <button
@@ -220,11 +224,11 @@ export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
               title="Ctrl+Enter"
               onClick={() => save(true)}
             >
-              Добавить и ещё
+              {t('kanjiForm.addMore')}
             </button>
           )}
           <button type="submit" form="kanji-card-form" className="btn btn-primary">
-            {card ? 'Сохранить' : 'Добавить карточку'}
+            {card ? t('common.save') : t('kanjiForm.add')}
           </button>
         </>
       }
@@ -247,7 +251,7 @@ export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
 
         <div className="form-row">
           <div className="field">
-            <label htmlFor="kanji-front">Кандзи</label>
+            <label htmlFor="kanji-front">{t('kanjiForm.kanji')}</label>
             <input
               ref={frontRef}
               id="kanji-front"
@@ -262,15 +266,15 @@ export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
               autoFocus
               spellCheck={false}
             />
-            <p className="field-hint">Для ввода иероглифов используй японскую раскладку.</p>
+            <p className="field-hint">{t('kanjiForm.kanjiHint')}</p>
           </div>
           <div className="field">
-            <label htmlFor="kanji-meaning">Перевод</label>
+            <label htmlFor="kanji-meaning">{t('kanjiForm.meaning')}</label>
             <input
               id="kanji-meaning"
               value={meaning}
               onChange={(event) => setMeaning(event.target.value)}
-              placeholder="вода"
+              placeholder={t('kanjiForm.meaningPlaceholder')}
               maxLength={160}
             />
           </div>
@@ -279,12 +283,12 @@ export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
         <section className="kanji-block">
           <div className="kanji-block-head">
             <div>
-              <h3>Чтения</h3>
-              <p className="field-hint">Слово каной и транскрипция. Можно добавить несколько.</p>
+              <h3>{t('kanjiForm.readings')}</h3>
+              <p className="field-hint">{t('kanjiForm.readingsHint')}</p>
             </div>
             <button type="button" className="btn btn-ghost btn-small" onClick={addReading}>
               <Icon name="plus" size={14} />
-              Добавить
+              {t('common.add')}
             </button>
           </div>
           {readings.map((item, index) => (
@@ -294,15 +298,19 @@ export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
                 value={item.kana}
                 onChange={(event) => changeReadingKana(item.id, event.target.value)}
                 placeholder={index === 0 ? 'みず' : 'すい'}
-                aria-label="Чтение каной"
+                aria-label={t('kanjiForm.readingKanaAria')}
                 maxLength={60}
                 spellCheck={false}
               />
               <input
                 value={item.transcription}
                 onChange={(event) => updateReading(item.id, { transcription: event.target.value })}
-                placeholder={defaultTranscription === 'cyrillic' ? 'мидзу' : 'mizu'}
-                aria-label="Транскрипция чтения"
+                placeholder={
+                  defaultTranscription === 'cyrillic'
+                    ? t('kanjiForm.readingTranscriptionCyrillic')
+                    : t('kanjiForm.readingTranscriptionRomaji')
+                }
+                aria-label={t('kanjiForm.readingTranscriptionAria')}
                 maxLength={120}
                 spellCheck={false}
               />
@@ -310,8 +318,8 @@ export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
                 type="button"
                 className="icon-btn danger"
                 onClick={() => removeReading(item.id)}
-                title="Удалить чтение"
-                aria-label="Удалить чтение"
+                title={t('kanjiForm.removeReading')}
+                aria-label={t('kanjiForm.removeReading')}
               >
                 <Icon name="x" size={16} />
               </button>
@@ -322,12 +330,12 @@ export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
         <section className="kanji-block">
           <div className="kanji-block-head">
             <div>
-              <h3>Примеры использования</h3>
-              <p className="field-hint">Написание, транскрипция и перевод.</p>
+              <h3>{t('kanjiForm.examples')}</h3>
+              <p className="field-hint">{t('kanjiForm.examplesHint')}</p>
             </div>
             <button type="button" className="btn btn-ghost btn-small" onClick={addExample}>
               <Icon name="plus" size={14} />
-              Добавить
+              {t('common.add')}
             </button>
           </div>
           {examples.map((item, index) => (
@@ -338,7 +346,7 @@ export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
                   value={item.text}
                   onChange={(event) => changeExampleText(item.id, event.target.value)}
                   placeholder={index === 0 ? '水を飲む' : '水が冷たい'}
-                  aria-label="Пример по-японски"
+                  aria-label={t('kanjiForm.exampleJpAria')}
                   maxLength={160}
                   spellCheck={false}
                 />
@@ -347,24 +355,28 @@ export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
                   onChange={(event) =>
                     updateExample(item.id, { transcription: event.target.value })
                   }
-                  placeholder={defaultTranscription === 'cyrillic' ? 'мидзу-о ному' : 'mizu o nomu'}
-                  aria-label="Транскрипция примера"
+                  placeholder={
+                    defaultTranscription === 'cyrillic'
+                      ? t('kanjiForm.exampleTranscriptionCyrillic')
+                      : t('kanjiForm.exampleTranscriptionRomaji')
+                  }
+                  aria-label={t('kanjiForm.exampleTranscriptionAria')}
                   maxLength={200}
                   spellCheck={false}
                 />
                 <input
                   value={item.translation}
                   onChange={(event) => updateExample(item.id, { translation: event.target.value })}
-                  placeholder="пить воду"
-                  aria-label="Перевод примера"
+                  placeholder={t('kanjiForm.exampleTranslationPlaceholder')}
+                  aria-label={t('kanjiForm.exampleTranslationAria')}
                   maxLength={200}
                 />
                 <button
                   type="button"
                   className="icon-btn danger"
                   onClick={() => removeExample(item.id)}
-                  title="Удалить пример"
-                  aria-label="Удалить пример"
+                  title={t('kanjiForm.removeExample')}
+                  aria-label={t('kanjiForm.removeExample')}
                 >
                   <Icon name="x" size={16} />
                 </button>
@@ -375,13 +387,13 @@ export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
 
         <div className="field">
           <label htmlFor="kanji-note">
-            Заметка <span className="field-hint">необязательно</span>
+            {t('kanjiForm.note')} <span className="field-hint">{t('common.optional')}</span>
           </label>
           <textarea
             id="kanji-note"
             value={note}
             onChange={(event) => setNote(event.target.value)}
-            placeholder="Подсказка, исключение или личная ассоциация"
+            placeholder={t('kanjiForm.notePlaceholder')}
             rows={2}
             maxLength={400}
           />
@@ -389,7 +401,7 @@ export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
 
         <div className="field">
           <label htmlFor="kanji-tags">
-            Теги <span className="field-hint">необязательно</span>
+            {t('kanjiForm.tags')} <span className="field-hint">{t('common.optional')}</span>
           </label>
           <div className="tag-input" id="kanji-tags">
             {tags.map((tag) => (
@@ -399,8 +411,8 @@ export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
                   type="button"
                   className="tag-remove"
                   onClick={() => removeTag(tag)}
-                  title={`Удалить тег «${tag}»`}
-                  aria-label={`Удалить тег ${tag}`}
+                  title={t('kanjiForm.tagRemoveTitle', { tag })}
+                  aria-label={t('kanjiForm.tagRemoveAria', { tag })}
                 >
                   ×
                 </button>
@@ -420,7 +432,7 @@ export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
                   setTagSuggestions([])
                 }
               }}
-              placeholder="Добавить тег и Enter…"
+              placeholder={t('kanjiForm.tagPlaceholder')}
               maxLength={40}
             />
             {tagSuggestions.length > 0 && (
@@ -440,11 +452,7 @@ export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
           </div>
         </div>
 
-        {!card && (
-          <p className="form-hint">
-            Ctrl+Enter — добавить карточку и сразу перейти к следующей.
-          </p>
-        )}
+        {!card && <p className="form-hint">{t('kanjiForm.ctrlEnter')}</p>}
 
         {error && <p className="form-error">{error}</p>}
       </form>

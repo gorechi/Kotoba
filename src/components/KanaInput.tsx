@@ -7,13 +7,14 @@ import {
   type RefObject,
 } from 'react'
 import {
-  KANA_MODES,
   convertForModeSwitch,
   convertRomajiTail,
   extraSigns,
   finalizeRomajiTail,
+  kanaModes,
   type KanaMode,
 } from '../lib/romaji'
+import { useI18n } from '../lib/i18n-react'
 
 interface KanaInputProps {
   id: string
@@ -45,6 +46,7 @@ export function KanaInput({
   onBlur,
   simple = false,
 }: KanaInputProps) {
+  const { t } = useI18n()
   const localRef = useRef<HTMLInputElement>(null)
   const ref = inputRef ?? localRef
   const composingRef = useRef(false)
@@ -125,6 +127,7 @@ export function KanaInput({
   }
 
   const signs = extraSigns(mode)
+  const modes = kanaModes()
 
   return (
     <div className={`kana-input${mode === 'abc' ? '' : ' is-kana'}`}>
@@ -148,9 +151,9 @@ export function KanaInput({
           autoCapitalize="off"
           spellCheck={false}
         />
-        <div className="kana-modes" role="group" aria-label="Режим ввода">
+        <div className="kana-modes" role="group" aria-label={t('kanaInput.modeAria')}>
           {!simple &&
-            KANA_MODES.map((option) => (
+            modes.map((option) => (
               <button
                 key={option.mode}
                 type="button"
@@ -170,15 +173,15 @@ export function KanaInput({
       {mode !== 'abc' && tip && <p className="kana-tip">{tip}</p>}
 
       {!simple && signs.length > 0 && (
-        <div className="kana-signs" role="group" aria-label="Дополнительные знаки">
-          <span className="kana-signs-label">знаки</span>
+        <div className="kana-signs" role="group" aria-label={t('kanaInput.extraAria')}>
+          <span className="kana-signs-label">{t('kanaInput.signs')}</span>
           {signs.map((sign) => (
             <button
               key={sign}
               type="button"
               className="kana-sign"
-              title={`Вставить ${sign}`}
-              aria-label={`Вставить ${sign}`}
+              title={t('kanaInput.insert', { sign })}
+              aria-label={t('kanaInput.insert', { sign })}
               tabIndex={-1}
               onMouseDown={(event) => event.preventDefault()}
               onClick={() => insertSign(sign)}

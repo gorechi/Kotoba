@@ -1,28 +1,30 @@
 import type { StudyMode } from '../types'
 import { useStore } from '../state/store'
+import { useI18n } from '../lib/i18n-react'
 import { Icon, type IconName } from './Icon'
 
-const MODES: { value: StudyMode; label: string; icon: IconName; hint: string }[] = [
+const MODES: { value: StudyMode; labelKey: string; icon: IconName; hintKey: string }[] = [
   {
     value: 'reading',
-    label: 'Чтение',
+    labelKey: 'mode.reading',
     icon: 'book',
-    hint: 'На карточке японский текст — вспоминаем чтение и перевод',
+    hintKey: 'mode.hintReading',
   },
   {
     value: 'writing',
-    label: 'Письмо',
+    labelKey: 'mode.writing',
     icon: 'pencil',
-    hint: 'На карточке перевод — пишем японский текст в тетради',
+    hintKey: 'mode.hintWriting',
   },
 ]
 
 export function ModeSwitch() {
   const { data, setSettings } = useStore()
+  const { t } = useI18n()
   const mode = data.settings.studyMode
 
   return (
-    <div className="mode-switch" role="group" aria-label="Режим обучения">
+    <div className="mode-switch" role="group" aria-label={t('mode.groupAria')}>
       {MODES.map((item) => (
         <button
           key={item.value}
@@ -30,10 +32,10 @@ export function ModeSwitch() {
           className={`mode-switch-btn ${item.value}${mode === item.value ? ' active' : ''}`}
           onClick={() => setSettings({ studyMode: item.value })}
           aria-pressed={mode === item.value}
-          title={item.hint}
+          title={t(item.hintKey)}
         >
           <Icon name={item.icon} size={15} />
-          {item.label}
+          {t(item.labelKey)}
         </button>
       ))}
     </div>

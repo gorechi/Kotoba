@@ -1,27 +1,21 @@
 import type { Card, Deck } from '../types'
 import { freshSrs } from '../lib/srs'
+import { DEFAULT_LOCALE } from '../lib/i18n'
 import {
   HIRAGANA_BASIC,
   HIRAGANA_VOICED,
   KATAKANA_BASIC,
   KATAKANA_VOICED,
+  type KanaSeed,
 } from './kana'
-
-export interface SeedKana {
-  kana: string
-  romaji: string
-  example?: string
-  translation?: string
-  note?: string
-}
 
 export function createSeedDecks(now = Date.now()): Deck[] {
   return [
     {
       id: 'hiragana',
-      name: 'Хирагана',
+      name: '',
       nameJp: 'ひらがな',
-      description: 'Основа японской письменности: 46 знаков и озвончённые варианты.',
+      description: '',
       accent: '#E1523D',
       builtin: true,
       kind: 'kana',
@@ -29,9 +23,9 @@ export function createSeedDecks(now = Date.now()): Deck[] {
     },
     {
       id: 'katakana',
-      name: 'Катакана',
+      name: '',
       nameJp: 'カタカナ',
-      description: 'Для заимствованных слов: 46 знаков и озвончённые варианты.',
+      description: '',
       accent: '#4A5FC1',
       builtin: true,
       kind: 'kana',
@@ -60,6 +54,7 @@ export function createSeedData(now = Date.now()) {
       defaultTranscription: 'romaji' as const,
       studyMode: 'reading' as const,
       writingDifficulty: 'normal' as const,
+      language: DEFAULT_LOCALE,
     },
     createdAt: now,
   }
@@ -68,7 +63,7 @@ export function createSeedData(now = Date.now()) {
 function seedCards(
   deckId: string,
   prefix: string,
-  seeds: SeedKana[],
+  seeds: KanaSeed[],
   group: 'basic' | 'voiced',
   startIndex: number,
   now: number,
@@ -79,7 +74,7 @@ function seedCards(
     front: seed.kana,
     reading: seed.romaji,
     meaning: '',
-    note: seed.note ?? (seed.example ? `${seed.example} — ${seed.translation ?? ''}` : ''),
+    note: '',
     mnemonic: '',
     tags: [],
     readings: [],

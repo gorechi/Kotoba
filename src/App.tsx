@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { QueueItem, Route, StudyMode } from './types'
 import { StoreProvider, useStore } from './state/store'
+import { I18nProvider } from './lib/i18n-react'
 import { TitleBar } from './components/TitleBar'
 import { Sidebar } from './components/Sidebar'
 import { Session } from './components/Session'
@@ -86,7 +87,9 @@ function Shell() {
 export default function App() {
   return (
     <StoreProvider>
-      <Shell />
+      <I18nProvider>
+        <Shell />
+      </I18nProvider>
     </StoreProvider>
   )
 }

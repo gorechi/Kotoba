@@ -1,4 +1,5 @@
 import { toHiragana, toKatakana, toRomaji } from 'wanakana'
+import { translate } from './i18n'
 
 export type KanaMode = 'abc' | 'hiragana' | 'katakana'
 
@@ -8,11 +9,14 @@ export interface KanaModeOption {
   title: string
 }
 
-export const KANA_MODES: KanaModeOption[] = [
-  { mode: 'abc', label: 'abc', title: 'Латиница (ромадзи)' },
-  { mode: 'hiragana', label: 'あ', title: 'Хирагана' },
-  { mode: 'katakana', label: 'ア', title: 'Катакана' },
-]
+/** Варианты ввода каны с подписями на текущем языке. */
+export function kanaModes(): KanaModeOption[] {
+  return [
+    { mode: 'abc', label: 'abc', title: translate('kanaMode.abc') },
+    { mode: 'hiragana', label: 'あ', title: translate('kanaMode.hiragana') },
+    { mode: 'katakana', label: 'ア', title: translate('kanaMode.katakana') },
+  ]
+}
 
 const EXTRA_SIGNS: Record<Exclude<KanaMode, 'abc'>, string[]> = {
   hiragana: ['っ', 'ゃ', 'ゅ', 'ょ', 'ぁ', 'ぃ', 'ぅ', 'ぇ', 'ぉ', 'ゔ', 'ー'],

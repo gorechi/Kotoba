@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { QueueItem, Rating, RatingUndo, StudyMode } from '../types'
 import { useStore } from '../state/store'
+import { useI18n } from '../lib/i18n-react'
+import { deckTitle } from '../lib/content'
 import { remainingNewToday } from '../lib/stats'
 import { intervalPreview } from '../lib/srs'
 import { studyQueue } from '../lib/study'
@@ -8,11 +10,11 @@ import { formatDuration, speakJa } from '../lib/utils'
 import { FitText } from './FitText'
 import { Icon } from './Icon'
 
-const RATINGS: { rating: Rating; label: string; key: string }[] = [
-  { rating: 'again', label: 'Снова', key: '1' },
-  { rating: 'hard', label: 'Трудно', key: '2' },
-  { rating: 'good', label: 'Хорошо', key: '3' },
-  { rating: 'easy', label: 'Легко', key: '4' },
+const RATINGS: { rating: Rating; labelKey: string; key: string }[] = [
+  { rating: 'again', labelKey: 'session.ratings.again', key: '1' },
+  { rating: 'hard', labelKey: 'session.ratings.hard', key: '2' },
+  { rating: 'good', labelKey: 'session.ratings.good', key: '3' },
+  { rating: 'easy', labelKey: 'session.ratings.easy', key: '4' },
 ]
 
 interface SessionProps {
@@ -46,15 +48,16 @@ interface SessionSnapshot {
   shownAt: number
 }
 
-const RATING_LABEL: Record<Rating, string> = {
-  again: 'Снова',
-  hard: 'Трудно',
-  good: 'Хорошо',
-  easy: 'Легко',
+const RATING_LABEL_KEY: Record<Rating, string> = {
+  again: 'session.ratings.again',
+  hard: 'session.ratings.hard',
+  good: 'session.ratings.good',
+  easy: 'session.ratings.easy',
 }
 
 export function Session({ deckId, items, mode, onClose }: SessionProps) {
   const { data, rateCard, undoRating, update } = useStore()
+  const { t } = useI18n()
   const [queue, setQueue] = useState<QueueItem[]>(items)
   const [pos, setPos] = useState(0)
   const [revealed, setRevealed] = useState(false)
@@ -78,8 +81,13 @@ export function Session({ deckId, items, mode, onClose }: SessionProps) {
   const cardDeck = card ? data.decks.find((item) => item.id === card.deckId) : undefined
   const canUseMnemonic = Boolean(cardDeck?.builtin)
   const mnemonic = card?.mnemonic?.trim() ?? ''
-  const deckName =
-    deckId === 'all' ? 'Все азбуки' : data.decks.find((deck) => deck.id === deckId)?.name ?? 'Колода'
+  const deck =
+    deckId === 'all' ? undefined : data.decks.find((item) => item.id === deckId)
+  const deckName = deckId === 'all'
+    ? t('common.allKana')
+    : deck
+      ? deckTitle(deck, t)
+      : t('session.deckFallback')
   const total = Math.max(1, queue.length)
   const isKanji = cardDeck?.kind === 'kanji'
   const isWriting = mode === 'writing'
@@ -356,12 +364,19 @@ export function Session({ deckId, items, mode, onClose }: SessionProps) {
   return (
     <div className="session">
       <header className="session-head">
-        <button className="icon-btn" onClick={onClose} aria-label="Выйти" title="Выйти (Esc)">
+        <button
+          className="icon-btn"
+          onClick={onClose}
+          aria-label={t('session.exit')}
+          title={t('session.exitTitle')}
+        >
           <Icon name="x" size={19} />
         </button>
         <div className="session-title">
           <span>{deckName}</span>
-          <span className={`mode-badge ${mode}`}>{isWriting ? 'письмо' : 'чтение'}</span>
+          <span className={`mode-badge ${mode}`}>
+            {isWriting ? t('session.modeWriting') : t('session.modeReading')}
+          </span>
           <span className="session-count">
             {finished ? queue.length : `${pos + 1} / ${queue.length}`}
           </span>
@@ -379,35 +394,35 @@ export function Session({ deckId, items, mode, onClose }: SessionProps) {
           <div className="done-icon">
             <Icon name="sparkles" size={28} />
           </div>
-          <h1>Отличная работа!</h1>
-          <p className="done-sub">Подход завершён. Прогресс сохранён.</p>
+          <h1>{t('session.doneTitle')}</h1>
+          <p className="done-sub">{t('session.doneSub')}</p>
 
           <div className="done-stats">
             <div>
               <strong>{stats.reviews}</strong>
-              <span>карточек</span>
+              <span>{t('session.cards')}</span>
             </div>
             <div>
               <strong>{accuracy}%</strong>
-              <span>точность</span>
+              <span>{t('session.accuracy')}</span>
             </div>
             <div>
               <strong>{stats.newCards}</strong>
-              <span>новых</span>
+              <span>{t('session.new')}</span>
             </div>
             <div>
               <strong>{formatDuration(Date.now() - stats.startedAt)}</strong>
-              <span>время</span>
+              <span>{t('session.time')}</span>
             </div>
           </div>
 
           {mistakeRows.length > 0 && (
             <div className="mistake-review">
               <div className="mistake-head">
-                <h2>Разбор ошибок</h2>
+                <h2>{t('session.mistakesTitle')}</h2>
                 <span className="badge badge-soft">{mistakeRows.length}</span>
               </div>
-              <p className="mistake-sub">Эти карточки ты отметил как «Снова».</p>
+              <p className="mistake-sub">{t('session.mistakesSub')}</p>
               <div className="mistake-list">
                 {mistakeRows.map(({ card: mistakeCard, count, isKanji: mistakeKanji }) => (
                   <div className="mistake-row" key={mistakeCard.id}>
@@ -445,8 +460,8 @@ export function Session({ deckId, items, mode, onClose }: SessionProps) {
                             : mistakeCard.front,
                         )
                       }
-                      title="Прослушать"
-                      aria-label={`Прослушать ${mistakeCard.front}`}
+                      title={t('session.listen')}
+                      aria-label={t('session.listenAria', { front: mistakeCard.front })}
                     >
                       <Icon name="speaker" size={15} />
                     </button>
@@ -460,24 +475,24 @@ export function Session({ deckId, items, mode, onClose }: SessionProps) {
             {lastRating && (
               <button className="btn btn-ghost btn-lg" onClick={undoLastRating}>
                 <Icon name="rotate" size={16} />
-                Отменить: {RATING_LABEL[lastRating.rating]}
+                {t('session.undo', { rating: t(RATING_LABEL_KEY[lastRating.rating]) })}
               </button>
             )}
             <button
               className={`btn btn-lg ${mistakeRows.length > 0 ? 'btn-ghost' : 'btn-primary'}`}
               onClick={onClose}
             >
-              Готово
+              {t('session.doneButton')}
             </button>
             {mistakeRows.length > 0 && (
               <button className="btn btn-primary btn-lg" onClick={practiceMistakes}>
                 <Icon name="rotate" size={16} />
-                Проработать ошибки ещё раз
+                {t('session.practiceMistakes')}
               </button>
             )}
             {restartQueue.length > 0 && (
               <button className="btn btn-ghost btn-lg" onClick={restart}>
-                Ещё подход
+                {t('session.another')}
               </button>
             )}
           </div>
@@ -493,7 +508,7 @@ export function Session({ deckId, items, mode, onClose }: SessionProps) {
                 <div className="face-top">
                   <span className="face-deck">{deckName}</span>
                   <div className="face-top-right">
-                    {current?.isNew && <span className="badge badge-soft">новое</span>}
+                    {current?.isNew && <span className="badge badge-soft">{t('session.newBadge')}</span>}
                     {canUseMnemonic && !isWriting && (
                       <button
                         type="button"
@@ -506,17 +521,17 @@ export function Session({ deckId, items, mode, onClose }: SessionProps) {
                         }}
                         title={
                           !mnemonic
-                            ? 'Добавить мнемонику'
+                            ? t('session.mnemonicAdd')
                             : mnemonicOpen || mnemonicEditing
-                              ? 'Скрыть мнемонику'
-                              : 'Показать мнемонику'
+                              ? t('session.mnemonicHide')
+                              : t('session.mnemonicShow')
                         }
                         aria-label={
                           !mnemonic
-                            ? 'Добавить мнемонику'
+                            ? t('session.mnemonicAdd')
                             : mnemonicOpen || mnemonicEditing
-                              ? 'Скрыть мнемонику'
-                              : 'Показать мнемонику'
+                              ? t('session.mnemonicHide')
+                              : t('session.mnemonicShow')
                         }
                         aria-expanded={mnemonicOpen || mnemonicEditing}
                       >
@@ -529,20 +544,18 @@ export function Session({ deckId, items, mode, onClose }: SessionProps) {
                   <div className="writing-prompt">
                     <span className="writing-instruction">
                       {isKanji
-                        ? 'Напиши иероглиф'
+                        ? t('session.writeKanji')
                         : hasMeaning
-                          ? 'Напиши по-японски в тетради'
+                          ? t('session.writeJapanese')
                           : cardReading
-                            ? 'Напиши эту кану'
-                            : 'Подсказки нет'}
+                            ? t('session.writeKana')
+                            : t('session.noHint')}
                     </span>
                     {writingPrompt ? (
                       <div className="writing-word">{writingPrompt}</div>
                     ) : (
                       <div className="writing-empty">
-                        {isKanji
-                          ? 'У карточки нет чтения и перевода'
-                          : 'У карточки нет перевода и чтения'}
+                        {isKanji ? t('session.noKanjiReading') : t('session.noCardReading')}
                       </div>
                     )}
                     {showWritingReading && (
@@ -558,7 +571,7 @@ export function Session({ deckId, items, mode, onClose }: SessionProps) {
                         }}
                       >
                         <Icon name="bulb" size={15} />
-                        Показать транскрипцию
+                        {t('session.showTranscription')}
                       </button>
                     )}
                   </div>
@@ -582,7 +595,7 @@ export function Session({ deckId, items, mode, onClose }: SessionProps) {
                             }}
                           >
                             <label className="mnemonic-label" htmlFor={`mnemonic-${card.id}`}>
-                              Мнемоника
+                              {t('session.mnemonicLabel')}
                             </label>
                             <textarea
                               id={`mnemonic-${card.id}`}
@@ -600,7 +613,7 @@ export function Session({ deckId, items, mode, onClose }: SessionProps) {
                                   saveMnemonic()
                                 }
                               }}
-                              placeholder="Например: «ぬ» похожа на …"
+                              placeholder={t('session.mnemonicPlaceholder')}
                               rows={2}
                               maxLength={240}
                               autoFocus
@@ -612,7 +625,7 @@ export function Session({ deckId, items, mode, onClose }: SessionProps) {
                                   className="btn btn-danger-ghost btn-small"
                                   onClick={removeMnemonic}
                                 >
-                                  Удалить
+                                  {t('common.delete')}
                                 </button>
                               )}
                               <button
@@ -620,10 +633,10 @@ export function Session({ deckId, items, mode, onClose }: SessionProps) {
                                 className="btn btn-ghost btn-small"
                                 onClick={cancelMnemonicEditor}
                               >
-                                Отмена
+                                {t('common.cancel')}
                               </button>
                               <button type="submit" className="btn btn-primary btn-small">
-                                Сохранить
+                                {t('common.save')}
                               </button>
                             </div>
                           </form>
@@ -634,8 +647,8 @@ export function Session({ deckId, items, mode, onClose }: SessionProps) {
                               type="button"
                               className="icon-btn mnemonic-edit-btn"
                               onClick={openMnemonicEditor}
-                              title="Изменить мнемонику"
-                              aria-label="Изменить мнемонику"
+                              title={t('session.mnemonicEdit')}
+                              aria-label={t('session.mnemonicEdit')}
                             >
                               <Icon name="pencil" size={15} />
                             </button>
@@ -654,23 +667,21 @@ export function Session({ deckId, items, mode, onClose }: SessionProps) {
                         event.stopPropagation()
                         speakJa(speakText)
                       }}
-                      title="Прослушать"
-                      aria-label="Прослушать"
+                      title={t('session.listen')}
+                      aria-label={t('session.listen')}
                     >
                       <Icon name="speaker" size={19} />
                     </button>
                   )}
                   <span className="face-hint">
-                    {isWriting
-                      ? 'Проверь себя: нажми на карточку или пробел'
-                      : 'Нажми на карточку или пробел'}
+                    {isWriting ? t('session.checkYourself') : t('session.flipHint')}
                   </span>
                 </div>
               </div>
 
               <div className="face face-back">
                 <div className="face-top">
-                  <span className="face-deck">ответ</span>
+                  <span className="face-deck">{t('session.answer')}</span>
                   {!isWriting && <span className="face-jp-small">{card.front}</span>}
                 </div>
                 {isKanji ? (
@@ -702,7 +713,7 @@ export function Session({ deckId, items, mode, onClose }: SessionProps) {
                     )}
                     {card.examples.length > 0 && (
                       <div className="kanji-usages">
-                        <div className="kanji-usage-label">Примеры</div>
+                        <div className="kanji-usage-label">{t('session.examples')}</div>
                         {card.examples.map((item) => (
                           <div className="kanji-usage" key={item.id}>
                             <div className="kanji-usage-jp">
@@ -752,12 +763,12 @@ export function Session({ deckId, items, mode, onClose }: SessionProps) {
                       event.stopPropagation()
                       speakJa(speakText)
                     }}
-                    title="Прослушать"
-                    aria-label="Прослушать"
+                    title={t('session.listen')}
+                    aria-label={t('session.listen')}
                   >
                     <Icon name="speaker" size={19} />
                   </button>
-                  <span className="face-hint">Нажми, чтобы перевернуть обратно</span>
+                  <span className="face-hint">{t('session.flipBack')}</span>
                 </div>
               </div>
             </div>
@@ -774,7 +785,7 @@ export function Session({ deckId, items, mode, onClose }: SessionProps) {
                       onClick={() => rate(item.rating)}
                     >
                       <span className="rate-top">
-                        <b>{item.label}</b>
+                        <b>{t(item.labelKey)}</b>
                         <kbd>{item.key}</kbd>
                       </span>
                       <span className="rate-interval">
@@ -788,8 +799,8 @@ export function Session({ deckId, items, mode, onClose }: SessionProps) {
                   className="btn btn-primary btn-lg show-answer"
                   onClick={() => setRevealed(true)}
                 >
-                  Показать ответ
-                  <kbd>пробел</kbd>
+                  {t('session.showAnswer')}
+                  <kbd>{t('session.space')}</kbd>
                 </button>
               )}
             </div>
@@ -799,10 +810,10 @@ export function Session({ deckId, items, mode, onClose }: SessionProps) {
                 <button
                   className="undo-rating"
                   onClick={undoLastRating}
-                  title="Отменить последнюю оценку (Ctrl+Z)"
+                  title={t('session.undoTitle')}
                 >
                   <Icon name="rotate" size={13} />
-                  Отменить: {RATING_LABEL[lastRating.rating]}
+                  {t('session.undo', { rating: t(RATING_LABEL_KEY[lastRating.rating]) })}
                   <kbd>Ctrl Z</kbd>
                 </button>
               )}
@@ -811,9 +822,9 @@ export function Session({ deckId, items, mode, onClose }: SessionProps) {
         </div>
       ) : (
         <div className="session-done">
-          <h1>Карточки закончились</h1>
+          <h1>{t('session.cardsDone')}</h1>
           <button className="btn btn-primary" onClick={onClose}>
-            Готово
+            {t('session.doneButton')}
           </button>
         </div>
       )}

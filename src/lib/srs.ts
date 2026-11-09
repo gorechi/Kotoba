@@ -1,4 +1,5 @@
 import type { Rating, SrsState } from '../types'
+import { translate } from './i18n'
 
 export const MINUTE = 60_000
 export const DAY = 86_400_000
@@ -42,30 +43,28 @@ export function applyRating(prev: SrsState, rating: Rating, now: number): SrsSta
 }
 
 export function formatInterval(days: number): string {
-  if (!Number.isFinite(days) || days <= 0) return 'сейчас'
-  if (days < 1 / 24) return `${Math.max(1, Math.round(days * 1440))} мин`
-  if (days < 1) return `${Math.max(1, Math.round(days * 24))} ч`
+  if (!Number.isFinite(days) || days <= 0) return translate('interval.now')
+  if (days < 1 / 24) {
+    const n = Math.max(1, Math.round(days * 1440))
+    return translate('interval.minutes', { n })
+  }
+  if (days < 1) {
+    const n = Math.max(1, Math.round(days * 24))
+    return translate('interval.hours', { n })
+  }
   if (days < 30) {
     const n = Math.round(days)
-    return `${n} ${plural(n, 'день', 'дня', 'дней')}`
+    return translate('interval.days', { n })
   }
   if (days < 365) {
     const n = Math.round(days / 30)
-    return `${n} мес`
+    return translate('interval.months', { n })
   }
-  return `${Math.round(days / 365)} г`
+  const n = Math.round(days / 365)
+  return translate('interval.years', { n })
 }
 
 export function intervalPreview(srs: SrsState, rating: Rating): string {
   const next = applyRating(srs, rating, Date.now())
   return formatInterval(next.interval)
-}
-
-export function plural(n: number, one: string, few: string, many: string): string {
-  const abs = Math.abs(n) % 100
-  const last = abs % 10
-  if (abs > 10 && abs < 20) return many
-  if (last === 1) return one
-  if (last >= 2 && last <= 4) return few
-  return many
 }

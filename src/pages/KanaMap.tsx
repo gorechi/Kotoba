@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from 'react'
 import type { Card } from '../types'
 import { useStore } from '../state/store'
+import { useI18n } from '../lib/i18n-react'
 import { FitText } from '../components/FitText'
 import { Icon } from '../components/Icon'
 import {
@@ -14,7 +15,7 @@ type KanaDeckId = 'hiragana' | 'katakana'
 
 interface KanaSection {
   id: KanaDeckId
-  label: string
+  labelKey: string
   labelJp: string
   seeds: { kana: string; romaji: string }[]
 }
@@ -22,13 +23,13 @@ interface KanaSection {
 const SECTIONS: KanaSection[] = [
   {
     id: 'hiragana',
-    label: 'Хирагана',
+    labelKey: 'kana.hiragana',
     labelJp: 'ひらがな',
     seeds: [...HIRAGANA_BASIC, ...HIRAGANA_VOICED].map((s) => ({ kana: s.kana, romaji: s.romaji })),
   },
   {
     id: 'katakana',
-    label: 'Катакана',
+    labelKey: 'kana.katakana',
     labelJp: 'カタカナ',
     seeds: [...KATAKANA_BASIC, ...KATAKANA_VOICED].map((s) => ({ kana: s.kana, romaji: s.romaji })),
   },
@@ -36,6 +37,7 @@ const SECTIONS: KanaSection[] = [
 
 export function KanaMap({ onStudyCard }: { onStudyCard: (cardId: string, deckId: string) => void }) {
   const { data } = useStore()
+  const { t } = useI18n()
   const now = Date.now()
 
   const findCard = useCallback(
@@ -62,6 +64,13 @@ export function KanaMap({ onStudyCard }: { onStudyCard: (cardId: string, deckId:
     [findCard, now],
   )
 
+  const statusLabel = (status: 'new' | 'due' | 'learned') =>
+    status === 'due'
+      ? t('kanaMap.statusDue')
+      : status === 'learned'
+        ? t('kanaMap.statusLearned')
+        : t('kanaMap.statusNew')
+
   const allCards = data.cards.filter(
     (c) => c.deckId === 'hiragana' || c.deckId === 'katakana',
   )
@@ -74,59 +83,54 @@ export function KanaMap({ onStudyCard }: { onStudyCard: (cardId: string, deckId:
     <div className="page">
       <header className="page-head">
         <div>
-          <div className="eyebrow">Карта каны</div>
-          <h1>Хирагана и катакана</h1>
-          <p className="page-sub">
-            Прогресс по каждому знаку. Кликните на знак — начнётся подход только с ним.
-          </p>
+          <div className="eyebrow">{t('kanaMap.eyebrow')}</div>
+          <h1>{t('kanaMap.title')}</h1>
+          <p className="page-sub">{t('kanaMap.subtitle')}</p>
         </div>
       </header>
 
       <div className="kana-map-stats">
         <div className="kana-map-stat">
           <strong>{totalChars}</strong>
-          <span>знаков</span>
+          <span>{t('kanaMap.signs')}</span>
         </div>
         <div className="kana-map-stat">
           <strong style={{ color: 'var(--green)' }}>{totalLearned}</strong>
-          <span>изучено</span>
+          <span>{t('kanaMap.learned')}</span>
         </div>
         <div className="kana-map-stat">
           <strong style={{ color: 'var(--red)' }}>{totalDue}</strong>
-          <span>к повторению</span>
+          <span>{t('kanaMap.due')}</span>
         </div>
         <div className="kana-map-stat">
           <strong>{totalFresh}</strong>
-          <span>новых</span>
+          <span>{t('kanaMap.new')}</span>
         </div>
       </div>
 
       <div className="kana-grid-wrap">
         {SECTIONS.map((section) => {
           const stat = sectionStat(section.seeds, section.id)
-          const duePct = stat.total ? Math.round((stat.due / stat.total) * 100) : 0
           const learnedPct = stat.total ? Math.round((stat.learned / stat.total) * 100) : 0
 
           return (
             <section className="kana-section" key={section.id}>
               <div className="kana-section-head">
-                <h2>{section.label}</h2>
+                <h2>{t(section.labelKey)}</h2>
                 <span className="kana-section-jp" aria-hidden="true">
                   {section.labelJp}
                 </span>
               </div>
               <div className="kana-section-stats">
+                <span>{t('kanaMap.learnedOf', { learned: stat.learned, total: stat.total })}</span>{' '}
                 <span>
-                  <b>{stat.learned}</b> из {stat.total} изучено
+                  <b style={{ color: 'var(--red)' }}>{stat.due}</b> {t('kanaMap.statusDue')}
                 </span>{' '}
                 <span>
-                  <b style={{ color: 'var(--red)' }}>{stat.due}</b> к повторению
+                  <b>{stat.fresh}</b> {t('kanaMap.new')}
                 </span>{' '}
                 <span>
-                  <b>{stat.fresh}</b> новых
-                </span>{' '}
-                <span>
-                  <b>{learnedPct}%</b> прогресс
+                  <b>{learnedPct}%</b> {t('kanaMap.progressLabel')}
                 </span>
               </div>
               <div className="kana-grid">
@@ -146,12 +150,14 @@ export function KanaMap({ onStudyCard }: { onStudyCard: (cardId: string, deckId:
                       }}
                       title={
                         !card
-                          ? 'Знак не найден в базе'
-                          : `${seed.kana} (${seed.romaji}) — ${status === 'due' ? 'к повторению' : status === 'learned' ? 'изучён' : 'новый'}${
-                              hasMnemonic ? ', есть мнемоника' : ''
-                            }`
+                          ? t('kanaMap.notFound')
+                          : t('kanaMap.tooltip', {
+                              kana: seed.kana,
+                              romaji: seed.romaji,
+                              status: statusLabel(status),
+                            }) + (hasMnemonic ? t('kanaMap.hasMnemonic') : '')
                       }
-                      aria-label={`${seed.kana} — ${status === 'due' ? 'к повторению' : status === 'learned' ? 'изучён' : 'новый'}`}
+                      aria-label={`${seed.kana} — ${statusLabel(status)}`}
                     >
                       <FitText
                         className="kana-char"
@@ -173,13 +179,13 @@ export function KanaMap({ onStudyCard }: { onStudyCard: (cardId: string, deckId:
       </div>
 
       <p className="kana-legend">
-        <span className="kana-legend-dot kana-cell--new" /> новое
+        <span className="kana-legend-dot kana-cell--new" /> {t('kanaMap.legendNew')}
         &nbsp;·&nbsp;
-        <span className="kana-legend-dot kana-cell--due" /> к повторению
+        <span className="kana-legend-dot kana-cell--due" /> {t('kanaMap.legendDue')}
         &nbsp;·&nbsp;
-        <span className="kana-legend-dot kana-cell--learned" /> изучено
+        <span className="kana-legend-dot kana-cell--learned" /> {t('kanaMap.legendLearned')}
         &nbsp;·&nbsp;
-        <Icon name="bulb" size={13} className="kana-legend-icon" /> есть мнемоника
+        <Icon name="bulb" size={13} className="kana-legend-icon" /> {t('kanaMap.legendMnemonic')}
       </p>
     </div>
   )

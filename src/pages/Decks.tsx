@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import type { Card, Route } from '../types'
 import { useStore } from '../state/store'
+import { useI18n } from '../lib/i18n-react'
+import { cardNote, deckDescription, deckTitle } from '../lib/content'
 import { DeckCard } from '../components/DeckCard'
 import { DeckForm } from '../components/DeckForm'
 import { CardForm } from '../components/CardForm'
@@ -10,7 +12,7 @@ import { FitText } from '../components/FitText'
 import { Icon } from '../components/Icon'
 import { ModeSwitch } from '../components/ModeSwitch'
 import { deckStat, remainingNewToday } from '../lib/stats'
-import { freshSrs, plural } from '../lib/srs'
+import { freshSrs } from '../lib/srs'
 import { dueLabel } from '../lib/utils'
 
 interface DecksProps {
@@ -20,6 +22,7 @@ interface DecksProps {
 
 export function Decks({ onNavigate, onStudy }: DecksProps) {
   const { data } = useStore()
+  const { t } = useI18n()
   const [creating, setCreating] = useState(false)
   const now = Date.now()
   const allowance = remainingNewToday(data.history, data.settings, now)
@@ -31,17 +34,15 @@ export function Decks({ onNavigate, onStudy }: DecksProps) {
     <div className="page">
       <header className="page-head">
         <div>
-          <div className="eyebrow">Азбуки</div>
-          <h1>Мои азбуки</h1>
-          <p className="page-sub">
-            Встроенные азбуки и твои собственные наборы. Всё хранится на этом компьютере.
-          </p>
+          <div className="eyebrow">{t('decks.eyebrow')}</div>
+          <h1>{t('decks.title')}</h1>
+          <p className="page-sub">{t('decks.subtitle')}</p>
         </div>
         <div className="page-head-actions">
           <ModeSwitch />
           <button className="btn btn-primary" onClick={() => setCreating(true)}>
             <Icon name="plus" size={18} />
-            Новая колода
+            {t('decks.new')}
           </button>
         </div>
       </header>
@@ -65,8 +66,8 @@ export function Decks({ onNavigate, onStudy }: DecksProps) {
           <span className="deck-new-icon">
             <Icon name="plus" size={20} />
           </span>
-          <strong>Создать колоду</strong>
-          <span>Слова, фразы и свои примеры</span>
+          <strong>{t('home.newDeckTitle')}</strong>
+          <span>{t('home.newDeckKanaHint')}</span>
         </button>
       </div>
 
@@ -83,6 +84,7 @@ interface DeckDetailProps {
 
 export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
   const { data, update } = useStore()
+  const { t } = useI18n()
   const [query, setQuery] = useState('')
   const [adding, setAdding] = useState(false)
   const [editingDeck, setEditingDeck] = useState(false)
@@ -101,16 +103,17 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
     return (
       <div className="page">
         <button className="back-btn" onClick={() => onNavigate({ name: 'decks' })}>
-          <Icon name="chevron-left" size={16} /> Все азбуки
+          <Icon name="chevron-left" size={16} /> {t('deckDetail.backKana')}
         </button>
-        <p className="empty-note">Колода не найдена.</p>
+        <p className="empty-note">{t('deckDetail.notFound')}</p>
       </div>
     )
   }
 
   const isKanji = deck.kind === 'kanji'
+  const title = deckTitle(deck, t)
   const listRoute: Route = isKanji ? { name: 'kanji' } : { name: 'decks' }
-  const listLabel = isKanji ? 'Все кандзи' : 'Все азбуки'
+  const listLabel = isKanji ? t('deckDetail.backKanji') : t('deckDetail.backKana')
 
   const cards = data.cards
     .filter((card) => card.deckId === deckId)
@@ -130,7 +133,7 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
   // Теги отсортированы по частоте (часто используемые — первыми)
   const sortedTags = useMemo(() => {
     const unique = new Set<string>()
-    cards.forEach((card) => card.tags.forEach((t) => unique.add(t)))
+    cards.forEach((card) => card.tags.forEach((tag) => unique.add(tag)))
     return [...unique].sort((a, b) => {
       const countA = tagFrequency.get(a) ?? 0
       const countB = tagFrequency.get(b) ?? 0
@@ -155,7 +158,7 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
       if (!text.includes(search)) return false
     }
     // По тегам: если выбраны теги, карточка должна иметь хотя бы один из них
-    if (activeTags.size > 0 && !card.tags.some((t) => activeTags.has(t))) return false
+    if (activeTags.size > 0 && !card.tags.some((tag) => activeTags.has(tag))) return false
     // По статусу SRS
     if (statusFilter === 'new' && card.srs.introduced) return false
     if (statusFilter === 'due' && (!card.srs.introduced || card.srs.due > now)) return false
@@ -167,7 +170,7 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
   const allowance = remainingNewToday(data.history, data.settings, now)
   const newCount = Math.min(stat.fresh, allowance)
   const canStudy = stat.due + newCount > 0 || stat.learned > 0
-  const studyLabel = stat.due + newCount > 0 ? 'Учить' : 'Тренировать'
+  const studyLabel = stat.due + newCount > 0 ? t('deckDetail.study') : t('deckDetail.practice')
   const watermark = (deck.nameJp || deck.name || '言').slice(0, 1)
 
   const deleteDeck = () => {
@@ -200,34 +203,30 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
           <div className="eyebrow">
             {deck.builtin
               ? isKanji
-                ? 'Встроенная колода кандзи'
-                : 'Встроенная колода'
+                ? t('deckDetail.eyebrow.builtinKanji')
+                : t('deckDetail.eyebrow.builtinKana')
               : isKanji
-                ? 'Колода кандзи'
-                : 'Своя колода'}
+                ? t('deckDetail.eyebrow.kanji')
+                : t('deckDetail.eyebrow.custom')}
           </div>
           <h1>
-            {deck.name}
+            {title}
             {deck.nameJp && <span className="title-jp">{deck.nameJp}</span>}
           </h1>
           <p className="deck-hero-desc">
-            {deck.description || 'Колода без описания. Добавляй карточки и учи их по одному.'}
+            {deckDescription(deck, t) || t('deckDetail.noDescription')}
           </p>
 
           <div className="stat-chips">
             <span className="stat-chip">
-              <b>{stat.learned}</b> из {stat.total} выучено
+              {t('deckDetail.learnedOf', { learned: stat.learned, total: stat.total })}
             </span>
-            <span className="stat-chip">
-              <b>{stat.due}</b> к повторению
-            </span>
-            <span className="stat-chip">
-              <b>{newCount}</b> новых сегодня
-            </span>
+            <span className="stat-chip">{t('deckDetail.dueCount', { n: stat.due })}</span>
+            <span className="stat-chip">{t('deckDetail.newToday', { n: newCount })}</span>
           </div>
 
           <div className="mode-row">
-            <span className="mode-row-label">Режим</span>
+            <span className="mode-row-label">{t('deckDetail.mode')}</span>
             <ModeSwitch />
           </div>
 
@@ -239,15 +238,15 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
             {!deck.builtin && (
               <button className="btn btn-ghost" onClick={() => setAdding(true)}>
                 <Icon name="plus" size={17} />
-                {isKanji ? 'Кандзи' : 'Карточка'}
+                {isKanji ? t('deckDetail.addKanji') : t('deckDetail.addCard')}
               </button>
             )}
             {!deck.builtin && (
               <button
                 className="icon-btn bordered"
                 onClick={() => setEditingDeck(true)}
-                title="Изменить колоду"
-                aria-label="Изменить колоду"
+                title={t('deckDetail.editDeck')}
+                aria-label={t('deckDetail.editDeck')}
               >
                 <Icon name="pencil" size={17} />
               </button>
@@ -255,8 +254,8 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
             <button
               className="icon-btn bordered"
               onClick={() => setResetting(true)}
-              title="Сбросить прогресс"
-              aria-label="Сбросить прогресс"
+              title={t('deckDetail.resetProgress')}
+              aria-label={t('deckDetail.resetProgress')}
             >
               <Icon name="rotate" size={17} />
             </button>
@@ -264,8 +263,8 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
               <button
                 className="icon-btn bordered danger"
                 onClick={() => setDeletingDeck(true)}
-                title="Удалить колоду"
-                aria-label="Удалить колоду"
+                title={t('deckDetail.deleteDeck')}
+                aria-label={t('deckDetail.deleteDeck')}
               >
                 <Icon name="trash" size={17} />
               </button>
@@ -276,16 +275,18 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
 
       <div className="section-head list-head">
         <h2>
-          {isKanji ? 'Кандзи' : 'Карточки'}{' '}
-          <span className="count">{filtered.length} из {cards.length}</span>
+          {isKanji ? t('deckDetail.cardsKanji') : t('deckDetail.cardsCards')}{' '}
+          <span className="count">
+            {t('deckDetail.countOf', { shown: filtered.length, total: cards.length })}
+          </span>
         </h2>
         <label className="search">
           <Icon name="search" size={16} />
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Найти карточку"
-            aria-label="Поиск по карточкам"
+            placeholder={t('deckDetail.searchPlaceholder')}
+            aria-label={t('deckDetail.searchAria')}
           />
         </label>
       </div>
@@ -293,14 +294,14 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
       {filtered.length === 0 && cards.length > 0 && (
         <div className="filter-bar">
           <button className="btn btn-ghost btn-small" onClick={() => setQuery('')}>
-            <Icon name="x" size={14} /> Сбросить поиск
+            <Icon name="x" size={14} /> {t('deckDetail.resetSearch')}
           </button>
         </div>
       )}
 
       {sortedTags.length > 0 && (
         <div className="filter-bar filter-bar--tags">
-          <span className="filter-label">Теги:</span>
+          <span className="filter-label">{t('deckDetail.tags')}</span>
           <div className={`tag-filter-wrap ${tagsExpanded ? 'expanded' : ''}`}>
             {sortedTags.map((tag, index) => {
               const active = activeTags.has(tag)
@@ -328,7 +329,7 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
                 className="tag-filter-btn tag-filter-more"
                 onClick={() => setTagsExpanded(true)}
               >
-                Ещё {sortedTags.length - MAX_TAGS_COLLAPSED}
+                {t('deckDetail.moreTags', { n: sortedTags.length - MAX_TAGS_COLLAPSED })}
               </button>
             )}
             {sortedTags.length > MAX_TAGS_COLLAPSED && tagsExpanded && (
@@ -337,7 +338,7 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
                 className="tag-filter-btn tag-filter-less"
                 onClick={() => setTagsExpanded(false)}
               >
-                Свернуть
+                {t('deckDetail.collapse')}
               </button>
             )}
           </div>
@@ -347,48 +348,47 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
               className="btn btn-ghost btn-small"
               onClick={() => setActiveTags(new Set())}
             >
-              Очистить теги
+              {t('deckDetail.clearTags')}
             </button>
           )}
         </div>
       )}
 
       <div className="filter-bar filter-bar--status">
-        <span className="filter-label">Статус:</span>
+        <span className="filter-label">{t('deckDetail.status')}</span>
         <button
           type="button"
           className={`status-filter-btn ${statusFilter === 'all' ? 'active' : ''}`}
           onClick={() => setStatusFilter('all')}
         >
-          Все
+          {t('deckDetail.statusAll')}
         </button>
         <button
           type="button"
           className={`status-filter-btn ${statusFilter === 'new' ? 'active' : ''}`}
           onClick={() => setStatusFilter('new')}
         >
-          Новые
+          {t('deckDetail.statusNew')}
         </button>
         <button
           type="button"
           className={`status-filter-btn ${statusFilter === 'due' ? 'active' : ''}`}
           onClick={() => setStatusFilter('due')}
         >
-          К повторению
+          {t('deckDetail.statusDue')}
         </button>
         <button
           type="button"
           className={`status-filter-btn ${statusFilter === 'learned' ? 'active' : ''}`}
           onClick={() => setStatusFilter('learned')}
         >
-          Изучённые
+          {t('deckDetail.statusLearned')}
         </button>
       </div>
 
       {deck.builtin && (
         <p className="builtin-note">
-          <Icon name="lock" size={14} /> Карточки встроенной колоды защищены от изменений — но прогресс
-          можно сбросить.
+          <Icon name="lock" size={14} /> {t('deckDetail.builtinNote')}
         </p>
       )}
 
@@ -396,11 +396,11 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
         <p className="empty-note">
           {cards.length === 0
             ? isKanji
-              ? 'В колоде пока нет иероглифов. Добавь первый!'
-              : 'В колоде пока нет карточек. Добавь первую!'
+              ? t('deckDetail.emptyKanji')
+              : t('deckDetail.emptyCards')
             : activeTags.size > 0 || statusFilter !== 'all' || query
-              ? 'Ничего не нашлось по выбранным фильтрам. Попробуй сбросить фильтры.'
-              : 'Ничего не нашлось. Попробуй другой запрос.'}
+              ? t('deckDetail.noMatchFilters')
+              : t('deckDetail.noMatch')}
         </p>
       ) : (
         <div className="card-list">
@@ -410,6 +410,7 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
               : card.srs.due <= now
                 ? 'badge'
                 : 'badge badge-muted'
+            const note = cardNote(card, deck, t)
             return (
               <div className="card-row" key={card.id}>
                 <FitText
@@ -441,7 +442,7 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
                         .join(' — ')}
                     </div>
                   )}
-                  {!isKanji && card.note && <div className="row-note">{card.note}</div>}
+                  {!isKanji && note && <div className="row-note">{note}</div>}
                   {card.tags.length > 0 && (
                     <div className="row-tags">
                       {card.tags.map((tag) => (
@@ -456,16 +457,16 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
                     <button
                       className="icon-btn"
                       onClick={() => setEditingCard(card)}
-                      title="Изменить"
-                      aria-label="Изменить карточку"
+                      title={t('deckDetail.edit')}
+                      aria-label={t('deckDetail.editCardAria')}
                     >
                       <Icon name="pencil" size={16} />
                     </button>
                     <button
                       className="icon-btn danger"
                       onClick={() => setDeletingCard(card)}
-                      title="Удалить"
-                      aria-label="Удалить карточку"
+                      title={t('deckDetail.delete')}
+                      aria-label={t('deckDetail.deleteCardAria')}
                     >
                       <Icon name="trash" size={16} />
                     </button>
@@ -479,11 +480,7 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
 
       {!deck.builtin && (
         <p className="list-total">
-          {cards.length}{' '}
-          {isKanji
-            ? plural(cards.length, 'иероглиф', 'иероглифа', 'иероглифов')
-            : plural(cards.length, 'карточка', 'карточки', 'карточек')}{' '}
-          в колоде
+          {t(isKanji ? 'deckDetail.kanjiInDeck' : 'deckDetail.cardsInDeck', { n: cards.length })}
         </p>
       )}
 
@@ -511,9 +508,9 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
 
       {deletingCard && (
         <ConfirmDialog
-          title="Удалить карточку?"
-          text={`«${deletingCard.front}» будет удалена вместе с её прогрессом. Это действие нельзя отменить.`}
-          confirmLabel="Удалить"
+          title={t('deckDetail.deleteCardTitle')}
+          text={t('deckDetail.deleteCardText', { front: deletingCard.front })}
+          confirmLabel={t('deckDetail.delete')}
           danger
           onClose={() => setDeletingCard(null)}
           onConfirm={() => {
@@ -526,9 +523,9 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
 
       {deletingDeck && (
         <ConfirmDialog
-          title="Удалить колоду?"
-          text={`Колода «${deck.name}» и все её карточки будут удалены. Это действие нельзя отменить.`}
-          confirmLabel="Удалить колоду"
+          title={t('deckDetail.deleteDeckTitle')}
+          text={t('deckDetail.deleteDeckText', { name: title })}
+          confirmLabel={t('deckDetail.deleteDeckConfirm')}
           danger
           onClose={() => setDeletingDeck(false)}
           onConfirm={deleteDeck}
@@ -537,9 +534,9 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
 
       {resetting && (
         <ConfirmDialog
-          title="Сбросить прогресс?"
-          text="Все карточки этой колоды снова станут новыми. Общая история повторений и серия останутся."
-          confirmLabel="Сбросить"
+          title={t('deckDetail.resetTitle')}
+          text={t('deckDetail.resetText')}
+          confirmLabel={t('common.reset')}
           onClose={() => setResetting(false)}
           onConfirm={resetDeck}
         />

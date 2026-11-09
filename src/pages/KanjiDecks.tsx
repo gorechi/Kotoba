@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { Route } from '../types'
 import { useStore } from '../state/store'
+import { useI18n } from '../lib/i18n-react'
 import { DeckCard } from '../components/DeckCard'
 import { DeckForm } from '../components/DeckForm'
 import { Icon } from '../components/Icon'
@@ -14,6 +15,7 @@ interface KanjiDecksProps {
 
 export function KanjiDecks({ onNavigate, onStudy }: KanjiDecksProps) {
   const { data } = useStore()
+  const { t } = useI18n()
   const [creating, setCreating] = useState(false)
   const now = Date.now()
   const allowance = remainingNewToday(data.history, data.settings, now)
@@ -25,26 +27,20 @@ export function KanjiDecks({ onNavigate, onStudy }: KanjiDecksProps) {
     <div className="page">
       <header className="page-head">
         <div>
-          <div className="eyebrow">Кандзи</div>
-          <h1>Кандзи</h1>
-          <p className="page-sub">
-            Отдельные колоды для иероглифов: перевод, чтения и примеры использования.
-          </p>
+          <div className="eyebrow">{t('kanjiPage.eyebrow')}</div>
+          <h1>{t('kanjiPage.title')}</h1>
+          <p className="page-sub">{t('kanjiPage.subtitle')}</p>
         </div>
         <div className="page-head-actions">
           <ModeSwitch />
           <button className="btn btn-primary" onClick={() => setCreating(true)}>
             <Icon name="plus" size={18} />
-            Новая колода
+            {t('kanjiPage.new')}
           </button>
         </div>
       </header>
 
-      {decks.length === 0 && (
-        <p className="empty-note">
-          Пока нет колод с иероглифами. Создай первую колоду и добавь в неё карточки.
-        </p>
-      )}
+      {decks.length === 0 && <p className="empty-note">{t('kanjiPage.empty')}</p>}
 
       <div className="deck-grid">
         {decks.map((deck) => {
@@ -65,8 +61,8 @@ export function KanjiDecks({ onNavigate, onStudy }: KanjiDecksProps) {
           <span className="deck-new-icon">
             <Icon name="plus" size={20} />
           </span>
-          <strong>Создать колоду</strong>
-          <span>Кандзи, чтения и примеры</span>
+          <strong>{t('home.newDeckTitle')}</strong>
+          <span>{t('kanjiPage.createHint')}</span>
         </button>
       </div>
 

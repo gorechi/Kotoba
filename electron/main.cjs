@@ -97,10 +97,10 @@ ipcMain.on('data:save-sync', (event, data) => {
   event.returnValue = true
 })
 
-ipcMain.handle('data:export', async (_event, data) => {
+ipcMain.handle('data:export', async (_event, data, title) => {
   const stamp = new Date().toISOString().slice(0, 10)
   const result = await dialog.showSaveDialog(mainWindow, {
-    title: 'Экспорт данных Котоба',
+    title: typeof title === 'string' && title ? title : undefined,
     defaultPath: path.join(app.getPath('documents'), `kotoba-backup-${stamp}.json`),
     filters: [{ name: 'JSON', extensions: ['json'] }],
   })
@@ -109,9 +109,9 @@ ipcMain.handle('data:export', async (_event, data) => {
   return result.filePath
 })
 
-ipcMain.handle('data:import', async () => {
+ipcMain.handle('data:import', async (_event, title) => {
   const result = await dialog.showOpenDialog(mainWindow, {
-    title: 'Импорт данных Котоба',
+    title: typeof title === 'string' && title ? title : undefined,
     properties: ['openFile'],
     filters: [{ name: 'JSON', extensions: ['json'] }],
   })

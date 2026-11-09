@@ -1,7 +1,7 @@
 import type { Route } from '../types'
 import { useStore } from '../state/store'
+import { useI18n } from '../lib/i18n-react'
 import { streak } from '../lib/stats'
-import { plural } from '../lib/srs'
 import { Icon, type IconName } from './Icon'
 
 interface SidebarProps {
@@ -11,18 +11,19 @@ interface SidebarProps {
 
 const NAV: {
   id: 'home' | 'decks' | 'kanji' | 'kanamap' | 'stats'
-  label: string
+  labelKey: string
   icon: IconName
 }[] = [
-  { id: 'home', label: 'Учить', icon: 'book' },
-  { id: 'decks', label: 'Азбуки', icon: 'kana' },
-  { id: 'kanji', label: 'Кандзи', icon: 'kanji' },
-  { id: 'kanamap', label: 'Карта каны', icon: 'grid' },
-  { id: 'stats', label: 'Статистика', icon: 'chart' },
+  { id: 'home', labelKey: 'nav.study', icon: 'book' },
+  { id: 'decks', labelKey: 'nav.kana', icon: 'kana' },
+  { id: 'kanji', labelKey: 'nav.kanji', icon: 'kanji' },
+  { id: 'kanamap', labelKey: 'nav.kanamap', icon: 'grid' },
+  { id: 'stats', labelKey: 'nav.stats', icon: 'chart' },
 ]
 
 export function Sidebar({ route, onNavigate }: SidebarProps) {
   const { data } = useStore()
+  const { t } = useI18n()
   const days = streak(data.history)
 
   const deckKind = route.name === 'deck'
@@ -49,7 +50,7 @@ export function Sidebar({ route, onNavigate }: SidebarProps) {
             onClick={() => onNavigate({ name: item.id } as Route)}
           >
             <Icon name={item.icon} size={19} />
-            <span>{item.label}</span>
+            <span>{t(item.labelKey)}</span>
           </button>
         ))}
       </nav>
@@ -60,10 +61,8 @@ export function Sidebar({ route, onNavigate }: SidebarProps) {
             <Icon name="flame" size={18} />
           </span>
           <span className="streak-copy">
-            <strong>
-              {days > 0 ? `${days} ${plural(days, 'день', 'дня', 'дней')}` : 'Серия'}
-            </strong>
-            <span>{days > 0 ? 'подряд — так держать' : 'начни серию сегодня'}</span>
+            <strong>{days > 0 ? t('count.days', { n: days }) : t('sidebar.streak')}</strong>
+            <span>{days > 0 ? t('sidebar.streakActive') : t('sidebar.streakEmpty')}</span>
           </span>
         </button>
 
@@ -72,11 +71,11 @@ export function Sidebar({ route, onNavigate }: SidebarProps) {
           onClick={() => onNavigate({ name: 'settings' })}
         >
           <Icon name="sliders" size={19} />
-          <span>Настройки</span>
+          <span>{t('nav.settings')}</span>
         </button>
 
         <p className="sidebar-note">
-          <Icon name="lock" size={12} /> Данные хранятся только на этом компьютере
+          <Icon name="lock" size={12} /> {t('sidebar.privacy')}
         </p>
       </div>
     </aside>

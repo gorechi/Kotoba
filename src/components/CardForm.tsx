@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
 import type { Card } from '../types'
 import { useStore } from '../state/store'
+import { useI18n } from '../lib/i18n-react'
+import { deckTitle } from '../lib/content'
 import { freshSrs } from '../lib/srs'
 import { finalizeRomajiTail, guessKanaMode, suggestReading, type KanaMode } from '../lib/romaji'
 import { toCyrillic } from '../lib/cyrillic'
@@ -17,13 +19,14 @@ interface CardFormProps {
 
 export function CardForm({ deckId, card, onClose }: CardFormProps) {
   const { data, update } = useStore()
+  const { t } = useI18n()
   const deck = data.decks.find((item) => item.id === deckId)
   const defaultTranscription: 'romaji' | 'cyrillic' = data.settings.defaultTranscription
   const deckTags = useMemo(() => {
     const set = new Set<string>()
     data.cards
       .filter((c) => c.deckId === deckId)
-      .forEach((c) => c.tags.forEach((t) => set.add(t)))
+      .forEach((c) => c.tags.forEach((tag) => set.add(tag)))
     return [...set].sort()
   }, [data.cards, deckId])
 
@@ -47,7 +50,7 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
       return
     }
     setTagSuggestions(
-      deckTags.filter((t) => t.toLowerCase().includes(input) && !tags.includes(t)),
+      deckTags.filter((tag) => tag.toLowerCase().includes(input) && !tags.includes(tag)),
     )
   }, [tagInput, deckTags, tags])
 
@@ -85,7 +88,7 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
   }
 
   const removeTag = (tag: string) => {
-    setTags(tags.filter((t) => t !== tag))
+    setTags(tags.filter((item) => item !== tag))
   }
 
   const selectSuggestion = (tag: string) => {
@@ -95,7 +98,7 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
   const save = (keepOpen: boolean) => {
     const cleanFront = finalizeRomajiTail(front, frontMode).trim()
     if (!cleanFront) {
-      setError('Добавь японское слово или знак')
+      setError(t('cardForm.frontError'))
       frontRef.current?.focus()
       return
     }
@@ -162,14 +165,14 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
 
   return (
     <Modal
-      title={card ? 'Изменить карточку' : 'Новая карточка'}
-      subtitle={deck ? `Колода «${deck.name}»` : undefined}
+      title={card ? t('cardForm.edit') : t('cardForm.new')}
+      subtitle={deck ? t('cardForm.subtitle', { name: deckTitle(deck, t) }) : undefined}
       onClose={onClose}
       wide
       footer={
         <>
           <button type="button" className="btn btn-ghost" onClick={onClose}>
-            Отмена
+            {t('common.cancel')}
           </button>
           {!card && (
             <button
@@ -178,11 +181,11 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
               title="Ctrl+Enter"
               onClick={() => save(true)}
             >
-              Добавить и ещё
+              {t('cardForm.addMore')}
             </button>
           )}
           <button type="submit" form="card-form" className="btn btn-primary">
-            {card ? 'Сохранить' : 'Добавить карточку'}
+            {card ? t('common.save') : t('cardForm.add')}
           </button>
         </>
       }
@@ -196,35 +199,38 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
             minFontSize={14}
           />
           <span className="card-preview-answer">
-            {[reading.trim(), meaning.trim()].filter(Boolean).join(' · ') || 'чтение и перевод'}
+            {[reading.trim(), meaning.trim()].filter(Boolean).join(' · ') ||
+              t('cardForm.previewPlaceholder')}
           </span>
         </div>
 
         <div className="form-row">
           <div className="field">
-            <label htmlFor="card-front">Слово или знак</label>
+            <label htmlFor="card-front">{t('cardForm.front')}</label>
             <KanaInput
               id="card-front"
               value={front}
               onChange={changeFront}
               mode={frontMode}
               onModeChange={setFrontMode}
-              placeholder="みず или mizu"
+              placeholder={t('cardForm.frontPlaceholder')}
               maxLength={80}
               autoFocus
               inputRef={frontRef}
-              tip="Печатай латиницей — кана появится сама: mizu → みず"
+              tip={t('cardForm.frontTip')}
             />
           </div>
           <div className="field">
-            <label htmlFor="card-reading">
-              Чтение
-            </label>
+            <label htmlFor="card-reading">{t('cardForm.reading')}</label>
             <input
               id="card-reading"
               value={reading}
               onChange={(event) => changeReading(event.target.value)}
-              placeholder={defaultTranscription === 'cyrillic' ? 'транскрипция' : 'mizu'}
+              placeholder={
+                defaultTranscription === 'cyrillic'
+                  ? t('cardForm.readingPlaceholderCyrillic')
+                  : t('cardForm.readingPlaceholderRomaji')
+              }
               maxLength={120}
               spellCheck={false}
             />
@@ -232,45 +238,44 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
         </div>
 
         <div className="field">
-          <label htmlFor="card-meaning">Перевод</label>
+          <label htmlFor="card-meaning">{t('cardForm.meaning')}</label>
           <input
             id="card-meaning"
             value={meaning}
             onChange={(event) => setMeaning(event.target.value)}
-            placeholder="вода"
+            placeholder={t('cardForm.meaningPlaceholder')}
             maxLength={160}
           />
         </div>
 
         <div className="field">
           <label htmlFor="card-note">
-            Заметка <span className="field-hint">необязательно</span>
+            {t('cardForm.note')} <span className="field-hint">{t('common.optional')}</span>
           </label>
           <textarea
             id="card-note"
             value={note}
             onChange={(event) => setNote(event.target.value)}
-            placeholder="Пример, подсказка или мнемоника: 水を飲む — пить воду"
+            placeholder={t('cardForm.notePlaceholder')}
             rows={3}
             maxLength={400}
           />
         </div>
 
         <div className="field">
-          <label htmlFor="card-tags">Теги <span className="field-hint">необязательно</span></label>
+          <label htmlFor="card-tags">
+            {t('cardForm.tags')} <span className="field-hint">{t('common.optional')}</span>
+          </label>
           <div className="tag-input" id="card-tags">
             {tags.map((tag) => (
-              <span
-                key={tag}
-                className="tag-chip"
-              >
+              <span key={tag} className="tag-chip">
                 {tag}
                 <button
                   type="button"
                   className="tag-remove"
                   onClick={() => removeTag(tag)}
-                  title={`Удалить тег «${tag}»`}
-                  aria-label={`Удалить тег ${tag}`}
+                  title={t('cardForm.tagRemoveTitle', { tag })}
+                  aria-label={t('cardForm.tagRemoveAria', { tag })}
                 >
                   ×
                 </button>
@@ -294,11 +299,13 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
                 if (tagInput.trim()) {
                   const input = tagInput.trim().toLowerCase()
                   setTagSuggestions(
-                    deckTags.filter((t) => t.toLowerCase().includes(input) && !tags.includes(t)),
+                    deckTags.filter(
+                      (tag) => tag.toLowerCase().includes(input) && !tags.includes(tag),
+                    ),
                   )
                 }
               }}
-              placeholder="Добавить тег и Enter…"
+              placeholder={t('cardForm.tagPlaceholder')}
               maxLength={40}
             />
 
@@ -317,14 +324,10 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
               </div>
             )}
           </div>
-          <p className="field-hint">Теги помогают находить карточки по теме или части речи.</p>
+          <p className="field-hint">{t('cardForm.tagsHint')}</p>
         </div>
 
-        {!card && (
-          <p className="form-hint">
-            Ctrl+Enter — добавить карточку и сразу перейти к следующей.
-          </p>
-        )}
+        {!card && <p className="form-hint">{t('cardForm.ctrlEnter')}</p>}
 
         {error && <p className="form-error">{error}</p>}
       </form>

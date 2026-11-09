@@ -17,6 +17,7 @@ import type {
 import { freshSrs } from './srs'
 import { uid } from './utils'
 import { createSeedData } from '../data/seed'
+import { DEFAULT_LOCALE, isLocaleCode } from './i18n'
 
 const THEMES: Theme[] = ['light', 'dark', 'system']
 const DECK_KINDS: DeckKind[] = ['kana', 'kanji']
@@ -61,7 +62,7 @@ function normalizeDeck(raw: unknown): Deck | null {
   if (!isObj(raw) || typeof raw.id !== 'string' || !raw.id.trim()) return null
   return {
     id: raw.id,
-    name: str(raw.name, 'Без названия'),
+    name: str(raw.name, ''),
     nameJp: str(raw.nameJp, ''),
     description: str(raw.description, ''),
     accent: /^#[0-9a-f]{6}$/i.test(str(raw.accent)) ? str(raw.accent) : '#E1523D',
@@ -170,6 +171,7 @@ function normalizeSettings(raw: unknown): Settings {
     defaultTranscription: 'romaji',
     studyMode: 'reading',
     writingDifficulty: 'normal',
+    language: DEFAULT_LOCALE,
   }
   if (!isObj(raw)) return base
   return {
@@ -183,6 +185,7 @@ function normalizeSettings(raw: unknown): Settings {
     writingDifficulty: WRITING_DIFFICULTIES.includes(raw.writingDifficulty as WritingDifficulty)
       ? (raw.writingDifficulty as WritingDifficulty)
       : base.writingDifficulty,
+    language: isLocaleCode(raw.language) ? raw.language : base.language,
   }
 }
 

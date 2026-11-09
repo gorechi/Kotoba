@@ -1,4 +1,5 @@
-import { DAY, plural } from './srs'
+import { DAY } from './srs'
+import { getActiveLocale, translate } from './i18n'
 
 export function uid(prefix: string): string {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
@@ -20,8 +21,8 @@ export function shuffle<T>(items: T[]): T[] {
   return copy
 }
 
-export function formatDateRu(ts: number): string {
-  const text = new Intl.DateTimeFormat('ru-RU', {
+export function formatDate(ts: number): string {
+  const text = new Intl.DateTimeFormat(getActiveLocale().intl, {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -31,37 +32,37 @@ export function formatDateRu(ts: number): string {
 
 export function greeting(ts = Date.now()): string {
   const hour = new Date(ts).getHours()
-  if (hour < 5) return 'Доброй ночи'
-  if (hour < 12) return 'Доброе утро'
-  if (hour < 18) return 'Добрый день'
-  return 'Добрый вечер'
+  if (hour < 5) return translate('greeting.night')
+  if (hour < 12) return translate('greeting.morning')
+  if (hour < 18) return translate('greeting.afternoon')
+  return translate('greeting.evening')
 }
 
 export function dueLabel(due: number, introduced: boolean, now = Date.now()): string {
-  if (!introduced) return 'новое'
+  if (!introduced) return translate('due.new')
   const diff = due - now
-  if (diff <= 60_000) return 'к повторению'
+  if (diff <= 60_000) return translate('due.now')
   if (diff < 3_600_000) {
-    const m = Math.ceil(diff / 60_000)
-    return `через ${m} мин`
+    const n = Math.ceil(diff / 60_000)
+    return translate('due.minutes', { n })
   }
   if (diff < DAY) {
-    const h = Math.ceil(diff / 3_600_000)
-    return `через ${h} ч`
+    const n = Math.ceil(diff / 3_600_000)
+    return translate('due.hours', { n })
   }
   const days = Math.ceil(diff / DAY)
-  if (days === 1) return 'завтра'
-  if (days < 30) return `через ${days} ${plural(days, 'день', 'дня', 'дней')}`
-  const months = Math.round(days / 30)
-  return `через ${months} мес`
+  if (days === 1) return translate('due.tomorrow')
+  if (days < 30) return translate('due.inDays', { n: days })
+  const n = Math.round(days / 30)
+  return translate('due.inMonths', { n })
 }
 
 export function formatDuration(ms: number): string {
   const total = Math.max(0, Math.round(ms / 1000))
   const minutes = Math.floor(total / 60)
   const seconds = total % 60
-  if (minutes === 0) return `${seconds} с`
-  return `${minutes} мин ${String(seconds).padStart(2, '0')} с`
+  if (minutes === 0) return translate('duration.seconds', { s: seconds })
+  return translate('duration.minutes', { m: minutes, s: String(seconds).padStart(2, '0') })
 }
 
 export function speakJa(text: string): void {

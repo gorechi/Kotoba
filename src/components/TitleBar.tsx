@@ -1,8 +1,10 @@
 import { Icon } from './Icon'
 import { useStore } from '../state/store'
+import { useI18n } from '../lib/i18n-react'
 
 export function TitleBar() {
   const { flush } = useStore()
+  const { t } = useI18n()
   const hasApi = Boolean(window.kotoba)
 
   const close = async () => {
@@ -15,7 +17,7 @@ export function TitleBar() {
       <div className="brand">
         <span className="brand-mark">言</span>
         <span className="brand-name">Котоба</span>
-        <span className="brand-tag">японский по карточкам</span>
+        <span className="brand-tag">{t('brand.tag')}</span>
       </div>
       <div className="titlebar-fill" />
       {hasApi && (
@@ -23,8 +25,8 @@ export function TitleBar() {
           <button
             className="win-btn"
             onClick={() => void window.kotoba?.minimize()}
-            aria-label="Свернуть"
-            title="Свернуть"
+            aria-label={t('titlebar.minimize')}
+            title={t('titlebar.minimize')}
           >
             <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
               <path d="M2 5h6" stroke="currentColor" strokeWidth="1" />
@@ -33,14 +35,19 @@ export function TitleBar() {
           <button
             className="win-btn"
             onClick={() => void window.kotoba?.toggleMaximize()}
-            aria-label="Развернуть"
-            title="Развернуть"
+            aria-label={t('titlebar.maximize')}
+            title={t('titlebar.maximize')}
           >
             <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
               <rect x="2" y="2" width="6" height="6" stroke="currentColor" strokeWidth="1" />
             </svg>
           </button>
-          <button className="win-btn win-close" onClick={() => void close()} aria-label="Закрыть" title="Закрыть">
+          <button
+            className="win-btn win-close"
+            onClick={() => void close()}
+            aria-label={t('titlebar.close')}
+            title={t('titlebar.close')}
+          >
             <Icon name="x" size={13} />
           </button>
         </div>

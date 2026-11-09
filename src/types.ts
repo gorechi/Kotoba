@@ -105,6 +105,8 @@ export interface Settings {
   studyMode: StudyMode
   /** Сложность режима письма. */
   writingDifficulty: WritingDifficulty
+  /** Код языка интерфейса. */
+  language: string
 }
 
 export interface AppData {
@@ -139,8 +141,8 @@ export interface KotobaApi {
   load: () => Promise<unknown>
   save: (data: AppData) => Promise<boolean>
   saveSync: (data: AppData) => void
-  exportData: (data: AppData) => Promise<string | null>
-  importData: () => Promise<ImportResult | null>
+  exportData: (data: AppData, title?: string) => Promise<string | null>
+  importData: (title?: string) => Promise<ImportResult | null>
   openDataFolder: () => Promise<string>
   minimize: () => Promise<void>
   toggleMaximize: () => Promise<void>

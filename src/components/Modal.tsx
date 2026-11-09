@@ -1,5 +1,6 @@
 import { useEffect, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
+import { useI18n } from '../lib/i18n-react'
 import { Icon } from './Icon'
 
 interface ModalProps {
@@ -12,6 +13,8 @@ interface ModalProps {
 }
 
 export function Modal({ title, subtitle, onClose, children, footer, wide }: ModalProps) {
+  const { t } = useI18n()
+
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose()
@@ -33,7 +36,7 @@ export function Modal({ title, subtitle, onClose, children, footer, wide }: Moda
             <h2>{title}</h2>
             {subtitle && <p>{subtitle}</p>}
           </div>
-          <button className="icon-btn" onClick={onClose} aria-label="Закрыть">
+          <button className="icon-btn" onClick={onClose} aria-label={t('modal.close')}>
             <Icon name="x" size={18} />
           </button>
         </div>
@@ -55,6 +58,7 @@ interface ConfirmProps {
 }
 
 export function ConfirmDialog({ title, text, confirmLabel, onConfirm, onClose, danger }: ConfirmProps) {
+  const { t } = useI18n()
   return (
     <Modal
       title={title}
@@ -62,7 +66,7 @@ export function ConfirmDialog({ title, text, confirmLabel, onConfirm, onClose, d
       footer={
         <>
           <button className="btn btn-ghost" onClick={onClose}>
-            Отмена
+            {t('confirm.cancel')}
           </button>
           <button
             className={`btn ${danger ? 'btn-danger' : 'btn-primary'}`}

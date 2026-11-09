@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { Route } from '../types'
 import { useStore } from '../state/store'
+import { useI18n } from '../lib/i18n-react'
 import { DeckCard } from '../components/DeckCard'
 import { DeckForm } from '../components/DeckForm'
 import { Icon } from '../components/Icon'
@@ -12,8 +13,7 @@ import {
   streak,
   todayStat,
 } from '../lib/stats'
-import { plural } from '../lib/srs'
-import { formatDateRu, greeting } from '../lib/utils'
+import { formatDate, greeting } from '../lib/utils'
 
 interface HomeProps {
   onNavigate: (route: Route) => void
@@ -22,6 +22,7 @@ interface HomeProps {
 
 export function Home({ onNavigate, onStudy }: HomeProps) {
   const { data } = useStore()
+  const { t } = useI18n()
   const [creatingDeck, setCreatingDeck] = useState(false)
   const [creatingDeckKind, setCreatingDeckKind] = useState<'kana' | 'kanji'>('kana')
   const now = Date.now()
@@ -42,7 +43,8 @@ export function Home({ onNavigate, onStudy }: HomeProps) {
   const ready = due + newCount
   const canPractice = overall.learned > 0
 
-  const ctaLabel = ready > 0 ? 'Учить всё' : canPractice ? 'Тренировать' : 'Выбрать колоду'
+  const ctaLabel =
+    ready > 0 ? t('home.cta.studyAll') : canPractice ? t('home.cta.practice') : t('home.cta.chooseDeck')
   const ctaAction = () => {
     if (ready > 0 || canPractice) onStudy('all')
     else onNavigate({ name: 'decks' })
@@ -50,29 +52,20 @@ export function Home({ onNavigate, onStudy }: HomeProps) {
 
   const subline =
     overall.total === 0
-      ? 'Встроенные азбуки уже готовы — начни с первой карточки.'
+      ? t('home.sub.empty')
       : ready > 0
-        ? `${due > 0 ? `${due} к повторению` : 'Повторений нет'} · ${
-            newCount > 0
-              ? `${newCount} ${plural(newCount, 'новая', 'новые', 'новых')}`
-              : 'новые на сегодня закончились'
+        ? `${due > 0 ? t('home.sub.due', { n: due }) : t('home.sub.noDue')} · ${
+            newCount > 0 ? t('home.sub.newLeft', { n: newCount }) : t('home.sub.newDone')
           }`
-        : 'На сегодня всё повторено. Можно потренировать изученное или добавить свои карточки.'
+        : t('home.sub.done')
 
   return (
     <div className="page">
       <section className="hero">
         <div className="hero-copy">
-          <div className="eyebrow">
-            {formatDateRu(now)} · сегодня
-          </div>
+          <div className="eyebrow">{t('home.dateToday', { date: formatDate(now) })}</div>
           <h1>{greeting(now)}</h1>
           <p className="hero-sub">{subline}</p>
-
-          <div className="mode-row">
-            <span className="mode-row-label">Режим</span>
-            <ModeSwitch />
-          </div>
 
           <div className="hero-actions">
             <button className="btn btn-primary btn-lg" onClick={ctaAction}>
@@ -84,15 +77,13 @@ export function Home({ onNavigate, onStudy }: HomeProps) {
           <div className="hero-meta">
             <span>
               <Icon name="flame" size={15} />
-              {days > 0
-                ? `${days} ${plural(days, 'день', 'дня', 'дней')} подряд`
-                : 'серия ещё не начата'}
+              {days > 0 ? t('home.streak', { n: days }) : t('home.streakEmpty')}
             </span>
             <span>
               <Icon name="check" size={15} />
               {today.reviews > 0
-                ? `${today.reviews} ${plural(today.reviews, 'повторение', 'повторения', 'повторений')} сегодня`
-                : 'сегодня пока без повторений'}
+                ? t('home.reviewsToday', { n: today.reviews })
+                : t('home.noReviews')}
             </span>
           </div>
         </div>
@@ -106,9 +97,9 @@ export function Home({ onNavigate, onStudy }: HomeProps) {
 
       <section className="section">
         <div className="section-head">
-          <h2>Азбуки</h2>
+          <h2>{t('home.sectionKana')}</h2>
           <button className="link-btn" onClick={() => onNavigate({ name: 'decks' })}>
-            Все азбуки
+            {t('home.allDecks')}
             <Icon name="chevron-right" size={15} />
           </button>
         </div>
@@ -134,13 +125,13 @@ export function Home({ onNavigate, onStudy }: HomeProps) {
               setCreatingDeckKind('kana')
               setCreatingDeck(true)
             }}
-            aria-label="Создать свою колоду"
+            aria-label={t('home.newDeckAria')}
           >
             <span className="deck-new-icon">
               <Icon name="plus" size={20} />
             </span>
-            <strong>Создать колоду</strong>
-            <span>Слова, фразы и свои примеры</span>
+            <strong>{t('home.newDeckTitle')}</strong>
+            <span>{t('home.newDeckKanaHint')}</span>
           </button>
         </div>
       </section>
@@ -148,9 +139,9 @@ export function Home({ onNavigate, onStudy }: HomeProps) {
       {kanjiDecks.length > 0 && (
         <section className="section">
           <div className="section-head">
-            <h2>Кандзи</h2>
+            <h2>{t('home.sectionKanji')}</h2>
             <button className="link-btn" onClick={() => onNavigate({ name: 'kanji' })}>
-              Все кандзи
+              {t('home.allKanji')}
               <Icon name="chevron-right" size={15} />
             </button>
           </div>
@@ -176,13 +167,13 @@ export function Home({ onNavigate, onStudy }: HomeProps) {
                 setCreatingDeckKind('kanji')
                 setCreatingDeck(true)
               }}
-              aria-label="Создать свою колоду"
+              aria-label={t('home.newDeckAria')}
             >
               <span className="deck-new-icon">
                 <Icon name="plus" size={20} />
               </span>
-              <strong>Создать колоду</strong>
-              <span>Кандзи, чтения и примеры</span>
+              <strong>{t('home.newDeckTitle')}</strong>
+              <span>{t('home.newDeckKanjiHint')}</span>
             </button>
           </div>
         </section>

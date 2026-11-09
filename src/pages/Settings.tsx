@@ -1,14 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Theme } from '../types'
 import { useStore } from '../state/store'
+import { useI18n } from '../lib/i18n-react'
 import { normalizeData } from '../lib/normalize'
 import { Icon, type IconName } from '../components/Icon'
 import { ConfirmDialog } from '../components/Modal'
 
-const THEMES: { value: Theme; label: string; icon: IconName }[] = [
-  { value: 'light', label: 'Светлая', icon: 'sun' },
-  { value: 'dark', label: 'Тёмная', icon: 'moon' },
-  { value: 'system', label: 'Системная', icon: 'monitor' },
+const THEMES: { value: Theme; labelKey: string; icon: IconName }[] = [
+  { value: 'light', labelKey: 'settings.themeLight', icon: 'sun' },
+  { value: 'dark', labelKey: 'settings.themeDark', icon: 'moon' },
+  { value: 'system', labelKey: 'settings.themeSystem', icon: 'monitor' },
 ]
 
 interface PendingImport {
@@ -18,6 +19,7 @@ interface PendingImport {
 
 export function Settings() {
   const { data, setSettings, resetProgress, replaceData } = useStore()
+  const { t, locales, language, setLanguage } = useI18n()
   const [confirmReset, setConfirmReset] = useState(false)
   const [pendingImport, setPendingImport] = useState<PendingImport | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
@@ -39,8 +41,8 @@ export function Settings() {
   const handleExport = async () => {
     setError(null)
     if (window.kotoba) {
-      const path = await window.kotoba.exportData(data)
-      if (path) setNotice(`Резервная копия сохранена: ${path}`)
+      const path = await window.kotoba.exportData(data, t('settings.exportDialogTitle'))
+      if (path) setNotice(t('settings.noticeBackupSaved', { path }))
       return
     }
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
@@ -50,21 +52,21 @@ export function Settings() {
     anchor.download = 'kotoba-backup.json'
     anchor.click()
     URL.revokeObjectURL(url)
-    setNotice('Резервная копия скачана.')
+    setNotice(t('settings.noticeBackupDownloaded'))
   }
 
   const handleImport = async () => {
     setError(null)
     if (window.kotoba) {
-      const result = await window.kotoba.importData()
+      const result = await window.kotoba.importData(t('settings.importDialogTitle'))
       if (!result) return
       if (result.error) {
-        setError('Не удалось прочитать файл. Убедись, что это JSON-бэкап Котоба.')
+        setError(t('settings.noticeImportReadError'))
         return
       }
       setPendingImport({
         raw: result.data,
-        name: result.path?.split(/[\\/]/).pop() ?? 'файл',
+        name: result.path?.split(/[\\/]/).pop() ?? t('common.file'),
       })
       return
     }
@@ -77,22 +79,22 @@ export function Settings() {
       const raw = JSON.parse(await file.text())
       setPendingImport({ raw, name: file.name })
     } catch {
-      setError('Файл не похож на резервную копию Котоба.')
+      setError(t('settings.noticeImportBadFile'))
     }
   }
 
   const openFolder = async () => {
     const folder = await window.kotoba?.openDataFolder()
-    if (folder) setNotice(`Папка с данными: ${folder}`)
+    if (folder) setNotice(t('settings.noticeFolder', { path: folder }))
   }
 
   return (
     <div className="page">
       <header className="page-head">
         <div>
-          <div className="eyebrow">Настройки</div>
-          <h1>Всё под себя</h1>
-          <p className="page-sub">Внешний вид, темп обучения и резервные копии.</p>
+          <div className="eyebrow">{t('settings.eyebrow')}</div>
+          <h1>{t('settings.title')}</h1>
+          <p className="page-sub">{t('settings.subtitle')}</p>
         </div>
       </header>
 
@@ -100,8 +102,31 @@ export function Settings() {
         <section className="panel">
           <div className="panel-head">
             <div>
-              <h2>Внешний вид</h2>
-              <p>Тема интерфейса</p>
+              <h2>{t('settings.language')}</h2>
+              <p>{t('settings.languageSub')}</p>
+            </div>
+          </div>
+          <div className="field">
+            <label htmlFor="settings-language">{t('settings.languageAria')}</label>
+            <select
+              id="settings-language"
+              value={language}
+              onChange={(event) => setLanguage(event.target.value)}
+            >
+              {locales.map((item) => (
+                <option key={item.code} value={item.code}>
+                  {item.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </section>
+
+        <section className="panel">
+          <div className="panel-head">
+            <div>
+              <h2>{t('settings.appearance')}</h2>
+              <p>{t('settings.theme')}</p>
             </div>
           </div>
           <div className="segmented">
@@ -112,7 +137,7 @@ export function Settings() {
                 onClick={() => setSettings({ theme: theme.value })}
               >
                 <Icon name={theme.icon} size={16} />
-                {theme.label}
+                {t(theme.labelKey)}
               </button>
             ))}
           </div>
@@ -121,21 +146,21 @@ export function Settings() {
         <section className="panel">
           <div className="panel-head">
             <div>
-              <h2>Темп обучения</h2>
-              <p>Сколько новых карточек давать в день</p>
+              <h2>{t('settings.pace')}</h2>
+              <p>{t('settings.paceSub')}</p>
             </div>
           </div>
 
           <div className="goal-row">
             <div className="goal-value">
               <strong>{data.settings.newPerDay}</strong>
-              <span>новых в день</span>
+              <span>{t('settings.newPerDayUnit')}</span>
             </div>
             <div className="stepper">
-              <button onClick={() => changeNewPerDay(-1)} aria-label="Меньше">
+              <button onClick={() => changeNewPerDay(-1)} aria-label={t('settings.lessAria')}>
                 <Icon name="minus" size={16} />
               </button>
-              <button onClick={() => changeNewPerDay(1)} aria-label="Больше">
+              <button onClick={() => changeNewPerDay(1)} aria-label={t('settings.moreAria')}>
                 <Icon name="plus" size={16} />
               </button>
             </div>
@@ -148,22 +173,20 @@ export function Settings() {
             max={50}
             value={data.settings.newPerDay}
             onChange={(event) => setSettings({ newPerDay: Number(event.target.value) })}
-            aria-label="Новых карточек в день"
+            aria-label={t('settings.newPerDayAria')}
           />
           <div className="range-scale">
             <span>1</span>
             <span>50</span>
           </div>
-          <p className="hint">
-            Для азбук хватает 5–10 в день. Если чувствуешь, что легко — добавь ещё.
-          </p>
+          <p className="hint">{t('settings.paceHint')}</p>
         </section>
 
         <section className="panel">
           <div className="panel-head">
             <div>
-              <h2>Транскрипция</h2>
-              <p>Какое чтение показывать по умолчанию</p>
+              <h2>{t('settings.transcription')}</h2>
+              <p>{t('settings.transcriptionSub')}</p>
             </div>
           </div>
           <div className="segmented">
@@ -171,26 +194,23 @@ export function Settings() {
               className={data.settings.defaultTranscription === 'romaji' ? 'active' : ''}
               onClick={() => setSettings({ defaultTranscription: 'romaji' })}
             >
-              ромадзи
+              {t('settings.transcriptionRomaji')}
             </button>
             <button
               className={data.settings.defaultTranscription === 'cyrillic' ? 'active' : ''}
               onClick={() => setSettings({ defaultTranscription: 'cyrillic' })}
             >
-              кириллица
+              {t('settings.transcriptionCyrillic')}
             </button>
           </div>
-          <p className="hint">
-            Выбор влияет на то, какое чтение показывается в карточках и подставляется при их
-            создании.
-          </p>
+          <p className="hint">{t('settings.transcriptionHint')}</p>
         </section>
 
         <section className="panel">
           <div className="panel-head">
             <div>
-              <h2>Режим письма</h2>
-              <p>Насколько сложными будут сеансы письма</p>
+              <h2>{t('settings.writingMode')}</h2>
+              <p>{t('settings.writingModeSub')}</p>
             </div>
           </div>
           <div className="segmented">
@@ -198,42 +218,39 @@ export function Settings() {
               className={data.settings.writingDifficulty === 'normal' ? 'active' : ''}
               onClick={() => setSettings({ writingDifficulty: 'normal' })}
             >
-              Нормальный
+              {t('settings.writingNormal')}
             </button>
             <button
               className={data.settings.writingDifficulty === 'hard' ? 'active' : ''}
               onClick={() => setSettings({ writingDifficulty: 'hard' })}
             >
-              Сложный
+              {t('settings.writingHard')}
             </button>
           </div>
-          <p className="hint">
-            Нормальный: на карточке сразу видны перевод и транскрипция. Сложный: только перевод,
-            транскрипцию можно открыть кнопкой. Сам режим выбирается рядом с кнопкой «Учить».
-          </p>
+          <p className="hint">{t('settings.writingModeHint')}</p>
         </section>
 
         <section className="panel">
           <div className="panel-head">
             <div>
-              <h2>Данные</h2>
-              <p>Резервные копии и папка с файлами</p>
+              <h2>{t('settings.data')}</h2>
+              <p>{t('settings.dataSub')}</p>
             </div>
           </div>
 
           <div className="settings-actions">
             <button className="btn btn-ghost" onClick={() => void handleExport()}>
               <Icon name="download" size={17} />
-              Экспорт
+              {t('settings.export')}
             </button>
             <button className="btn btn-ghost" onClick={() => void handleImport()}>
               <Icon name="upload" size={17} />
-              Импорт
+              {t('settings.import')}
             </button>
             {window.kotoba && (
               <button className="btn btn-ghost" onClick={() => void openFolder()}>
                 <Icon name="folder" size={17} />
-                Папка с данными
+                {t('settings.dataFolder')}
               </button>
             )}
             <input
@@ -256,43 +273,40 @@ export function Settings() {
           )}
           {error && <p className="form-error">{error}</p>}
 
-          <p className="hint">
-            Прогресс сохраняется автоматически в JSON-файл на этом компьютере. Экспорт пригодится для
-            бэкапа или переноса обучения на другой ПК.
-          </p>
+          <p className="hint">{t('settings.dataHint')}</p>
         </section>
 
         <section className="panel">
           <div className="panel-head">
             <div>
-              <h2>Горячие клавиши</h2>
-              <p>Во время учёбы</p>
+              <h2>{t('settings.shortcuts')}</h2>
+              <p>{t('settings.shortcutsSub')}</p>
             </div>
           </div>
           <div className="shortcuts">
             <div>
-              <kbd>пробел</kbd>
-              <span>перевернуть карточку</span>
+              <kbd>{t('settings.keySpace')}</kbd>
+              <span>{t('settings.shortcutFlip')}</span>
             </div>
             <div>
               <kbd>1</kbd>
-              <span>снова — карточка вернётся</span>
+              <span>{t('settings.shortcutAgain')}</span>
             </div>
             <div>
               <kbd>2</kbd>
-              <span>трудно</span>
+              <span>{t('settings.shortcutHard')}</span>
             </div>
             <div>
               <kbd>3</kbd>
-              <span>хорошо</span>
+              <span>{t('settings.shortcutGood')}</span>
             </div>
             <div>
               <kbd>4</kbd>
-              <span>легко</span>
+              <span>{t('settings.shortcutEasy')}</span>
             </div>
             <div>
               <kbd>esc</kbd>
-              <span>выйти из подхода</span>
+              <span>{t('settings.shortcutEscape')}</span>
             </div>
           </div>
         </section>
@@ -300,18 +314,15 @@ export function Settings() {
         <section className="panel danger-panel">
           <div className="panel-head">
             <div>
-              <h2>Сброс</h2>
-              <p>Начать обучение с чистого листа</p>
+              <h2>{t('settings.reset')}</h2>
+              <p>{t('settings.resetSub')}</p>
             </div>
             <button className="btn btn-danger-ghost" onClick={() => setConfirmReset(true)}>
               <Icon name="rotate" size={17} />
-              Сбросить прогресс
+              {t('settings.resetProgress')}
             </button>
           </div>
-          <p className="hint">
-            Все карточки снова станут новыми, история и серия обнулятся. Колоды и сами карточки
-            останутся на месте.
-          </p>
+          <p className="hint">{t('settings.resetHint')}</p>
         </section>
       </div>
 
@@ -319,34 +330,38 @@ export function Settings() {
         <span className="brand-mark small">言</span>
         <div>
           <strong>Котоба · 言葉</strong>
-          <span>версия 0.1.0 · сделано для спокойной учёбы</span>
+          <span>{t('settings.about', { version: '1.1.0' })}</span>
         </div>
       </footer>
 
       {confirmReset && (
         <ConfirmDialog
-          title="Сбросить весь прогресс?"
-          text="Весь прогресс повторений и история будут обнулены. Колоды и карточки останутся. Это действие нельзя отменить."
-          confirmLabel="Сбросить всё"
+          title={t('settings.resetTitle')}
+          text={t('settings.resetText')}
+          confirmLabel={t('settings.resetConfirm')}
           danger
           onClose={() => setConfirmReset(false)}
           onConfirm={() => {
             resetProgress()
-            setNotice('Прогресс сброшен. Можно начинать заново.')
+            setNotice(t('settings.noticeResetDone'))
           }}
         />
       )}
 
       {pendingImport && preview && (
         <ConfirmDialog
-          title="Импортировать данные?"
-          text={`Файл «${pendingImport.name}»: ${preview.cards.length} карточек и ${preview.decks.length} колод. Текущие колоды и прогресс будут заменены.`}
-          confirmLabel="Импортировать"
+          title={t('settings.importTitle')}
+          text={t('settings.importText', {
+            name: pendingImport.name,
+            cards: preview.cards.length,
+            decks: preview.decks.length,
+          })}
+          confirmLabel={t('settings.importConfirm')}
           danger
           onClose={() => setPendingImport(null)}
           onConfirm={() => {
             replaceData(pendingImport.raw)
-            setNotice('Данные импортированы.')
+            setNotice(t('settings.noticeImported'))
           }}
         />
       )}

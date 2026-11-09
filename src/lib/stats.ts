@@ -1,6 +1,7 @@
 import type { AppData, Card, DayStat, Settings, StudyMode, StudyTotals } from '../types'
 import { DAY } from './srs'
 import { dayKey } from './utils'
+import { getActiveLocale } from './i18n'
 
 const ZERO_TOTALS: StudyTotals = { reviews: 0, correct: 0, newCards: 0, ms: 0 }
 
@@ -145,7 +146,7 @@ export function lastDays(history: Record<string, DayStat>, count: number, now = 
     points.push({
       key,
       ts,
-      weekday: new Intl.DateTimeFormat('ru-RU', { weekday: 'short' }).format(cursor),
+      weekday: new Intl.DateTimeFormat(getActiveLocale().intl, { weekday: 'short' }).format(cursor),
       day: cursor.getDate(),
       reviews: stat?.reviews ?? 0,
       correct: stat?.correct ?? 0,

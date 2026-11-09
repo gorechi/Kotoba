@@ -1,143 +1,159 @@
-# Котоба · 言葉
+# Kotoba · 言葉
 
-Простое настольное приложение для изучения японского языка по карточкам. Хирагана и катакана уже внутри, свои колоды и карточки добавляются в пару кликов. Всё работает офлайн, прогресс хранится только на этом компьютере.
+**English** · [Русский](README.ru.md)
 
-![Котоба](build/icon.png)
+## ⚠️ Important: development, authorship, and warranties
 
-## Что умеет
+**This is a personal hobby project, not a commercial product and not an official release.**
 
-- **Встроенные колоды**: хирагана и катакана — по 71 карточке (46 базовых знаков + 25 озвончённых). У базовых знаков есть примеры слов.
-- **Карта каны**: сетка хираганы и катаканы с прогрессом по каждому знаку, цветом изученности и значком мнемоники. Клик по символу запускает подход только с этой карточкой.
-- **Мнемоники для каны**: на лицевой стороне карточки можно сохранить личную ассоциацию для знака. Она скрыта по умолчанию и открывается по клику на лампочку.
-- **Свои колоды и карточки**: слово или знак, чтение, перевод и заметка. Колоду можно переименовать, сменить ей цвет и удалить.
-- **Теги для карточек**: при создании или редактировании карточки можно добавлять теги. При вводе предлагаются уже использованные в колоде теги — не нужно вспоминать точное написание. Теги отображаются в списке карточек и можно фильтровать по ним.
-- **Ввод каны без японской раскладки**: набирайте ромадзи, а поле само превращает его в кану. Переключатели `abc / あ / ア`, панель дополнительных знаков и кнопка «Добавить и ещё» для быстрого набора пачки карточек.
-- **Повторения по упрощённому SRS**: карточка возвращается через 10 минут, 12 часов, 1 день, 3 дня и дальше — в зависимости от оценки. Новые карточки порциями, чтобы не перегружаться.
-- **Разбор ошибок в конце подхода**: в конце подхода показывается список карточек, которые вы отметили как «Снова», с их чтением, переводом и кнопкой «Прослушать». Кнопка «Проработать ошибки ещё раз» запускает повтор только этих карточек.
-- **Отмена последней оценки**: если случайно нажали не ту кнопку, вернитесь к карточке кнопкой «Отменить» или `Ctrl+Z` — прогресс и статистика восстановятся.
-- **Озвучка**: кнопка с динамиком читает японский текст голосом системы (Web Speech API, `ja-JP`).
-- **Статистика**: серия дней, точность, повторения за 14 дней, прогресс по колодам.
-- **Темы**: светлая, тёмная или системная.
-- **Режим «Дзен»**: полноэкранное повторение без интерфейса. Карточка показывает японскую сторону, через 10 секунд переворачивается с переводом, ещё через 10 секунд растворяется и заменяется следующей. Режим запускается из меню или автоматически после настраиваемого бездействия; выход — кнопкой или `Esc`.
-- **Резервные копии**: экспорт и импорт JSON, сброс прогресса.
+- A significant portion of the code was written with AI tools — the so-called "vibe coding". I set the tasks, made the decisions, and reviewed the result, but I did not write every line by hand.
+- I do not hide the use of AI and state it explicitly here so that no one gets the impression of deception.
+- I do not claim authorship of every line of code and do not claim any patent rights to the project. The copyright notice in [`LICENSE`](LICENSE) refers to the project as a whole and does not mean that every fragment was written by me by hand.
+- The code is provided "as is", without warranties. It may contain bugs, rough edges, and fragments of unclear origin.
+- Original repository: https://github.com/gorechi/Kotoba. It is the source of truth; forks and copies must not be presented as the original.
+- If you find third-party code, a font, an image, or any other material used without attribution or a license, please let me know — I will check it and either fix or remove it.
+- Rights to third-party components belong to their authors and are governed by their licenses. The project is distributed under the **MIT** license; Klee One and Caveat are distributed under SIL OFL 1.1; the license texts are in `public/fonts/`.
+- Please do not treat this project as legally vetted or commercially supported.
 
-## Ввод карточек
+A simple desktop app for learning Japanese with flashcards. Hiragana and katakana are included; custom decks and cards can be added in a couple of clicks. Everything works offline, and progress is stored only on this computer.
 
-Поле «Слово или знак» по умолчанию работает в режиме `あ` — печатайте латиницей:
+![Kotoba](build/icon.png)
 
-| Набрано | Получится |
+## Features
+
+- **Built-in decks**: hiragana and katakana, 71 cards each (46 basic characters + 25 voiced). Basic characters include example words.
+- **Kana map**: a grid of hiragana and katakana with progress for each character, study status colors, and a mnemonic indicator. Clicking a character starts a session with just that card.
+- **Kana mnemonics**: you can save a personal association for a character on the front of the card. It is hidden by default and opens when you click the lightbulb.
+- **Custom decks and cards**: word or character, reading, translation, and a note. A deck can be renamed, recolored, and deleted.
+- **Card tags**: tags can be added when creating or editing a card. As you type, the app suggests tags already used in the deck, so you don't have to remember the exact spelling. Tags are shown in the card list and can be used as filters.
+- **Kana input without a Japanese keyboard layout**: type romaji and the field converts it to kana automatically. Use the `abc / あ / ア` toggles, the additional characters panel, and the "Add and add another" button to enter a batch of cards quickly.
+- **Spaced repetition with a simplified SRS**: a card comes back after 10 minutes, 12 hours, 1 day, 3 days, and so on, depending on your rating. New cards are introduced in small batches to avoid overload.
+- **Mistake review at the end of a session**: at the end of a session, the app shows the cards you marked "Again", with their reading, translation, and a "Listen" button. The "Review mistakes again" button starts a session with just those cards.
+- **Undo the last rating**: if you press the wrong button, return to the card with the "Undo" button or `Ctrl+Z` — progress and statistics will be restored.
+- **Text-to-speech**: the speaker button reads Japanese text using the system voice (Web Speech API, `ja-JP`).
+- **Statistics**: streak, accuracy, 14-day review activity, and progress by deck.
+- **Themes**: light, dark, or system.
+- **Zen mode**: full-screen review with no interface. The card shows the Japanese side, flips to the translation after 10 seconds, and fades out and is replaced by the next card after another 10 seconds. The mode can be started from the menu or automatically after a configurable period of inactivity; exit with the button or `Esc`.
+- **Backups**: JSON export and import, and progress reset.
+
+## Adding cards
+
+The "Word or character" field works in `あ` mode by default — type in Latin letters:
+
+| Typed | Result |
 | --- | --- |
 | `mizu` | みず |
 | `gakkou` | がっこう |
 | `konnichiha` | こんにちは |
 | `kan` + `Tab` | かん |
-| `ko-hi-` в режиме `ア` | コーヒー |
+| `ko-hi-` in `ア` mode | コーヒー |
 
-- `abc` — обычная латиница без превращений;
-- `あ` и `ア` — хирагана и катакана;
-- под полем — панель `っ ゃ ゅ ょ ぁ ぃ ぅ ぇ ぉ ゔ ー` (в катакане — `ッ ャ ュ ョ … ヴ`);
-- чтение подставляется ромадзи автоматически, пока вы не начали править его вручную;
-- «Добавить и ещё» или `Ctrl+Enter` сохраняет карточку и оставляет форму открытой для следующей.
+- `abc` — plain Latin input with no conversion;
+- `あ` and `ア` — hiragana and katakana;
+- below the field is a panel of `っ ゃ ゅ ょ ぁ ぃ ぅ ぇ ぉ ゔ ー` (in katakana — `ッ ャ ュ ョ … ヴ`);
+- the reading is filled in as romaji automatically until you start editing it manually;
+- "Add and add another" or `Ctrl+Enter` saves the card and keeps the form open for the next one.
 
-## Теги и фильтры
+## Tags and filters
 
-В форме карточки есть поле «Теги» — можно добавлять произвольные метки (например, `#существительное`, `#глагол`, `#N5`). При вводе предлагаются теги, которые уже используются в этой колоде, поэтому не нужно вспоминать точное написание.
+The card form has a "Tags" field where you can add arbitrary labels (for example, `#noun`, `#verb`, `#N5`). As you type, the app suggests tags already used in the deck, so you don't have to remember the exact spelling.
 
-На странице колоды над списком карточек появляются фильтры:
-- **Теги** — кликните на тег, чтобы показать только карточки с ним. Можно выбрать несколько тегов.
-- **Статус** — «Все», «Новые», «К повторению», «Изучённые».
-- **Поиск** — по слову, чтению, переводу, заметке или мнемонике.
+On the deck page, filters appear above the card list:
+- **Tags** — click a tag to show only cards with that tag. Multiple tags can be selected.
+- **Status** — "All", "New", "Due", "Learned".
+- **Search** — by word, reading, translation, note, or mnemonic.
 
+## Development setup
 
-## Запуск для разработки
-
-Нужен Node.js 20+ (проверено на 24 LTS).
+Node.js 20+ is required (tested on 24 LTS).
 
 ```powershell
 npm install
 npm run dev
 ```
 
-`npm run dev` запускает Vite и окно Electron вместе. Если нужен только браузер:
+`npm run dev` starts Vite and the Electron window together. If you only need the browser:
 
 ```powershell
 npm run dev:web
 ```
 
-и открыть `http://localhost:5173`.
+and open `http://localhost:5173`.
 
-## Сборка установщика
+## Building the installer
 
 ```powershell
 npm run dist
 ```
 
-Готовый установщик появится в `release\Kotoba-Setup-1.4.0.exe`. Это NSIS-установщик: можно выбрать папку установки, создаётся ярлык на рабочем столе.
+The installer will appear in `release\Kotoba-Setup-1.4.0.exe`. It is an NSIS installer: you can choose the installation folder, and a desktop shortcut is created.
 
-Только веб-сборка (без установщика):
+Web build only (no installer):
 
 ```powershell
 npm run build
 ```
 
-Результат — папка `dist`.
+The result is in the `dist` folder.
 
-## Где хранятся данные
+## Where data is stored
 
-В собранном приложении данные лежат в папке `%APPDATA%\Kotoba\`:
+In the packaged app, data is stored in `%APPDATA%\Kotoba\`:
 
-- `kotoba-content.json` — колоды и карточки;
-- `kotoba-settings.json` — настройки;
-- `kotoba-progress.json` — прогресс SRS;
-- `kotoba-history.json` — история занятий.
+- `kotoba-content.json` — decks and cards;
+- `kotoba-settings.json` — settings;
+- `kotoba-progress.json` — SRS progress;
+- `kotoba-history.json` — study history.
 
-В режиме браузера используется IndexedDB, а `localStorage` — как аварийный запасной вариант.
+In browser mode, the app uses IndexedDB, with `localStorage` as an emergency fallback.
 
-Файлы можно скопировать на другой компьютер или импортировать через «Настройки → Импорт». Кнопка «Папка с данными» открывает её в проводнике.
+You can copy the files to another computer or import them via "Settings → Import". The "Data folder" button opens the folder in File Explorer.
 
-## Горячие клавиши в подходе
+## Study session hotkeys
 
-| Клавиша | Действие |
+| Key | Action |
 | --- | --- |
-| `Пробел` / `Enter` | перевернуть карточку |
-| `1` | Снова — карточка вернётся через несколько карточек |
-| `2` | Трудно |
-| `3` | Хорошо |
-| `4` | Легко |
-| `Ctrl+Z` | отменить последнюю оценку |
-| `Esc` | выйти из подхода |
+| `Space` / `Enter` | flip the card |
+| `1` | Again — the card will return after a few cards |
+| `2` | Hard |
+| `3` | Good |
+| `4` | Easy |
+| `Ctrl+Z` | undo the last rating |
+| `Esc` | exit the session |
 
-## Как устроен проект
+## Project structure
 
 ```
-electron/          главный процесс и preload (IPC, окно, файлы)
+electron/          main process and preload (IPC, window, files)
 src/
-  components/      карточка подхода, колоды, формы, модальные окна
-  assets/          встроенные шрифты и SVG-маски
-  data/            хирагана, катакана и seed-данные
-  lib/             SRS, статистика, очереди учёбы, валидация данных, ромадзи→кана
-  pages/           Главная, Колоды, Статистика, Настройки
-  state/           хранилище данных и автосохранение
-  styles.css       тема и все стили
-scripts/           запуск dev и генерация иконки
-build/             иконки приложения
+  components/      study card, decks, forms, modals
+  assets/          bundled fonts and SVG masks
+  data/            hiragana, katakana, and seed data
+  lib/             SRS, statistics, study queues, data validation, romaji→kana
+  pages/           Home, Decks, Statistics, Settings
+  state/           data store and autosave
+  styles.css       theme and all styles
+scripts/           dev launcher and icon generation
+build/             app icons
 ```
 
-Данные при загрузке проходят через `src/lib/normalize.ts`: повреждённый или неполный JSON восстанавливается, встроенные колоды возвращаются на место, прогресс не теряется.
+On load, data passes through `src/lib/normalize.ts`: corrupted or incomplete JSON is restored, built-in decks are put back in place, and progress is not lost.
 
-## Шрифты и лицензии
+## Fonts and licenses
 
-Приложение работает офлайн и не загружает шрифты из сети — они встроены в сборку.
+The project code is distributed under the **MIT** license. The full text is in [`LICENSE`](LICENSE).
 
-- **Klee One** — японская сторона карточек в режиме «Дзен». Автор: The Klee Project Authors. Лицензия: SIL Open Font License 1.1. Файл шрифта: `src/assets/fonts/KleeOne-Regular.ttf`, текст лицензии: [`public/fonts/OFL-KleeOne.txt`](public/fonts/OFL-KleeOne.txt).
-- **Caveat** — переводы на карточках «Дзен» (кириллица и латиница). Автор: The Caveat Project Authors. Лицензия: SIL Open Font License 1.1. Файл шрифта: `src/assets/fonts/Caveat-Regular.ttf`, текст лицензии: [`public/fonts/OFL-Caveat.txt`](public/fonts/OFL-Caveat.txt).
+The app works offline and does not download fonts from the network — they are bundled into the build.
 
-Оба шрифта распространяются по SIL OFL 1.1: их можно свободно использовать, изменять и встраивать в приложение. Лицензия MIT в файле [`LICENSE`](LICENSE) относится к коду приложения; на шрифты она не распространяется.
+- **Klee One** — the Japanese side of cards in Zen mode. Author: The Klee Project Authors. License: SIL Open Font License 1.1. Font file: `src/assets/fonts/KleeOne-Regular.ttf`, license text: [`public/fonts/OFL-KleeOne.txt`](public/fonts/OFL-KleeOne.txt).
+- **Caveat** — translations on Zen cards (Cyrillic and Latin). Author: The Caveat Project Authors. License: SIL Open Font License 1.1. Font file: `src/assets/fonts/Caveat-Regular.ttf`, license text: [`public/fonts/OFL-Caveat.txt`](public/fonts/OFL-Caveat.txt).
 
-## Идеи для развития
+Both fonts are distributed under SIL OFL 1.1: they can be freely used, modified, and embedded in the app. The MIT license in [`LICENSE`](LICENSE) applies to the app code; it does not apply to the fonts.
 
-- Кандзи и словарные колоды с импортом из CSV.
-- Режим «наоборот»: перевод → японский.
-- Пользовательские интервалы и настройка SRS.
-- Напоминание о занятиях.
-- Синхронизация между устройствами.
+## Ideas for future development
+
+- Kanji and vocabulary decks with CSV import.
+- Reverse mode: translation → Japanese.
+- Custom intervals and SRS settings.
+- Study reminders.
+- Sync between devices.

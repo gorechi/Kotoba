@@ -496,7 +496,6 @@ export const messages: Record<string, string> = {
   "settings.language": "Язык",
   "settings.languageSub": "Язык интерфейса",
   "settings.languageAria": "Язык интерфейса",
-  "settings.languageHint": "language",
   "settings.appearance": "Внешний вид",
   "settings.theme": "Тема интерфейса",
   "settings.themeLight": "Светлая",

@@ -343,7 +343,8 @@ export function Settings({
                 {language !== 'en' && (
                   <span className="panel-title-note">
                     {' '}
-                    ({t('settings.languageHint')})
+                    {/* Always English: a wayfinding hint for users who don't know the current language. */}
+                    (Language)
                   </span>
                 )}
               </h2>

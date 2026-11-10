@@ -1109,6 +1109,7 @@ code {
 
 .zen-frame img {
   width: 100%;
+  height: auto;
 }
 
 /* ---------- Data ---------- */

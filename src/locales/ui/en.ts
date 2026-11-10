@@ -200,7 +200,7 @@ export const messages: Record<string, string> = {
   "deckSettings.mode": "Study mode",
   "deckSettings.modeGlobal": "Use global",
   "deckSettings.reset": "Reset to global settings",
-  "deckDetail.backKana": "All scripts",
+  "deckDetail.backKana": "All decks",
   "deckDetail.backKanji": "All kanji",
   "deckDetail.notFound": "Deck not found.",
   "deckDetail.eyebrow.builtinKanji": "Built-in kanji deck",

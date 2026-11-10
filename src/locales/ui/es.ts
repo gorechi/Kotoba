@@ -200,7 +200,7 @@ export const messages: Record<string, string> = {
   "deckSettings.mode": "Modo de estudio",
   "deckSettings.modeGlobal": "Usar global",
   "deckSettings.reset": "Restablecer los ajustes globales",
-  "deckDetail.backKana": "Todos los silabarios",
+  "deckDetail.backKana": "Todos los mazos",
   "deckDetail.backKanji": "Todos los kanji",
   "deckDetail.notFound": "No se encontró el mazo.",
   "deckDetail.eyebrow.builtinKanji": "Mazo de kanji incluido",

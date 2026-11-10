@@ -200,7 +200,7 @@ export const messages: Record<string, string> = {
   "deckSettings.mode": "Режим изучения",
   "deckSettings.modeGlobal": "Как в настройках",
   "deckSettings.reset": "Сбросить к общим настройкам",
-  "deckDetail.backKana": "Все азбуки",
+  "deckDetail.backKana": "Все колоды",
   "deckDetail.backKanji": "Все кандзи",
   "deckDetail.notFound": "Колода не найдена.",
   "deckDetail.eyebrow.builtinKanji": "Встроенная колода кандзи",

@@ -363,10 +363,11 @@ export function CsvImport({ kind }: { kind: DeckKind }) {
       return
     }
 
-    update((draft) => {
-      if (newDeck) draft.decks.push(newDeck)
-      draft.cards.push(...cards)
-    })
+    update((current) => ({
+      ...current,
+      decks: newDeck ? [...current.decks, newDeck] : current.decks,
+      cards: [...current.cards, ...cards],
+    }))
 
     setNotice(
       skipped

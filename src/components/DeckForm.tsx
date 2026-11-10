@@ -39,26 +39,39 @@ export function DeckForm({ deck, kind = 'kana', onClose }: DeckFormProps) {
       return
     }
     const cleanNameJp = finalizeRomajiTail(nameJp, nameJpMode).trim()
-    update((draft) => {
+    update((current) => {
+      const trimmedDescription = description.trim()
       if (deck) {
-        const target = draft.decks.find((item) => item.id === deck.id)
-        if (target) {
-          target.name = cleanName
-          target.nameJp = cleanNameJp
-          target.description = description.trim()
-          target.accent = accent
+        return {
+          ...current,
+          decks: current.decks.map((item) =>
+            item.id === deck.id
+              ? {
+                  ...item,
+                  name: cleanName,
+                  nameJp: cleanNameJp,
+                  description: trimmedDescription,
+                  accent,
+                }
+              : item,
+          ),
         }
-      } else {
-        draft.decks.push({
-          id: uid('deck'),
-          name: cleanName,
-          nameJp: cleanNameJp,
-          description: description.trim(),
-          accent,
-          builtin: false,
-          kind: deckKind,
-          createdAt: Date.now(),
-        })
+      }
+      return {
+        ...current,
+        decks: [
+          ...current.decks,
+          {
+            id: uid('deck'),
+            name: cleanName,
+            nameJp: cleanNameJp,
+            description: trimmedDescription,
+            accent,
+            builtin: false,
+            kind: deckKind,
+            createdAt: Date.now(),
+          },
+        ],
       }
     })
     onClose()

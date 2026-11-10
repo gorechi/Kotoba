@@ -1,7 +1,14 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { StorageIssue, StorageLoadResult } from '../lib/storage'
 import { inspectBackup } from '../lib/backup'
-import { getLocale, translateIn, type Translate } from '../lib/i18n'
+import {
+  getLoadedLocale,
+  getLocale,
+  loadLocale,
+  translateIn,
+  type Locale,
+  type Translate,
+} from '../lib/i18n'
 import { Icon } from './Icon'
 
 interface RecoveryScreenProps {
@@ -29,7 +36,9 @@ function recoveryLanguage(result: StorageLoadResult): string {
     return settings.language
   }
   const browserLanguage = typeof navigator !== 'undefined' ? navigator.language : ''
-  return browserLanguage.toLowerCase().startsWith('ru') ? 'ru' : 'en'
+  if (browserLanguage.toLowerCase().startsWith('ru')) return 'ru'
+  if (browserLanguage.toLowerCase().startsWith('es')) return 'es'
+  return 'en'
 }
 
 export function RecoveryScreen({
@@ -38,7 +47,32 @@ export function RecoveryScreen({
   onStartFresh,
   onImport,
 }: RecoveryScreenProps) {
-  const locale = useMemo(() => getLocale(recoveryLanguage(result)), [result])
+  const [locale, setLocale] = useState<Locale>(
+    () => getLoadedLocale(recoveryLanguage(result)) ?? getLocale('en'),
+  )
+
+  useEffect(() => {
+    let cancelled = false
+    const code = recoveryLanguage(result)
+    const cached = getLoadedLocale(code)
+    if (cached) {
+      setLocale(cached)
+      return
+    }
+    void loadLocale(code)
+      .then((next) => {
+        if (!cancelled) setLocale(next)
+      })
+      .catch(() => {
+        void loadLocale('en').then((fallback) => {
+          if (!cancelled) setLocale(fallback)
+        })
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [result])
+
   const t = useMemo<Translate>(
     () => (key, params) => translateIn(locale, key, params),
     [locale],

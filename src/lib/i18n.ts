@@ -1,58 +1,51 @@
-/**
- * Локализация приложения.
- *
- * Файлы локалей лежат в `src/locales/*.ts` и подхватываются автоматически:
- * чтобы добавить новый язык, достаточно создать там файл с объектом Locale.
- */
+import { messages as enUi } from '../locales/ui/en'
 
+/**
+ * Локали устроены так:
+ * - метаданные (код, название, Intl) лежат в этом файле и всегда доступны;
+ * - UI-строки и контентные переводы лежат отдельными чанками;
+ * - активный язык загружается при старте, неактивные — только при переключении.
+ */
 export type TranslateParams = Record<string, string | number>
 
-export interface Locale {
-  /** Код языка: используется в настройках и атрибуте lang. */
+export interface LocaleInfo {
   code: string
-  /** Название языка на нём самом — показывается в списке выбора. */
   name: string
-  /** Локаль для Intl (даты, числа, склонения). */
   intl: string
+}
+
+export interface Locale extends LocaleInfo {
   messages: Record<string, string>
 }
 
 export type Translate = (key: string, params?: TranslateParams) => string
 
-const modules = import.meta.glob('../locales/*.ts', { eager: true }) as Record<
-  string,
-  Record<string, unknown>
->
+export const LOCALES: LocaleInfo[] = [
+  { code: 'en', name: 'English', intl: 'en-US' },
+  { code: 'ru', name: 'Русский', intl: 'ru-RU' },
+  { code: 'es', name: 'Español', intl: 'es-ES' },
+]
 
-function isLocale(value: unknown): value is Locale {
-  if (typeof value !== 'object' || value === null) return false
-  const candidate = value as Partial<Locale>
-  return (
-    typeof candidate.code === 'string' &&
-    typeof candidate.name === 'string' &&
-    typeof candidate.intl === 'string' &&
-    typeof candidate.messages === 'object' &&
-    candidate.messages !== null
-  )
-}
-
-function collectLocales(): Locale[] {
-  const found = new Map<string, Locale>()
-  for (const module of Object.values(modules)) {
-    for (const value of Object.values(module)) {
-      if (isLocale(value)) found.set(value.code, value)
-    }
-  }
-  return [...found.values()].sort((a, b) => a.code.localeCompare(b.code))
-}
-
-/** Все доступные локали приложения. */
-export const LOCALES: Locale[] = collectLocales()
-
-/** Язык по умолчанию. */
 export const DEFAULT_LOCALE = 'en'
 
-export function getLocale(code: string | undefined | null): Locale {
+type MessageModule = { messages: Record<string, string> }
+
+// UI-строки неактивных языков подгружаются отдельно. UI английского
+// остаётся статическим фолбэком и не тянет за собой контентные переводы.
+const uiLoaders: Record<string, () => Promise<MessageModule>> = {
+  ru: () => import('../locales/ui/ru'),
+  es: () => import('../locales/ui/es'),
+}
+
+const contentLoaders: Record<string, () => Promise<MessageModule>> = {
+  en: () => import('../locales/content/en'),
+  ru: () => import('../locales/content/ru'),
+  es: () => import('../locales/content/es'),
+}
+
+const loadedLocales = new Map<string, Locale>()
+
+export function getLocaleInfo(code: string | undefined | null): LocaleInfo {
   return (
     LOCALES.find((locale) => locale.code === code) ??
     LOCALES.find((locale) => locale.code === DEFAULT_LOCALE) ??
@@ -60,15 +53,57 @@ export function getLocale(code: string | undefined | null): Locale {
   )
 }
 
+/** Возвращает загруженную локаль или метаданные с английским UI-фолбэком. */
+export function getLocale(code: string | undefined | null): Locale {
+  const info = getLocaleInfo(code)
+  return (
+    loadedLocales.get(info.code) ?? {
+      ...info,
+      messages: info.code === DEFAULT_LOCALE ? enUi : {},
+    }
+  )
+}
+
 export function isLocaleCode(code: unknown): code is string {
   return typeof code === 'string' && LOCALES.some((locale) => locale.code === code)
 }
 
-let activeLocale = getLocale(DEFAULT_LOCALE)
+export function getLoadedLocale(code: string | undefined | null): Locale | undefined {
+  return loadedLocales.get(getLocaleInfo(code).code)
+}
 
-/** Запоминает язык, который сейчас показывается в интерфейсе. */
-export function setActiveLocale(code: string): void {
-  activeLocale = getLocale(code)
+/** Загружает UI и контентные строки языка. Повторные вызовы берут кэш. */
+export async function loadLocale(code: string | undefined | null): Promise<Locale> {
+  const info = getLocaleInfo(code)
+  const cached = loadedLocales.get(info.code)
+  if (cached) return cached
+
+  const uiLoader = info.code === DEFAULT_LOCALE ? null : uiLoaders[info.code]
+  const contentLoader = contentLoaders[info.code]
+  if ((!uiLoader && info.code !== DEFAULT_LOCALE) || !contentLoader) {
+    throw new Error(`Locale bundle is not available: ${info.code}`)
+  }
+
+  const [ui, content] = await Promise.all([
+    uiLoader ? uiLoader() : Promise.resolve({ messages: enUi }),
+    contentLoader(),
+  ])
+
+  const locale: Locale = {
+    ...info,
+    messages: { ...content.messages, ...ui.messages },
+  }
+  loadedLocales.set(info.code, locale)
+  return locale
+}
+
+let activeLocale: Locale = {
+  ...getLocaleInfo(DEFAULT_LOCALE),
+  messages: enUi,
+}
+
+export function setActiveLocale(locale: Locale | string): void {
+  activeLocale = typeof locale === 'string' ? getLocale(locale) : locale
 }
 
 export function getActiveLocale(): Locale {
@@ -79,7 +114,7 @@ function lookup(locale: Locale, key: string): string | undefined {
   const value = locale.messages[key]
   if (typeof value === 'string') return value
   if (locale.code !== DEFAULT_LOCALE) {
-    const fallback = getLocale(DEFAULT_LOCALE).messages[key]
+    const fallback = enUi[key]
     if (typeof fallback === 'string') return fallback
   }
   return undefined
@@ -93,14 +128,14 @@ function pluralKey(locale: Locale, key: string, count: number): string {
       if (lookup(locale, candidate) !== undefined) return candidate
     }
   } catch {
-    /* если Intl не знает локаль — используем обычный ключ */
+    /* Если Intl не знает язык - используем базовый ключ. */
   }
   return key
 }
 
 /**
- * Возвращает перевод с подстановкой параметров.
- * Для числительных достаточно передать `n`: будет выбрана правильная форма
+ * Перевод строки с подстановкой параметров.
+ * Если у параметра есть `n`, будет выбрана правильная форма
  * (`key.one`, `key.few`, `key.many` или `key.other`).
  */
 export function translateIn(locale: Locale, key: string, params?: TranslateParams): string {
@@ -113,7 +148,7 @@ export function translateIn(locale: Locale, key: string, params?: TranslateParam
   )
 }
 
-/** Перевод для текущего активного языка (для функций вне React). */
+/** Перевод для текущего активного языка (не-React код). */
 export function translate(key: string, params?: TranslateParams): string {
   return translateIn(activeLocale, key, params)
 }

@@ -1,7 +1,6 @@
 import type { Card, Deck, StudySet } from '../types'
 import { freshSrs } from '../lib/srs'
 import { DEFAULT_LOCALE } from '../lib/i18n'
-import { installContentPacks } from './content-packs'
 import {
   HIRAGANA_BASIC,
   HIRAGANA_VOICED,
@@ -74,16 +73,9 @@ export function createBaseSeedData(now = Date.now()) {
 }
 
 export function createSeedData(now = Date.now()) {
-  const base = createBaseSeedData(now)
-  const packed = installContentPacks(
-    {
-      decks: base.decks,
-      cards: base.cards,
-      installedPacks: base.installedPacks,
-    },
-    now,
-  )
-  return { ...base, ...packed }
+  // Kanji packs are installed lazily after the app shell is ready,
+  // so their data does not end up in the initial JavaScript bundle.
+  return createBaseSeedData(now)
 }
 
 function seedCards(

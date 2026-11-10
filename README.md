@@ -26,7 +26,7 @@
 - **Works offline.** Fonts and card data are bundled with the app; the only network request is the update check.
 - **Gentle by design.** Small batches of new cards, calm animations, and a Zen mode for review without interface noise.
 - **Yours to shape.** Built-in decks are ready to study, and custom decks and cards take a couple of clicks.
-- **Two languages.** The interface is available in Russian and English and can be switched at any time.
+- **Three languages.** The interface is available in English, Russian, and Spanish and can be switched at any time.
 
 ## Download
 

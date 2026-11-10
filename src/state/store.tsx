@@ -24,6 +24,7 @@ import { normalizeData } from '../lib/normalize'
 import { applyRating, freshSrs } from '../lib/srs'
 import { dayKey } from '../lib/utils'
 import { RecoveryScreen } from '../components/RecoveryScreen'
+import { Splash } from '../components/Splash'
 
 export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
 
@@ -38,7 +39,7 @@ interface StoreValue {
   clearLoadIssues: () => void
   saveState: SaveState
   retrySave: () => void
-  update: (fn: (draft: AppData) => void) => void
+  update: (fn: (current: AppData) => AppData) => void
   rateCard: (
     cardId: string,
     rating: Rating,
@@ -90,6 +91,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const lastProgressChangeRef = useRef(0)
   const lastProgressWriteRef = useRef(0)
   const progressSaveTimerRef = useRef<number | null>(null)
+  const lazyPacksRef = useRef(false)
   const [saveState, setSaveState] = useState<SaveState>({ status: 'idle' })
   const savedTimerRef = useRef<number | null>(null)
 
@@ -246,6 +248,42 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return () => window.clearTimeout(timer)
   }, [data, persistDirty])
 
+  // Kanji packs live in a lazy chunk. Install them after the app shell is
+  // ready so their cards do not inflate the initial bundle.
+  useEffect(() => {
+    if (!data || lazyPacksRef.current) return
+    const missing = ['kanji-n5', 'kanji-n4'].some(
+      (packId) => !data.installedPacks.includes(packId),
+    )
+    if (!missing) return
+
+    lazyPacksRef.current = true
+    void import('../data/content-packs')
+      .then(({ installContentPacks }) => {
+        setData((current) => {
+          if (!current) return current
+          const packed = installContentPacks({
+            decks: current.decks,
+            cards: current.cards,
+            installedPacks: current.installedPacks,
+          })
+          if (
+            packed.decks === current.decks &&
+            packed.cards === current.cards &&
+            packed.installedPacks === current.installedPacks
+          ) {
+            return current
+          }
+          dirtyRef.current = { ...dirtyRef.current, content: true }
+          return { ...current, ...packed }
+        })
+      })
+      .catch((error) => {
+        lazyPacksRef.current = false
+        console.error('[kotoba] could not install kanji packs', error)
+      })
+  }, [data])
+
   useEffect(() => {
     const theme = data?.settings.theme ?? 'system'
     const media = window.matchMedia('(prefers-color-scheme: dark)')
@@ -262,21 +300,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return undefined
   }, [data?.settings.theme])
 
-  const apply = useCallback((fn: (draft: AppData) => void, dirty: Partial<DirtyFlags>) => {
-    dirtyRef.current = { ...dirtyRef.current, ...dirty }
-    setData((prev) => {
-      if (!prev) return prev
-      const next = structuredClone(prev)
-      fn(next)
-      return next
-    })
-  }, [])
-
   const update = useCallback(
-    (fn: (draft: AppData) => void) => {
-      apply(fn, { content: true })
+    (fn: (current: AppData) => AppData) => {
+      dirtyRef.current = { ...dirtyRef.current, content: true }
+      setData((current) => (current ? fn(current) : current))
     },
-    [apply],
+    [],
   )
 
   const rateCard = useCallback(
@@ -590,15 +619,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }
 
   if (!value) {
-    return (
-      <div className="splash">
-        <div className="splash-mark">言</div>
-        <div className="splash-title">Котоба</div>
-        <div className="splash-bar">
-          <span />
-        </div>
-      </div>
-    )
+    return <Splash />
   }
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>

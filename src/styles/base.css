@@ -1,0 +1,175 @@
+@font-face {
+  font-family: 'Klee One';
+  /* Subset: kana, built-in N5/N4 kanji, punctuation and ASCII. */
+  src: url('../assets/fonts/KleeOne-Subset.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Caveat';
+  src: url('../assets/fonts/Caveat-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ============================================================
+   Котоба — токены
+   ============================================================ */
+:root {
+  --bg: #f6f2eb;
+  --bg-deep: #efe9df;
+  --surface: #ffffff;
+  --surface-2: #fbf8f3;
+  --text: #1d1b18;
+  --text-soft: #4c4841;
+  --muted: #837c6f;
+  --line: rgba(29, 27, 24, 0.09);
+  --line-strong: rgba(29, 27, 24, 0.16);
+  --accent: #e1523d;
+  --accent-ink: #c03e2b;
+  --accent-soft: color-mix(in srgb, var(--accent) 12%, transparent);
+  --accent-light: color-mix(in srgb, var(--accent) 25%, transparent);
+  --accent-dark: color-mix(in srgb, var(--accent) 70%, transparent);
+  --accent-bright: #d63031;
+  --green: #4e8a62;
+  --amber: #c08a2e;
+  --red: #d24b3f;
+  --blue: #4a6fc1;
+  --heat-0: #ece8e1;
+  --heat-1: #b7dcc0;
+  --heat-2: #86c596;
+  --heat-3: #58a46f;
+  --heat-4: #3f7a52;
+  --shadow-sm: 0 1px 2px rgba(29, 27, 24, 0.04), 0 6px 18px rgba(29, 27, 24, 0.05);
+  --shadow-md: 0 18px 40px rgba(29, 27, 24, 0.1), 0 2px 8px rgba(29, 27, 24, 0.05);
+  --radius: 18px;
+  --radius-lg: 26px;
+  --font-ui: 'Segoe UI Variable Text', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-display: 'Segoe UI Variable Display', 'Segoe UI', system-ui, sans-serif;
+  --font-jp: 'Yu Gothic UI', 'Meiryo', 'Hiragino Kaku Gothic ProN', sans-serif;
+  --font-kana: 'Yu Mincho', 'YuMincho', 'Hiragino Mincho ProN', serif;
+  --font-zen: 'Klee One', 'UD Digi Kyokasho NK-R', 'UD Digi Kyokasho N-R', 'Yu Mincho',
+    'YuMincho', 'Hiragino Mincho ProN', serif;
+  --font-zen-translation: 'Caveat', 'Segoe Print', 'Bradley Hand', 'Chalkboard SE', cursive;
+}
+
+[data-theme='dark'] {
+  --bg: #131211;
+  --bg-deep: #0e0d0c;
+  --surface: #1c1a18;
+  --surface-2: #221f1c;
+  --text: #f3eee6;
+  --text-soft: #cfc7ba;
+  --muted: #948c7e;
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.16);
+  --accent: #f0634c;
+  --accent-ink: #f47863;
+  --accent-soft: color-mix(in srgb, var(--accent) 16%, transparent);
+  --accent-light: color-mix(in srgb, var(--accent) 25%, transparent);
+  --accent-dark: color-mix(in srgb, var(--accent) 70%, transparent);
+  --accent-bright: #ff6b6b;
+  --green: #6fa980;
+  --amber: #d6a24b;
+  --red: #e9665a;
+  --blue: #7c95da;
+  --heat-0: #25221f;
+  --heat-1: #24442f;
+  --heat-2: #2f6a42;
+  --heat-3: #46955c;
+  --heat-4: #6fc182;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 24px 50px rgba(0, 0, 0, 0.45);
+}
+
+/* ============================================================
+   База
+   ============================================================ */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: 14.5px;
+  color: var(--text);
+  background: var(--bg);
+  overflow: hidden;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+h1 {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 3vw, 38px);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  font-weight: 650;
+}
+
+h2 {
+  font-size: 16px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 70%, transparent);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--muted) 28%, transparent);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--muted) 45%, transparent);
+  background-clip: content-box;
+}
+
+.app {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background:
+    radial-gradient(900px 500px at 82% -10%, color-mix(in srgb, var(--accent) 7%, transparent), transparent 60%),
+    radial-gradient(700px 500px at -10% 100%, color-mix(in srgb, var(--blue) 5%, transparent), transparent 65%),
+    var(--bg);
+}

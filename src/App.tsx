@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import type { QueueItem, Route, StudyMode } from './types'
 import { StoreProvider, useStore } from './state/store'
 import { I18nProvider, useI18n } from './lib/i18n-react'
@@ -7,16 +7,32 @@ import { Sidebar } from './components/Sidebar'
 import { Session } from './components/Session'
 import { Icon } from './components/Icon'
 import { Home } from './pages/Home'
-import { Decks, DeckDetail } from './pages/Decks'
-import { KanjiDecks } from './pages/KanjiDecks'
-import { CardBrowser } from './pages/CardBrowser'
-import { Stats } from './pages/Stats'
-import { Data } from './pages/Data'
-import { Settings } from './pages/Settings'
-import { KanaMap } from './pages/KanaMap'
-import { Help } from './pages/Help'
-import { HelpGuidePage } from './pages/HelpGuidePage'
-import { TtsHelp } from './pages/TtsHelp'
+
+const Decks = lazy(() => import('./pages/Decks').then((module) => ({ default: module.Decks })))
+const DeckDetail = lazy(() =>
+  import('./pages/Decks').then((module) => ({ default: module.DeckDetail })),
+)
+const KanjiDecks = lazy(() =>
+  import('./pages/KanjiDecks').then((module) => ({ default: module.KanjiDecks })),
+)
+const CardBrowser = lazy(() =>
+  import('./pages/CardBrowser').then((module) => ({ default: module.CardBrowser })),
+)
+const Stats = lazy(() => import('./pages/Stats').then((module) => ({ default: module.Stats })))
+const Data = lazy(() => import('./pages/Data').then((module) => ({ default: module.Data })))
+const Settings = lazy(() =>
+  import('./pages/Settings').then((module) => ({ default: module.Settings })),
+)
+const KanaMap = lazy(() =>
+  import('./pages/KanaMap').then((module) => ({ default: module.KanaMap })),
+)
+const Help = lazy(() => import('./pages/Help').then((module) => ({ default: module.Help })))
+const HelpGuidePage = lazy(() =>
+  import('./pages/HelpGuidePage').then((module) => ({ default: module.HelpGuidePage })),
+)
+const TtsHelp = lazy(() =>
+  import('./pages/TtsHelp').then((module) => ({ default: module.TtsHelp })),
+)
 import { ZenMode } from './components/ZenMode'
 import { effectiveStudyMode } from './lib/deck-settings'
 import { practiceQueue, buildStudyQueue } from './lib/study'
@@ -37,6 +53,16 @@ const TTS_NOTICE_KEY: Record<TtsFailureReason, string> = {
   unsupported: 'tts.unsupported',
   'missing-voice': 'tts.missingVoice',
   error: 'tts.error',
+}
+
+function PageLoader() {
+  const { t } = useI18n()
+  return (
+    <div className="page-loading" role="status" aria-live="polite">
+      <span className="page-loading-dot" aria-hidden="true" />
+      {t('common.loading')}
+    </div>
+  )
 }
 
 interface TtsNotice {
@@ -67,10 +93,10 @@ function Shell() {
   const updateCheckedRef = useRef(false)
   const mainRef = useRef<HTMLElement>(null)
 
-  const checkUpdates = useCallback(async () => {
+  const checkUpdates = useCallback(async (force = false) => {
     setUpdateChecking(true)
     setUpdateState((previous) => ({ ...previous, status: 'checking' }))
-    const result = await checkForUpdates()
+    const result = await checkForUpdates({ force })
     setUpdateState(result)
     setUpdateChecking(false)
   }, [])
@@ -282,6 +308,7 @@ function Shell() {
         <div className="app-body">
           <Sidebar route={route} onNavigate={navigate} onZen={() => setZen(true)} />
           <main className="main" ref={mainRef}>
+            <Suspense fallback={<PageLoader />}>
             {route.name === 'home' && (
               <Home
                 onNavigate={navigate}
@@ -302,7 +329,7 @@ function Shell() {
                 onZen={() => setZen(true)}
                 update={updateState}
                 updateChecking={updateChecking}
-                onCheckUpdates={() => void checkUpdates()}
+                onCheckUpdates={() => void checkUpdates(true)}
               />
             )}
             {route.name === 'help' && (
@@ -334,6 +361,7 @@ function Shell() {
                 }}
               />
             )}
+            </Suspense>
           </main>
         </div>
       )}

@@ -1,0 +1,95 @@
+/* ============================================================
+   Адаптив
+   ============================================================ */
+@media (max-width: 1180px) {
+  .main {
+    padding: 32px 32px 56px;
+  }
+
+  .hero {
+    padding: 30px;
+  }
+
+  .hero-art {
+    width: 180px;
+  }
+
+  .hero-jp {
+    font-size: 18px;
+    padding-left: 44px;
+  }
+
+  .hero-kanji {
+    font-size: 92px;
+  }
+}
+
+@media (max-width: 1060px) {
+  .stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .stats-columns,
+  .motivation-grid,
+  .plan-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .recap-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .shortcuts {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 980px) {
+  .sidebar {
+    width: 200px;
+    flex-basis: 200px;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .nav-item.active::before {
+    left: -10px;
+  }
+
+  .hero-art {
+    display: none;
+  }
+
+  .brand-tag {
+    display: none;
+  }
+
+  .deck-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  }
+
+  .settings-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-height: 760px) {
+  .flashcard {
+    height: 330px;
+  }
+
+  .session-body {
+    gap: 14px;
+    padding-bottom: 22px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

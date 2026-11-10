@@ -174,42 +174,55 @@ export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
       return
     }
 
-    update((draft) => {
+    update((current) => {
       if (card) {
-        const target = draft.cards.find((item) => item.id === card.id)
-        if (target) {
-          target.front = cleanFront
-          target.meaning = nextMeaning
-          target.note = note.trim()
-          target.tags = tags
-          target.jlpt = jlpt >= 1 && jlpt <= 5 ? jlpt : undefined
-          target.frequency = parsedFrequency > 0 ? parsedFrequency : undefined
-          target.readings = cleanReadings
-          target.examples = nextExamples
+        return {
+          ...current,
+          cards: current.cards.map((item) =>
+            item.id === card.id
+              ? {
+                  ...item,
+                  front: cleanFront,
+                  meaning: nextMeaning,
+                  note: note.trim(),
+                  tags,
+                  jlpt: jlpt >= 1 && jlpt <= 5 ? jlpt : undefined,
+                  frequency: parsedFrequency > 0 ? parsedFrequency : undefined,
+                  readings: cleanReadings,
+                  examples: nextExamples,
+                }
+              : item,
+          ),
         }
-        return
       }
-      const maxOrder = draft.cards.reduce(
+      const maxOrder = current.cards.reduce(
         (max, item) => (item.deckId === deckId ? Math.max(max, item.order) : max),
         0,
       )
-      draft.cards.push({
-        id: uid('card'),
-        deckId,
-        front: cleanFront,
-        reading: '',
-        meaning: cleanMeaning,
-        note: note.trim(),
-        mnemonic: '',
-        tags,
-        jlpt: jlpt >= 1 && jlpt <= 5 ? jlpt : undefined,
-        frequency: parsedFrequency > 0 ? parsedFrequency : undefined,
-        readings: cleanReadings,
-        examples: cleanExamples,        group: 'custom',
-        order: maxOrder + 1,
-        srs: freshSrs(),
-        createdAt: Date.now(),
-      })
+      return {
+        ...current,
+        cards: [
+          ...current.cards,
+          {
+            id: uid('card'),
+            deckId,
+            front: cleanFront,
+            reading: '',
+            meaning: cleanMeaning,
+            note: note.trim(),
+            mnemonic: '',
+            tags,
+            jlpt: jlpt >= 1 && jlpt <= 5 ? jlpt : undefined,
+            frequency: parsedFrequency > 0 ? parsedFrequency : undefined,
+            readings: cleanReadings,
+            examples: cleanExamples,
+            group: 'custom',
+            order: maxOrder + 1,
+            srs: freshSrs(),
+            createdAt: Date.now(),
+          },
+        ],
+      }
     })
 
     if (!keepOpen) {

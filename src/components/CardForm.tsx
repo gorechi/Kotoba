@@ -108,42 +108,54 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
     }
     const cleanReading = reading.trim()
     const parsedFrequency = Math.round(Number(frequency))
-    update((draft) => {
+    update((current) => {
       if (card) {
-        const target = draft.cards.find((item) => item.id === card.id)
-        if (target) {
-          target.front = cleanFront
-          target.reading = cleanReading
-          target.meaning = meaning.trim()
-          target.note = note.trim()
-          target.tags = tags
-          target.jlpt = jlpt >= 1 && jlpt <= 5 ? jlpt : undefined
-          target.frequency = parsedFrequency > 0 ? parsedFrequency : undefined
+        return {
+          ...current,
+          cards: current.cards.map((item) =>
+            item.id === card.id
+              ? {
+                  ...item,
+                  front: cleanFront,
+                  reading: cleanReading,
+                  meaning: meaning.trim(),
+                  note: note.trim(),
+                  tags,
+                  jlpt: jlpt >= 1 && jlpt <= 5 ? jlpt : undefined,
+                  frequency: parsedFrequency > 0 ? parsedFrequency : undefined,
+                }
+              : item,
+          ),
         }
-        return
       }
-      const maxOrder = draft.cards.reduce(
+      const maxOrder = current.cards.reduce(
         (max, item) => (item.deckId === deckId ? Math.max(max, item.order) : max),
         0,
       )
-      draft.cards.push({
-        id: uid('card'),
-        deckId,
-        front: cleanFront,
-        reading: cleanReading,
-        meaning: meaning.trim(),
-        note: note.trim(),
-        mnemonic: '',
-        tags,
-        jlpt: jlpt >= 1 && jlpt <= 5 ? jlpt : undefined,
-        frequency: parsedFrequency > 0 ? parsedFrequency : undefined,
-        readings: [],
-        examples: [],
-        group: 'custom',
-        order: maxOrder + 1,
-        srs: freshSrs(),
-        createdAt: Date.now(),
-      })
+      return {
+        ...current,
+        cards: [
+          ...current.cards,
+          {
+            id: uid('card'),
+            deckId,
+            front: cleanFront,
+            reading: cleanReading,
+            meaning: meaning.trim(),
+            note: note.trim(),
+            mnemonic: '',
+            tags,
+            jlpt: jlpt >= 1 && jlpt <= 5 ? jlpt : undefined,
+            frequency: parsedFrequency > 0 ? parsedFrequency : undefined,
+            readings: [],
+            examples: [],
+            group: 'custom',
+            order: maxOrder + 1,
+            srs: freshSrs(),
+            createdAt: Date.now(),
+          },
+        ],
+      }
     })
 
     if (!keepOpen) {

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type CSSProperties } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import type { Card, Route } from '../types'
 import { useStore } from '../state/store'
 import { useI18n } from '../lib/i18n-react'
@@ -18,6 +18,10 @@ import { KanjiCardForm } from '../components/KanjiCardForm'
 import { ConfirmDialog } from '../components/Modal'
 import { FitText } from '../components/FitText'
 import { Icon } from '../components/Icon'
+import {
+  DECK_TAGS_COLLAPSED as MAX_TAGS_COLLAPSED,
+  useDeckCardFilters,
+} from './deck-detail/useDeckCardFilters'
 import { ModeSwitch } from '../components/ModeSwitch'
 import { deckStat } from '../lib/stats'
 import {
@@ -101,7 +105,6 @@ interface DeckDetailProps {
 export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
   const { data, update, resetDeckProgress } = useStore()
   const { t } = useI18n()
-  const [query, setQuery] = useState('')
   const [adding, setAdding] = useState(false)
   const [editingDeck, setEditingDeck] = useState(false)
   const [editingCard, setEditingCard] = useState<Card | null>(null)
@@ -109,12 +112,25 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
   const [deletingDeck, setDeletingDeck] = useState(false)
   const [resetting, setResetting] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
-  const [activeTags, setActiveTags] = useState<Set<string>>(new Set())
-  const [statusFilter, setStatusFilter] = useState<'all' | 'new' | 'due' | 'learned'>('all')
-  const [tagsExpanded, setTagsExpanded] = useState(false)
 
   const deck = data.decks.find((item) => item.id === deckId)
   const now = Date.now()
+  const cards = data.cards
+    .filter((card) => card.deckId === deckId)
+    .sort((a, b) => a.order - b.order || a.createdAt - b.createdAt)
+
+  const {
+    query,
+    setQuery,
+    activeTags,
+    setActiveTags,
+    statusFilter,
+    setStatusFilter,
+    tagsExpanded,
+    setTagsExpanded,
+    sortedTags,
+    filtered,
+  } = useDeckCardFilters(cards, now, t)
 
   if (!deck) {
     return (
@@ -133,60 +149,6 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
   const listRoute: Route = isKanji ? { name: 'kanji' } : { name: 'decks' }
   const listLabel = isKanji ? t('deckDetail.backKanji') : t('deckDetail.backKana')
 
-  const cards = data.cards
-    .filter((card) => card.deckId === deckId)
-    .sort((a, b) => a.order - b.order || a.createdAt - b.createdAt)
-
-  // Частота использования тегов в колоде
-  const tagFrequency = useMemo(() => {
-    const counts = new Map<string, number>()
-    cards.forEach((card) => {
-      card.tags.forEach((tag) => {
-        counts.set(tag, (counts.get(tag) || 0) + 1)
-      })
-    })
-    return counts
-  }, [cards])
-
-  // Теги отсортированы по частоте (часто используемые — первыми)
-  const sortedTags = useMemo(() => {
-    const unique = new Set<string>()
-    cards.forEach((card) => card.tags.forEach((tag) => unique.add(tag)))
-    return [...unique].sort((a, b) => {
-      const countA = tagFrequency.get(a) ?? 0
-      const countB = tagFrequency.get(b) ?? 0
-      return countB - countA || a.localeCompare(b)
-    })
-  }, [cards, tagFrequency])
-
-  const MAX_TAGS_COLLAPSED = 6
-
-  const search = query.trim().toLowerCase()
-  const filtered = cards.filter((card) => {
-    // Поиск по тексту
-    if (search) {
-      const readingsText = card.readings
-        .map((item) => `${item.kana} ${item.transcription}`)
-        .join(' ')
-      const examplesText = card.examples
-        .map(
-          (item) =>
-            `${item.text} ${item.transcription} ${cardExampleTranslation(card, item, t)}`,
-        )
-        .join(' ')
-      const text =
-        `${card.front} ${card.reading} ${cardMeaning(card, t)} ${card.note} ${card.mnemonic} ${readingsText} ${examplesText}`.toLowerCase()
-      if (!text.includes(search)) return false
-    }
-    // По тегам: если выбраны теги, карточка должна иметь хотя бы один из них
-    if (activeTags.size > 0 && !card.tags.some((tag) => activeTags.has(tag))) return false
-    // По статусу SRS
-    if (statusFilter === 'new' && card.srs.introduced) return false
-    if (statusFilter === 'due' && (!card.srs.introduced || card.srs.due > now)) return false
-    if (statusFilter === 'learned' && (!card.srs.introduced || card.srs.due <= now)) return false
-    return true
-  })
-
   const stat = deckStat(data.cards, deckId, now)
   const newCount = Math.min(
     stat.fresh,
@@ -199,10 +161,11 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
   const watermark = (deck.nameJp || deck.name || '言').slice(0, 1)
 
   const deleteDeck = () => {
-    update((draft) => {
-      draft.decks = draft.decks.filter((item) => item.id !== deckId)
-      draft.cards = draft.cards.filter((card) => card.deckId !== deckId)
-    })
+    update((current) => ({
+      ...current,
+      decks: current.decks.filter((item) => item.id !== deckId),
+      cards: current.cards.filter((card) => card.deckId !== deckId),
+    }))
     onNavigate(listRoute)
   }
 
@@ -211,11 +174,17 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
   }
 
   const changeMode = (mode: 'reading' | 'writing') => {
-    update((draft) => {
-      const target = draft.decks.find((item) => item.id === deckId)
-      if (!target) return
-      target.settings = { ...getDeckSettings(target), studyMode: mode }
-    })
+    update((current) => ({
+      ...current,
+      decks: current.decks.map((item) =>
+        item.id === deckId
+          ? {
+              ...item,
+              settings: { ...getDeckSettings(item), studyMode: mode },
+            }
+          : item,
+      ),
+    }))
   }
 
   return (
@@ -557,9 +526,10 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
           danger
           onClose={() => setDeletingCard(null)}
           onConfirm={() => {
-            update((draft) => {
-              draft.cards = draft.cards.filter((item) => item.id !== deletingCard.id)
-            })
+            update((current) => ({
+              ...current,
+              cards: current.cards.filter((item) => item.id !== deletingCard.id),
+            }))
           }}
         />
       )}

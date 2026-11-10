@@ -67,8 +67,63 @@ async function requestRelease(): Promise<UpdateCheckResult> {
   }
 }
 
-/** Проверяет последний релиз на GitHub. Ничего не скачивает и не устанавливает. */
-export async function checkForUpdates(): Promise<UpdateState> {
+/**
+ * Проверяет последний релиз на GitHub. Ничего не скачивает и не устанавливает.
+ * Результат кешируется на сутки; ручная проверка может обойти кеш.
+ */
+const UPDATE_CACHE_KEY = 'kotoba.updateCheck.v1'
+const UPDATE_CACHE_TTL = 24 * 60 * 60 * 1000
+
+interface UpdateCacheEntry {
+  checkedAt: number
+  state: UpdateState
+}
+
+function readUpdateCache(): UpdateCacheEntry | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = window.localStorage.getItem(UPDATE_CACHE_KEY)
+    if (!raw) return null
+    const value = JSON.parse(raw) as Partial<UpdateCacheEntry>
+    if (
+      typeof value.checkedAt !== 'number' ||
+      typeof value.state !== 'object' ||
+      value.state === null ||
+      typeof value.state.status !== 'string' ||
+      typeof value.state.currentVersion !== 'string'
+    ) {
+      return null
+    }
+    return value as UpdateCacheEntry
+  } catch {
+    return null
+  }
+}
+
+function writeUpdateCache(state: UpdateState): void {
+  if (typeof window === 'undefined') return
+  try {
+    window.localStorage.setItem(
+      UPDATE_CACHE_KEY,
+      JSON.stringify({ checkedAt: Date.now(), state } satisfies UpdateCacheEntry),
+    )
+  } catch {
+    /* Кеш не критичен: просто проверим в следующий раз. */
+  }
+}
+
+export async function checkForUpdates(options: { force?: boolean } = {}): Promise<UpdateState> {
+  if (!options.force) {
+    const cached = readUpdateCache()
+    if (
+      cached &&
+      cached.state.currentVersion === APP_VERSION &&
+      Date.now() - cached.checkedAt < UPDATE_CACHE_TTL
+    ) {
+      return cached.state
+    }
+  }
+
   try {
     const result = await requestRelease()
     if (result.error) throw new Error(result.error)
@@ -78,25 +133,31 @@ export async function checkForUpdates(): Promise<UpdateState> {
     if (!latestVersion) throw new Error('Release has no version')
 
     if (isNewer(latestVersion, currentVersion)) {
-      return {
+      const state: UpdateState = {
         status: 'available',
         currentVersion,
         latestVersion,
         releaseUrl: result.releaseUrl || RELEASES_PAGE,
         releaseName: result.releaseName,
       }
+      writeUpdateCache(state)
+      return state
     }
 
-    return {
+    const state: UpdateState = {
       status: 'current',
       currentVersion,
       latestVersion,
     }
+    writeUpdateCache(state)
+    return state
   } catch (error) {
-    return {
+    const state: UpdateState = {
       status: 'error',
       currentVersion: APP_VERSION,
       error: error instanceof Error ? error.message : String(error),
     }
+    writeUpdateCache(state)
+    return state
   }
 }

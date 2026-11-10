@@ -53,17 +53,23 @@ export function DeckSettingsForm({ deck, onClose }: { deck: Deck; onClose: () =>
       ? Math.min(2000, Math.max(1, Math.round(reviewLimit)))
       : 1
 
-    update((draft) => {
-      const target = draft.decks.find((item) => item.id === deck.id)
-      if (!target) return
-      target.settings = {
-        newPerDay: allowNew && !useGlobalNew ? safeNewPerDay : null,
-        reviewLimit: limitReviews ? safeReviewLimit : null,
-        order,
-        allowNew,
-        studyMode,
-      }
-    })
+    update((current) => ({
+      ...current,
+      decks: current.decks.map((item) =>
+        item.id === deck.id
+          ? {
+              ...item,
+              settings: {
+                newPerDay: allowNew && !useGlobalNew ? safeNewPerDay : null,
+                reviewLimit: limitReviews ? safeReviewLimit : null,
+                order,
+                allowNew,
+                studyMode,
+              },
+            }
+          : item,
+      ),
+    }))
     onClose()
   }
 

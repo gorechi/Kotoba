@@ -125,35 +125,39 @@ export function CustomStudy({
     if (!name) return
     const stamp = Date.now()
     if (editingSet) {
-      update((draft) => {
-        const target = draft.studySets?.find((item) => item.id === editingSet.id)
-        if (target) {
-          target.name = name
-          target.options = { ...form }
-          target.updatedAt = stamp
-        }
-      })
+      update((current) => ({
+        ...current,
+        studySets: (current.studySets ?? []).map((item) =>
+          item.id === editingSet.id
+            ? { ...item, name, options: { ...form }, updatedAt: stamp }
+            : item,
+        ),
+      }))
       setNotice(t('customStudy.updated'))
     } else {
-      update((draft) => {
-        if (!draft.studySets) draft.studySets = []
-        draft.studySets.push({
-          id: uid('set'),
-          name,
-          options: { ...form },
-          createdAt: stamp,
-          updatedAt: stamp,
-        })
-      })
+      update((current) => ({
+        ...current,
+        studySets: [
+          ...(current.studySets ?? []),
+          {
+            id: uid('set'),
+            name,
+            options: { ...form },
+            createdAt: stamp,
+            updatedAt: stamp,
+          },
+        ],
+      }))
       setNotice(t('customStudy.saved'))
     }
     setBuilderOpen(false)
   }
 
   const deleteSet = (set: StudySet) => {
-    update((draft) => {
-      draft.studySets = (draft.studySets ?? []).filter((item) => item.id !== set.id)
-    })
+    update((current) => ({
+      ...current,
+      studySets: (current.studySets ?? []).filter((item) => item.id !== set.id),
+    }))
     setNotice(t('customStudy.deleted'))
   }
 

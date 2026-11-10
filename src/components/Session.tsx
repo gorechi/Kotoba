@@ -9,6 +9,7 @@ import { formatDuration } from '../lib/utils'
 import { speakJa } from '../lib/tts'
 import { FitText } from './FitText'
 import { Icon } from './Icon'
+import { useSessionShortcuts } from './session/useSessionShortcuts'
 
 const RATINGS: { rating: Rating; labelKey: string; key: string }[] = [
   { rating: 'again', labelKey: 'session.ratings.again', key: '1' },
@@ -148,10 +149,12 @@ export function Session({ deckId, items, mode, title, restartItems, onClose }: S
   const saveMnemonic = () => {
     if (!card) return
     const nextMnemonic = mnemonicDraft.trim()
-    update((draft) => {
-      const target = draft.cards.find((item) => item.id === card.id)
-      if (target) target.mnemonic = nextMnemonic
-    })
+    update((current) => ({
+      ...current,
+      cards: current.cards.map((item) =>
+        item.id === card.id ? { ...item, mnemonic: nextMnemonic } : item,
+      ),
+    }))
     setMnemonicDraft('')
     setMnemonicEditing(false)
     setMnemonicOpen(false)
@@ -159,10 +162,12 @@ export function Session({ deckId, items, mode, title, restartItems, onClose }: S
 
   const removeMnemonic = () => {
     if (!card) return
-    update((draft) => {
-      const target = draft.cards.find((item) => item.id === card.id)
-      if (target) target.mnemonic = ''
-    })
+    update((current) => ({
+      ...current,
+      cards: current.cards.map((item) =>
+        item.id === card.id ? { ...item, mnemonic: '' } : item,
+      ),
+    }))
     setMnemonicDraft('')
     setMnemonicEditing(false)
     setMnemonicOpen(false)
@@ -254,73 +259,23 @@ export function Session({ deckId, items, mode, title, restartItems, onClose }: S
     setLastRating(null)
   }, [lastRating, undoRating])
 
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement | null
-      if (
-        target &&
-        (target.tagName === 'INPUT' ||
-          target.tagName === 'TEXTAREA' ||
-          target.isContentEditable)
-      ) {
-        return
-      }
-      if (event.repeat) return
-      if (event.key === 'Escape') {
-        event.preventDefault()
-        if (mnemonicEditing) {
-          setMnemonicEditing(false)
-          setMnemonicDraft('')
-          return
-        }
-        if (mnemonicOpen) {
-          setMnemonicOpen(false)
-          return
-        }
-        onClose()
-        return
-      }
-      if (
-        (event.ctrlKey || event.metaKey) &&
-        (event.code === 'KeyZ' || event.key.toLowerCase() === 'z')
-      ) {
-        if (!lastRating) return
-        event.preventDefault()
-        undoLastRating()
-        return
-      }
-      if (finished) return
-      if (event.key === ' ' || event.key === 'Enter') {
-        if (target?.closest('button')) return
-        event.preventDefault()
-        setRevealed((prev) => !prev)
-        return
-      }
-      if (!revealed) return
-      const map: Record<string, Rating> = {
-        '1': 'again',
-        '2': 'hard',
-        '3': 'good',
-        '4': 'easy',
-      }
-      const rating = map[event.key]
-      if (rating) {
-        event.preventDefault()
-        rate(rating)
-      }
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [
+  const toggleAnswer = useCallback(() => {
+    setRevealed((prev) => !prev)
+  }, [])
+
+  useSessionShortcuts({
     finished,
-    lastRating,
+    revealed,
     mnemonicEditing,
     mnemonicOpen,
-    revealed,
-    rate,
-    undoLastRating,
+    canUndo: Boolean(lastRating),
     onClose,
-  ])
+    onUndo: undoLastRating,
+    onToggleAnswer: toggleAnswer,
+    onCancelMnemonic: cancelMnemonicEditor,
+    onCloseMnemonic: () => setMnemonicOpen(false),
+    onRate: rate,
+  })
 
   const restartQueue = finished
     ? restartItems

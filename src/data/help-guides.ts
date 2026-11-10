@@ -1,5 +1,6 @@
 import type { IconName } from '../components/Icon'
 import type { Route } from '../types'
+import { HELP_ES } from './help-guides.es'
 
 export type HelpSection = 'system' | 'learning'
 
@@ -50,6 +51,7 @@ const step = (
 
 /** Текст инструкции на языке интерфейса, с английским запасным вариантом. */
 export function helpText(value: HelpText, language: string): string {
+  if (language === 'es') return HELP_ES[value.en] ?? value.en
   return value[language as keyof HelpText] ?? value.en
 }
 

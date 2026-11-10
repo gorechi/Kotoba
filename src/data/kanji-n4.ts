@@ -1,8 +1,8 @@
 import type { Card, Deck } from '../types'
 import { freshSrs } from '../lib/srs'
+import { N4_KANJI_DECK_ID, N4_KANJI_PACK_ID } from './kanji-ids'
 
-export const N4_KANJI_PACK_ID = 'kanji-n4'
-export const N4_KANJI_DECK_ID = 'kanji-n4'
+export { N4_KANJI_DECK_ID, N4_KANJI_PACK_ID }
 
 interface N4KanjiEntry {
   kanji: string

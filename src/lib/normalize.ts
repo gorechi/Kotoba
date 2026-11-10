@@ -26,8 +26,8 @@ import type {
 import { freshSrs } from './srs'
 import { uid } from './utils'
 import { createBaseSeedData, createSeedData } from '../data/seed'
-import { installContentPacks } from '../data/content-packs'
-import { DEFAULT_LOCALE, getLocale, isLocaleCode } from './i18n'
+import { LEGACY_N5_EXAMPLES, LEGACY_N5_MEANINGS } from '../data/legacy-n5'
+import { DEFAULT_LOCALE, isLocaleCode } from './i18n'
 
 const THEMES: Theme[] = ['light', 'dark', 'system']
 const DECK_KINDS: DeckKind[] = ['kana', 'kanji']
@@ -358,26 +358,20 @@ function normalizeSettings(raw: unknown): Settings {
 }
 
 function stripLegacyN5Text(cards: Card[]): void {
-  const en = getLocale('en').messages
-  const ru = getLocale('ru').messages
   for (const card of cards) {
     const number = card.id.match(/^kanji-n5-(\d{3})$/)?.[1]
     if (!number) continue
 
-    const meaningKey = `kanji.n5.${number}.meaning`
-    const enMeaning = en[meaningKey]
-    const ruMeaning = ru[meaningKey]
-    if (enMeaning && ruMeaning && card.meaning === `${enMeaning} / ${ruMeaning}`) {
+    const legacyMeaning = LEGACY_N5_MEANINGS[number]
+    if (legacyMeaning && card.meaning === legacyMeaning) {
       card.meaning = ''
     }
 
     for (const example of card.examples) {
       const exampleNumber = example.id.match(/^example-\d{3}-(\d+)$/)?.[1]
       if (!exampleNumber) continue
-      const key = `kanji.n5.${number}.example.${exampleNumber}`
-      const enText = en[key]
-      const ruText = ru[key]
-      if (enText && ruText && example.translation === `${enText} / ${ruText}`) {
+      const legacyText = LEGACY_N5_EXAMPLES[number]?.[exampleNumber]
+      if (legacyText && example.translation === legacyText) {
         example.translation = ''
       }
     }
@@ -457,19 +451,14 @@ export function normalizeData(raw: unknown): AppData {
     validDeckIds.has(card.deckId),
   )
 
-  const packed = installContentPacks({
-    decks: mergedDecks,
-    cards: mergedCards,
-    installedPacks: [...new Set(strArray(raw.installedPacks))],
-  })
-  stripLegacyN5Text(packed.cards)
+  stripLegacyN5Text(mergedCards)
 
   return {
     version: 2,
-    decks: packed.decks,
-    cards: packed.cards,
+    decks: mergedDecks,
+    cards: mergedCards,
     studySets: normalizeStudySets(raw.studySets),
-    installedPacks: packed.installedPacks,
+    installedPacks: [...new Set(strArray(raw.installedPacks))],
     history: normalizeHistory(raw.history),
     settings: normalizeSettings(raw.settings),
     createdAt: num(raw.createdAt, Date.now()),

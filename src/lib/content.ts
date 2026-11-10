@@ -6,8 +6,7 @@
  */
 import type { Card, CardExample, Deck } from '../types'
 import type { Translate } from './i18n'
-import { N4_KANJI_DECK_ID } from '../data/kanji-n4'
-import { N5_KANJI_DECK_ID } from '../data/kanji-n5'
+import { N4_KANJI_DECK_ID, N5_KANJI_DECK_ID } from '../data/kanji-ids'
 import {
   HIRAGANA_BASIC,
   HIRAGANA_VOICED,

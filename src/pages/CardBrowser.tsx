@@ -1,91 +1,58 @@
-import { useEffect, useMemo, useState, type DragEvent } from 'react'
+import { useEffect, useState, type DragEvent } from 'react'
 import type { Card, Deck, DeckKind } from '../types'
 import { useStore } from '../state/store'
 import { useI18n } from '../lib/i18n-react'
 import { cardExampleTranslation, cardMeaning, deckTitle, isProtectedDeck } from '../lib/content'
-import type { Translate } from '../lib/i18n'
 import { freshSrs, knownSrs } from '../lib/srs'
 import { dueLabel, formatDate } from '../lib/utils'
 import { speakJa } from '../lib/tts'
 import { Icon } from '../components/Icon'
 import { ConfirmDialog, Modal } from '../components/Modal'
 import { Select } from '../components/Select'
-
-type SortKey =
-  | 'created-desc'
-  | 'created-asc'
-  | 'front-asc'
-  | 'front-desc'
-  | 'interval-asc'
-  | 'interval-desc'
-  | 'lapses-desc'
-
-type StatusKey = 'all' | 'new' | 'learning' | 'due' | 'learned' | 'suspended'
-type TypeFilter = 'all' | 'kana' | 'kanji'
-type CardStatus = 'new' | 'learning' | 'due' | 'learned'
-
-const MAX_TAGS_COLLAPSED = 8
-const PAGE_SIZE = 100
-
-const SORT_OPTIONS: { value: SortKey; labelKey: string }[] = [
-  { value: 'created-desc', labelKey: 'browser.sortNewest' },
-  { value: 'created-asc', labelKey: 'browser.sortOldest' },
-  { value: 'front-asc', labelKey: 'browser.sortAlphabet' },
-  { value: 'front-desc', labelKey: 'browser.sortAlphabetDesc' },
-  { value: 'interval-asc', labelKey: 'browser.sortInterval' },
-  { value: 'interval-desc', labelKey: 'browser.sortIntervalDesc' },
-  { value: 'lapses-desc', labelKey: 'browser.sortLapses' },
-]
-
-const STATUS_FILTERS: { value: StatusKey; labelKey: string }[] = [
-  { value: 'all', labelKey: 'browser.statusAll' },
-  { value: 'new', labelKey: 'browser.statusNew' },
-  { value: 'learning', labelKey: 'browser.statusLearning' },
-  { value: 'due', labelKey: 'browser.statusDue' },
-  { value: 'learned', labelKey: 'browser.statusLearned' },
-  { value: 'suspended', labelKey: 'browser.statusSuspended' },
-]
-
-const STATUS_LABEL_KEY: Record<CardStatus, string> = {
-  new: 'browser.statusNew',
-  learning: 'browser.statusLearning',
-  due: 'browser.statusDue',
-  learned: 'browser.statusLearned',
-}
-
-function cardStatus(card: Card, now: number): CardStatus {
-  if (!card.srs.introduced) return 'new'
-  if (card.srs.due <= now) return 'due'
-  if (card.srs.interval >= 21) return 'learned'
-  return 'learning'
-}
-
-function cardSearchText(card: Card, t: Translate): string {
-  const readings = card.readings
-    .map((item) => `${item.kana} ${item.transcription}`)
-    .join(' ')
-  const examples = card.examples
-    .map(
-      (item) =>
-        `${item.text} ${item.transcription} ${cardExampleTranslation(card, item, t)}`,
-    )
-    .join(' ')
-  return `${card.front} ${card.reading} ${cardMeaning(card, t)} ${card.note} ${card.mnemonic} ${card.tags.join(' ')} ${readings} ${examples}`.toLowerCase()
-}
+import {
+  MAX_TAGS_COLLAPSED,
+  PAGE_SIZE,
+  SORT_OPTIONS,
+  STATUS_FILTERS,
+  STATUS_LABEL_KEY,
+  cardStatus,
+  type SortKey,
+  type StatusKey,
+  type TypeFilter,
+} from '../lib/card-browser'
+import { useCardBrowserFilters } from './card-browser/useCardBrowserFilters'
 
 export function CardBrowser() {
   const { data, update } = useStore()
   const { t, locale } = useI18n()
   const now = Date.now()
 
-  const [query, setQuery] = useState('')
-  const [deckFilter, setDeckFilter] = useState('all')
-  const [typeFilter, setTypeFilter] = useState<TypeFilter>('all')
-  const [statusFilter, setStatusFilter] = useState<StatusKey>('all')
-  const [mnemonicOnly, setMnemonicOnly] = useState(false)
-  const [activeTags, setActiveTags] = useState<Set<string>>(new Set())
-  const [tagsExpanded, setTagsExpanded] = useState(false)
-  const [sort, setSort] = useState<SortKey>('created-desc')
+  const {
+    query,
+    setQuery,
+    deckFilter,
+    setDeckFilter,
+    typeFilter,
+    setTypeFilter,
+    statusFilter,
+    setStatusFilter,
+    mnemonicOnly,
+    setMnemonicOnly,
+    activeTags,
+    setActiveTags,
+    tagsExpanded,
+    setTagsExpanded,
+    sort,
+    setSort,
+    deckMap,
+    deckCounts,
+    allTags,
+    filtered,
+    visibleCards,
+    visibleTags,
+    setVisibleCount,
+  } = useCardBrowserFilters(data.cards, data.decks, t, locale.intl)
+
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [preview, setPreview] = useState<Card | null>(null)
   const [pendingDelete, setPendingDelete] = useState(false)
@@ -93,18 +60,12 @@ export function CardBrowser() {
   const [notice, setNotice] = useState<string | null>(null)
   const [draggingIds, setDraggingIds] = useState<string[]>([])
   const [dragOverDeck, setDragOverDeck] = useState<string | null>(null)
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
 
   useEffect(() => {
     if (!notice) return
     const timer = window.setTimeout(() => setNotice(null), 4500)
     return () => window.clearTimeout(timer)
   }, [notice])
-
-  const deckMap = useMemo(
-    () => new Map(data.decks.map((deck) => [deck.id, deck])),
-    [data.decks],
-  )
 
   const isProtectedCard = (card: Card) => {
     const deck = deckMap.get(card.deckId)
@@ -113,96 +74,6 @@ export function CardBrowser() {
 
   const movableDecks = data.decks.filter((deck) => !isProtectedDeck(deck))
 
-  const deckCounts = useMemo(() => {
-    const counts = new Map<string, number>()
-    for (const card of data.cards) {
-      counts.set(card.deckId, (counts.get(card.deckId) ?? 0) + 1)
-    }
-    return counts
-  }, [data.cards])
-
-  const allTags = useMemo(() => {
-    const counts = new Map<string, number>()
-    for (const card of data.cards) {
-      for (const tag of card.tags) counts.set(tag, (counts.get(tag) ?? 0) + 1)
-    }
-    return [...counts.entries()].sort(
-      (a, b) => b[1] - a[1] || a[0].localeCompare(b[0], locale.intl),
-    )
-  }, [data.cards, locale.intl])
-
-  const filtered = useMemo(() => {
-    const search = query.trim().toLowerCase()
-    const current = Date.now()
-    const result = data.cards.filter((card) => {
-      const deck = deckMap.get(card.deckId)
-      if (!deck) return false
-      if (deckFilter !== 'all' && card.deckId !== deckFilter) return false
-      if (typeFilter !== 'all' && deck.kind !== typeFilter) return false
-      if (statusFilter === 'suspended') {
-        if (!card.suspended) return false
-      } else if (statusFilter === 'new') {
-        if (card.srs.introduced) return false
-      } else if (statusFilter === 'learning') {
-        if (!card.srs.introduced || card.srs.due <= current || card.srs.interval >= 21) {
-          return false
-        }
-      } else if (statusFilter === 'due') {
-        if (!card.srs.introduced || card.srs.due > current) return false
-      } else if (statusFilter === 'learned') {
-        if (!card.srs.introduced || card.srs.due <= current || card.srs.interval < 21) {
-          return false
-        }
-      }
-      if (mnemonicOnly && !card.mnemonic.trim()) return false
-      if (activeTags.size > 0 && !card.tags.some((tag) => activeTags.has(tag))) return false
-      if (search && !cardSearchText(card, t).includes(search)) return false
-      return true
-    })
-
-    const compareText = (a: Card, b: Card) =>
-      (a.reading || a.front).localeCompare(b.reading || b.front, locale.intl)
-
-    result.sort((a, b) => {
-      switch (sort) {
-        case 'created-asc':
-          return a.createdAt - b.createdAt || a.order - b.order
-        case 'front-asc':
-          return compareText(a, b) || a.front.localeCompare(b.front, locale.intl)
-        case 'front-desc':
-          return compareText(b, a) || b.front.localeCompare(a.front, locale.intl)
-        case 'interval-asc':
-          return a.srs.interval - b.srs.interval || compareText(a, b)
-        case 'interval-desc':
-          return b.srs.interval - a.srs.interval || compareText(a, b)
-        case 'lapses-desc':
-          return b.srs.lapses - a.srs.lapses || b.srs.reps - a.srs.reps || compareText(a, b)
-        case 'created-desc':
-        default:
-          return b.createdAt - a.createdAt || a.order - b.order
-      }
-    })
-
-    return result
-  }, [
-    data.cards,
-    deckMap,
-    query,
-    deckFilter,
-    typeFilter,
-    statusFilter,
-    mnemonicOnly,
-    activeTags,
-    sort,
-    locale.intl,
-  ])
-
-  useEffect(() => {
-    setVisibleCount(PAGE_SIZE)
-  }, [query, deckFilter, typeFilter, statusFilter, mnemonicOnly, activeTags, sort])
-
-  const visibleCards = filtered.slice(0, visibleCount)
-  const visibleTags = tagsExpanded ? allTags : allTags.slice(0, MAX_TAGS_COLLAPSED)
   const allVisibleSelected =
     filtered.length > 0 && filtered.every((card) => selected.has(card.id))
   const selectedCards = data.cards.filter((card) => selected.has(card.id))
@@ -289,16 +160,19 @@ export function CardBrowser() {
       return
     }
 
-    update((draft) => {
+    update((current) => {
       let nextOrder =
-        draft.cards
+        current.cards
           .filter((card) => card.deckId === targetDeckId)
           .reduce((max, card) => Math.max(max, card.order), 0) + 1
-      for (const card of draft.cards) {
-        if (!idSet.has(card.id) || card.deckId === targetDeckId) continue
-        card.deckId = targetDeckId
-        card.order = nextOrder
-        nextOrder += 1
+      return {
+        ...current,
+        cards: current.cards.map((card) => {
+          if (!idSet.has(card.id) || card.deckId === targetDeckId) return card
+          const movedCard = { ...card, deckId: targetDeckId, order: nextOrder }
+          nextOrder += 1
+          return movedCard
+        }),
       }
     })
 
@@ -309,11 +183,12 @@ export function CardBrowser() {
   const setSuspended = (suspended: boolean) => {
     if (selected.size === 0 || selectionHasProtected) return
     const count = selected.size
-    update((draft) => {
-      for (const card of draft.cards) {
-        if (selected.has(card.id)) card.suspended = suspended
-      }
-    })
+    update((current) => ({
+      ...current,
+      cards: current.cards.map((card) =>
+        selected.has(card.id) ? { ...card, suspended } : card,
+      ),
+    }))
     setNotice(
       t(suspended ? 'browser.noticeSuspended' : 'browser.noticeUnsuspended', {
         n: count,
@@ -326,13 +201,12 @@ export function CardBrowser() {
     if (selected.size === 0) return
     const count = selected.size
     const known = knownSrs()
-    update((draft) => {
-      for (const card of draft.cards) {
-        if (selected.has(card.id)) {
-          card.srs = { ...known }
-        }
-      }
-    })
+    update((current) => ({
+      ...current,
+      cards: current.cards.map((card) =>
+        selected.has(card.id) ? { ...card, srs: { ...known } } : card,
+      ),
+    }))
     setNotice(t('browser.noticeKnown', { n: count }))
     setSelected(new Set())
   }
@@ -340,13 +214,12 @@ export function CardBrowser() {
   const resetSelectedProgress = () => {
     if (selected.size === 0) return
     const count = selected.size
-    update((draft) => {
-      for (const card of draft.cards) {
-        if (selected.has(card.id)) {
-          card.srs = freshSrs()
-        }
-      }
-    })
+    update((current) => ({
+      ...current,
+      cards: current.cards.map((card) =>
+        selected.has(card.id) ? { ...card, srs: freshSrs() } : card,
+      ),
+    }))
     setNotice(t('browser.noticeReset', { n: count }))
     setSelected(new Set())
   }
@@ -360,11 +233,14 @@ export function CardBrowser() {
     }
     if (selected.size === 0) return
     const count = selected.size
-    update((draft) => {
-      for (const card of draft.cards) {
-        if (selected.has(card.id) && !card.tags.includes(tag)) card.tags.push(tag)
-      }
-    })
+    update((current) => ({
+      ...current,
+      cards: current.cards.map((card) =>
+        selected.has(card.id) && !card.tags.includes(tag)
+          ? { ...card, tags: [...card.tags, tag] }
+          : card,
+      ),
+    }))
     setTagDraft('')
     setNotice(t('browser.noticeTagged', { n: count }))
     setSelected(new Set())
@@ -374,9 +250,10 @@ export function CardBrowser() {
     if (selectionHasProtected) return
     const count = selected.size
     if (count === 0) return
-    update((draft) => {
-      draft.cards = draft.cards.filter((card) => !selected.has(card.id))
-    })
+    update((current) => ({
+      ...current,
+      cards: current.cards.filter((card) => !selected.has(card.id)),
+    }))
     setSelected(new Set())
     setPendingDelete(false)
     setNotice(t('browser.noticeDeleted', { n: count }))

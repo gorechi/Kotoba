@@ -176,6 +176,20 @@ ipcMain.handle('data:openFolder', async () => {
   return folder
 })
 
+ipcMain.handle('system:open-speech-settings', async () => {
+  try {
+    await shell.openExternal('ms-settings:speech')
+    return true
+  } catch {
+    try {
+      await shell.openExternal('ms-settings:regionlanguage')
+      return true
+    } catch {
+      return false
+    }
+  }
+})
+
 ipcMain.handle('window:minimize', () => mainWindow?.minimize())
 ipcMain.handle('window:toggleMaximize', () => {
   if (!mainWindow) return

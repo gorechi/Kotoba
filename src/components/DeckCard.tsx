@@ -2,7 +2,7 @@ import type { CSSProperties, KeyboardEvent } from 'react'
 import type { Deck } from '../types'
 import type { DeckStat } from '../lib/stats'
 import { useI18n } from '../lib/i18n-react'
-import { deckDescription, deckTitle } from '../lib/content'
+import { deckDescription, deckTitle, isProtectedDeck } from '../lib/content'
 import { Icon } from './Icon'
 
 interface DeckCardProps {
@@ -17,6 +17,7 @@ interface DeckCardProps {
 export function DeckCard({ deck, stat, newCount, dueCount, onOpen, onStudy }: DeckCardProps) {
   const { t } = useI18n()
   const isKanji = deck.kind === 'kanji'
+  const protectedDeck = isProtectedDeck(deck)
   const due = dueCount ?? stat.due
   const nothingToStudy = due === 0 && newCount === 0
   const practice = nothingToStudy && stat.learned > 0
@@ -81,7 +82,7 @@ export function DeckCard({ deck, stat, newCount, dueCount, onOpen, onStudy }: De
 
       <div className="deck-foot">
         <span className="deck-count">
-          {deck.builtin
+          {protectedDeck
             ? t('deckCard.builtin')
             : t(isKanji ? 'count.kanji' : 'count.cards', { n: stat.total })}
         </span>

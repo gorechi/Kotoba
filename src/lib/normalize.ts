@@ -24,8 +24,9 @@ import type {
 } from '../types'
 import { freshSrs } from './srs'
 import { uid } from './utils'
-import { createSeedData } from '../data/seed'
-import { DEFAULT_LOCALE, isLocaleCode } from './i18n'
+import { createBaseSeedData, createSeedData } from '../data/seed'
+import { installContentPacks } from '../data/content-packs'
+import { DEFAULT_LOCALE, getLocale, isLocaleCode } from './i18n'
 
 const THEMES: Theme[] = ['light', 'dark', 'system']
 const DECK_KINDS: DeckKind[] = ['kana', 'kanji']
@@ -333,9 +334,36 @@ function normalizeSettings(raw: unknown): Settings {
   }
 }
 
+function stripLegacyN5Text(cards: Card[]): void {
+  const en = getLocale('en').messages
+  const ru = getLocale('ru').messages
+  for (const card of cards) {
+    const number = card.id.match(/^kanji-n5-(\d{3})$/)?.[1]
+    if (!number) continue
+
+    const meaningKey = `kanji.n5.${number}.meaning`
+    const enMeaning = en[meaningKey]
+    const ruMeaning = ru[meaningKey]
+    if (enMeaning && ruMeaning && card.meaning === `${enMeaning} / ${ruMeaning}`) {
+      card.meaning = ''
+    }
+
+    for (const example of card.examples) {
+      const exampleNumber = example.id.match(/^example-\d{3}-(\d+)$/)?.[1]
+      if (!exampleNumber) continue
+      const key = `kanji.n5.${number}.example.${exampleNumber}`
+      const enText = en[key]
+      const ruText = ru[key]
+      if (enText && ruText && example.translation === `${enText} / ${ruText}`) {
+        example.translation = ''
+      }
+    }
+  }
+}
+
 export function normalizeData(raw: unknown): AppData {
-  const seed = createSeedData()
-  if (!isObj(raw)) return seed
+  const seed = createBaseSeedData()
+  if (!isObj(raw)) return createSeedData()
 
   const decks = (Array.isArray(raw.decks) ? raw.decks : [])
     .map(normalizeDeck)
@@ -374,11 +402,19 @@ export function normalizeData(raw: unknown): AppData {
     validDeckIds.has(card.deckId),
   )
 
-  return {
-    version: 2,
+  const packed = installContentPacks({
     decks: mergedDecks,
     cards: mergedCards,
+    installedPacks: [...new Set(strArray(raw.installedPacks))],
+  })
+  stripLegacyN5Text(packed.cards)
+
+  return {
+    version: 2,
+    decks: packed.decks,
+    cards: packed.cards,
     studySets: normalizeStudySets(raw.studySets),
+    installedPacks: packed.installedPacks,
     history: normalizeHistory(raw.history),
     settings: normalizeSettings(raw.settings),
     createdAt: num(raw.createdAt, Date.now()),

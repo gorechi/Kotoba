@@ -37,6 +37,7 @@ export type IconName =
   | 'calendar'
   | 'eye'
   | 'bookmark'
+  | 'help'
 
 const paths: Record<IconName, ReactNode> = {
   book: (
@@ -256,6 +257,12 @@ const paths: Record<IconName, ReactNode> = {
     </>
   ),
   bookmark: <path d="M6 3h12v18l-6-4-6 4V3Z" />,
+  help: (
+    <>
+      <path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2.2-3 4" />
+      <path d="M12 17h.01" />
+    </>
+  ),
 }
 
 interface IconProps extends Omit<SVGProps<SVGSVGElement>, 'name'> {

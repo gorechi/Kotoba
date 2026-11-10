@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Card } from '../types'
 import { useI18n } from '../lib/i18n-react'
+import { cardMeaning } from '../lib/content'
+import type { Translate } from '../lib/i18n'
 import { FitText } from './FitText'
 import { Icon } from './Icon'
 
@@ -8,8 +10,8 @@ const FRONT_MS = 10_000
 const BACK_MS = 10_000
 const FADE_MS = 900
 
-function backText(card: Card): string {
-  return card.meaning.trim() || card.reading.trim() || card.front
+function backText(card: Card, t: Translate): string {
+  return cardMeaning(card, t).trim() || card.reading.trim() || card.front
 }
 
 export function ZenMode({ cards, onClose }: { cards: Card[]; onClose: () => void }) {
@@ -27,9 +29,9 @@ export function ZenMode({ cards, onClose }: { cards: Card[]; onClose: () => void
       cards.filter(
         (item) =>
           !item.suspended &&
-          Boolean(item.meaning.trim() || item.reading.trim()),
+          Boolean(cardMeaning(item, t).trim() || item.reading.trim()),
       ),
-    [cards],
+    [cards, t],
   )
 
   const pickNext = (excludeId?: string): Card | null => {
@@ -150,7 +152,7 @@ export function ZenMode({ cards, onClose }: { cards: Card[]; onClose: () => void
                 <div className="zen-face zen-face--back" aria-hidden={!flipped}>
                   <FitText
                     className="zen-card-translation"
-                    text={backText(card)}
+                    text={backText(card, t)}
                     maxFontSize={96}
                     minFontSize={20}
                   />

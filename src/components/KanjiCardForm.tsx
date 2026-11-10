@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEven
 import type { Card, CardExample, CardReading } from '../types'
 import { useStore } from '../state/store'
 import { useI18n } from '../lib/i18n-react'
-import { deckTitle } from '../lib/content'
+import { cardExampleTranslation, cardMeaning, deckTitle } from '../lib/content'
 import { freshSrs } from '../lib/srs'
 import { convertRomajiTail, guessKanaMode } from '../lib/romaji'
 import { toCyrillic } from '../lib/cyrillic'
@@ -40,7 +40,7 @@ export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
   }, [data.cards, deckId])
 
   const [front, setFront] = useState(card?.front ?? '')
-  const [meaning, setMeaning] = useState(card?.meaning ?? '')
+  const [meaning, setMeaning] = useState(() => (card ? cardMeaning(card, t) : ''))
   const [note, setNote] = useState(card?.note ?? '')
   const [jlpt, setJlpt] = useState(card?.jlpt ?? 0)
   const [frequency, setFrequency] = useState(
@@ -49,9 +49,13 @@ export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
   const [readings, setReadings] = useState<CardReading[]>(
     card?.readings.length ? card.readings : [emptyReading()],
   )
-  const [examples, setExamples] = useState<CardExample[]>(
-    card?.examples.length ? card.examples : [emptyExample()],
-  )
+  const [examples, setExamples] = useState<CardExample[]>(() => {
+    if (!card?.examples.length) return [emptyExample()]
+    return card.examples.map((item) => ({
+      ...item,
+      translation: cardExampleTranslation(card, item, t),
+    }))
+  })
   const [tags, setTags] = useState<string[]>(card?.tags ?? [])
   const [tagInput, setTagInput] = useState('')
   const [tagSuggestions, setTagSuggestions] = useState<string[]>([])
@@ -140,6 +144,29 @@ export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
       }))
       .filter((item) => item.text || item.transcription || item.translation)
     const cleanMeaning = meaning.trim()
+    const frontChanged = Boolean(card && cleanFront !== card.front)
+    const localizedMeaning = card ? cardMeaning(card, t) : ''
+    const nextMeaning =
+      card && !frontChanged && !card.meaning.trim() && cleanMeaning === localizedMeaning
+        ? ''
+        : cleanMeaning
+    const nextExamples = cleanExamples.map((item) => {
+      const original = card?.examples.find((example) => example.id === item.id)
+      if (!card || !original) return item
+      const localized = cardExampleTranslation(card, original, t)
+      const exampleChanged =
+        original.text.trim() !== item.text ||
+        original.transcription.trim() !== item.transcription
+      return {
+        ...item,
+        translation:
+          !exampleChanged &&
+          !original.translation.trim() &&
+          item.translation === localized
+            ? ''
+            : item.translation,
+      }
+    })
     const parsedFrequency = Math.round(Number(frequency))
 
     if (!cleanMeaning && !cleanReadings.length) {
@@ -152,13 +179,13 @@ export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
         const target = draft.cards.find((item) => item.id === card.id)
         if (target) {
           target.front = cleanFront
-          target.meaning = cleanMeaning
+          target.meaning = nextMeaning
           target.note = note.trim()
           target.tags = tags
           target.jlpt = jlpt >= 1 && jlpt <= 5 ? jlpt : undefined
           target.frequency = parsedFrequency > 0 ? parsedFrequency : undefined
           target.readings = cleanReadings
-          target.examples = cleanExamples
+          target.examples = nextExamples
         }
         return
       }
@@ -178,8 +205,7 @@ export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
         jlpt: jlpt >= 1 && jlpt <= 5 ? jlpt : undefined,
         frequency: parsedFrequency > 0 ? parsedFrequency : undefined,
         readings: cleanReadings,
-        examples: cleanExamples,
-        group: 'custom',
+        examples: cleanExamples,        group: 'custom',
         order: maxOrder + 1,
         srs: freshSrs(),
         createdAt: Date.now(),

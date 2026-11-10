@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
 import type { Card, CardExample, CardReading, Deck, DeckKind } from '../types'
 import { useStore } from '../state/store'
 import { useI18n } from '../lib/i18n-react'
-import { deckTitle } from '../lib/content'
+import { deckTitle, isProtectedDeck } from '../lib/content'
 import { freshSrs } from '../lib/srs'
 import { uid } from '../lib/utils'
 import { toCyrillic } from '../lib/cyrillic'
@@ -104,10 +104,12 @@ export function CsvImport({ kind }: { kind: DeckKind }) {
 
   const fields = kind === 'kana' ? KANA_FIELDS : KANJI_FIELDS
   const existingDecks = useMemo(
-    () => data.decks.filter((deck) => deck.kind === kind && !deck.builtin),
+    () => data.decks.filter((deck) => deck.kind === kind && !isProtectedDeck(deck)),
     [data.decks, kind],
   )
-  const hasBuiltinDecks = data.decks.some((deck) => deck.kind === kind && deck.builtin)
+  const hasBuiltinDecks = data.decks.some(
+    (deck) => deck.kind === kind && isProtectedDeck(deck),
+  )
 
   const delimiter = useMemo<Delimiter>(() => {
     if (!file) return ','

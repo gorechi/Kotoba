@@ -81,6 +81,16 @@ export function Sidebar({ route, onNavigate, onZen }: SidebarProps) {
           <span>{t('nav.settings')}</span>
         </button>
 
+        <button
+          className={`nav-item nav-help${
+            route.name === 'help' || route.name === 'ttsHelp' ? ' active' : ''
+          }`}
+          onClick={() => onNavigate({ name: 'help' })}
+        >
+          <Icon name="help" size={19} />
+          <span>{t('nav.help')}</span>
+        </button>
+
         <p className="sidebar-note">
           <Icon name="lock" size={12} /> {t('sidebar.privacy')}
         </p>

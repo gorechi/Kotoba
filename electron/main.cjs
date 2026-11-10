@@ -2,89 +2,96 @@ const { app, BrowserWindow, Menu, dialog, ipcMain, shell } = require('electron')
 const path = require('node:path')
 const fs = require('node:fs')
 const { checkUpdates } = require('./updates.cjs')
+const {
+  backupBeforeImport,
+  checkScheduledBackup,
+  createAutoBackup,
+  createOnCloseBackup,
+  getAutoBackupInfo,
+  mergeSettings,
+  resolveBackupFolder,
+} = require('./backup.cjs')
+const storage = require('./storage.cjs')
 
 const isDev = !app.isPackaged
+const AUTO_BACKUP_CHECK_MS = 60 * 60 * 1000
 let mainWindow = null
+let windowReady = false
+let pendingFocus = false
+let backupTimer = null
+let backupWarmupTimer = null
+let closeBackupDone = false
 
-function dataFile(name) {
-  return path.join(app.getPath('userData'), name)
-}
+/**
+ * Brings the existing window back to the foreground when a second instance
+ * tries to start. This keeps the data files owned by a single writer.
+ */
+function focusMainWindow() {
+  if (!mainWindow || mainWindow.isDestroyed()) {
+    // Окно ещё не создано (или уже закрывается). Если оно появится,
+    // ready-to-show заберёт этот флаг и сфокусирует его.
+    pendingFocus = true
+    return
+  }
 
-function contentFile() {
-  return dataFile('kotoba-content.json')
-}
+  if (!windowReady) {
+    pendingFocus = true
+    return
+  }
 
-function settingsFile() {
-  return dataFile('kotoba-settings.json')
-}
-
-function progressFile() {
-  return dataFile('kotoba-progress.json')
-}
-
-function historyFile() {
-  return dataFile('kotoba-history.json')
-}
-
-/** Файл старого формата; остаётся как резервная копия после миграции. */
-function legacyFile() {
-  return dataFile('kotoba-data.json')
-}
-
-function readJson(file) {
   try {
-    return JSON.parse(fs.readFileSync(file, 'utf8'))
+    if (mainWindow.isMinimized()) mainWindow.restore()
+    if (!mainWindow.isVisible()) mainWindow.show()
   } catch {
-    return null
+    /* окно уже закрывается */
+  }
+
+  try {
+    // Windows can block focus stealing; this is the documented escape hatch.
+    app.focus({ steal: true })
+  } catch {
+    /* not supported on all platforms */
+  }
+
+  try {
+    mainWindow.focus()
+  } catch {
+    /* окно уже закрывается */
   }
 }
 
-function writeJson(file, data) {
-  const tmp = file + '.tmp'
-  const json = JSON.stringify(data)
-  fs.mkdirSync(path.dirname(file), { recursive: true })
-  fs.writeFileSync(tmp, json, 'utf8')
-  try {
-    fs.renameSync(tmp, file)
-  } catch {
-    fs.writeFileSync(file, json, 'utf8')
+function startAutoBackupScheduler() {
+  const run = () => {
     try {
-      fs.unlinkSync(tmp)
-    } catch {
-      /* ignore */
-    }
-  }
-}
-
-function readParts() {
-  const content = readJson(contentFile())
-  if (content) {
-    return {
-      content,
-      settings: readJson(settingsFile()) ?? undefined,
-      progress: readJson(progressFile()) ?? {},
-      history: readJson(historyFile()) ?? {},
+      const result = checkScheduledBackup(app.getPath('userData'))
+      if (result?.error) {
+        console.error('[kotoba] auto backup failed', result.error)
+      }
+    } catch (error) {
+      console.error('[kotoba] auto backup check failed', error)
     }
   }
 
-  const legacy = readJson(legacyFile())
-  return legacy ? { legacy } : null
+  // Даём рендереру сохранить настройки после загрузки, затем проверяем срок.
+  backupWarmupTimer = setTimeout(run, 5000)
+  backupTimer = setInterval(run, AUTO_BACKUP_CHECK_MS)
 }
 
-function writeParts(parts) {
-  if (!parts || typeof parts !== 'object') return false
-
-  // Прогресс и историю пишем раньше контента: если запись прервётся,
-  // карточки останутся прежними, а лишние записи прогресса безвредны.
-  if (parts.progress !== undefined) writeJson(progressFile(), parts.progress)
-  if (parts.history !== undefined) writeJson(historyFile(), parts.history)
-  if (parts.settings !== undefined) writeJson(settingsFile(), parts.settings)
-  if (parts.content !== undefined) writeJson(contentFile(), parts.content)
-
-  return true
+function runOnCloseBackup() {
+  if (closeBackupDone) return
+  closeBackupDone = true
+  try {
+    const result = createOnCloseBackup(app.getPath('userData'))
+    if (result?.error) {
+      console.error('[kotoba] auto backup on close failed', result.error)
+    }
+  } catch (error) {
+    console.error('[kotoba] auto backup on close failed', error)
+  }
 }
 
 function createWindow() {
+  windowReady = false
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 820,
@@ -105,11 +112,17 @@ function createWindow() {
   })
 
   mainWindow.once('ready-to-show', () => {
+    windowReady = true
     mainWindow.show()
+    if (pendingFocus) {
+      pendingFocus = false
+      focusMainWindow()
+    }
   })
 
   mainWindow.on('closed', () => {
     mainWindow = null
+    windowReady = false
   })
 
   if (isDev) {
@@ -133,15 +146,16 @@ function createWindow() {
   })
 }
 
-ipcMain.handle('data:load', () => readParts())
-ipcMain.handle('data:save-parts', (_event, parts) => writeParts(parts))
+ipcMain.handle('data:load', () => storage.readParts(app.getPath('userData')))
+ipcMain.handle('data:save-parts', (_event, parts) =>
+  storage.writeParts(app.getPath('userData'), parts),
+)
 ipcMain.on('data:save-parts-sync', (event, parts) => {
   try {
-    writeParts(parts)
+    event.returnValue = storage.writeParts(app.getPath('userData'), parts) !== false
   } catch {
-    /* не блокируем закрытие окна */
+    event.returnValue = false
   }
-  event.returnValue = true
 })
 
 ipcMain.handle('data:export', async (_event, data, title) => {
@@ -177,6 +191,62 @@ ipcMain.handle('data:openFolder', async () => {
   return folder
 })
 
+ipcMain.handle('data:backup-before-import', (_event, data) =>
+  backupBeforeImport(app.getPath('userData'), data),
+)
+
+ipcMain.handle('data:backup-info', (_event, settingsOverride) => {
+  const userData = app.getPath('userData')
+  const settings = mergeSettings(storage.readSettings(userData), settingsOverride) ?? {}
+  return getAutoBackupInfo(userData, settings)
+})
+
+ipcMain.handle('data:check-auto-backup', (_event, settingsOverride) => {
+  const userData = app.getPath('userData')
+  try {
+    const result = checkScheduledBackup(userData, settingsOverride)
+    if (result?.error) {
+      console.error('[kotoba] auto backup failed', result.error)
+    }
+  } catch (error) {
+    console.error('[kotoba] auto backup check failed', error)
+  }
+  const settings = mergeSettings(storage.readSettings(userData), settingsOverride) ?? {}
+  return getAutoBackupInfo(userData, settings)
+})
+
+ipcMain.handle('data:create-auto-backup', (_event, settingsOverride) => {
+  const userData = app.getPath('userData')
+  const settings = mergeSettings(storage.readSettings(userData), settingsOverride) ?? {}
+  const result = createAutoBackup(userData, settings)
+  if (result.error) {
+    console.error('[kotoba] manual auto backup failed', result.error)
+  }
+  return result
+})
+
+ipcMain.handle('data:choose-backup-folder', async (_event, title) => {
+  const result = await dialog.showOpenDialog(mainWindow, {
+    title: typeof title === 'string' && title ? title : undefined,
+    properties: ['openDirectory', 'createDirectory'],
+  })
+  if (result.canceled || !result.filePaths[0]) return null
+  return result.filePaths[0]
+})
+
+ipcMain.handle('data:open-backup-folder', async (_event, settingsOverride) => {
+  const userData = app.getPath('userData')
+  const settings = mergeSettings(storage.readSettings(userData), settingsOverride) ?? {}
+  const target = resolveBackupFolder(userData, settings)
+  try {
+    fs.mkdirSync(target, { recursive: true })
+  } catch {
+    return false
+  }
+  const error = await shell.openPath(target)
+  return !error
+})
+
 ipcMain.handle('system:open-speech-settings', async () => {
   try {
     await shell.openExternal('ms-settings:speech')
@@ -203,15 +273,43 @@ ipcMain.handle('window:close', () => mainWindow?.close())
 
 app.setAppUserModelId('app.kotoba.cards')
 
-app.whenReady().then(() => {
-  Menu.setApplicationMenu(null)
-  createWindow()
+const gotTheLock = app.requestSingleInstanceLock()
 
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
-  })
-})
-
-app.on('window-all-closed', () => {
+if (!gotTheLock) {
+  // Второй экземпляр не должен открывать окно и трогать те же файлы данных.
   app.quit()
-})
+} else {
+  app.on('second-instance', () => {
+    if (isDev) {
+      console.log('[kotoba] second instance detected; focusing existing window')
+    }
+    focusMainWindow()
+  })
+
+  app.whenReady().then(() => {
+    Menu.setApplicationMenu(null)
+    createWindow()
+    startAutoBackupScheduler()
+
+    app.on('activate', () => {
+      if (BrowserWindow.getAllWindows().length === 0) createWindow()
+    })
+  })
+
+  app.on('before-quit', () => {
+    if (backupWarmupTimer) {
+      clearTimeout(backupWarmupTimer)
+      backupWarmupTimer = null
+    }
+    if (backupTimer) {
+      clearInterval(backupTimer)
+      backupTimer = null
+    }
+    runOnCloseBackup()
+  })
+
+  app.on('window-all-closed', () => {
+    runOnCloseBackup()
+    app.quit()
+  })
+}

@@ -17,13 +17,27 @@ import {
   saveStorage,
   saveStorageSync,
   type DirtyFlags,
+  type StorageIssue,
+  type StorageLoadResult,
 } from '../lib/storage'
 import { normalizeData } from '../lib/normalize'
 import { applyRating, freshSrs } from '../lib/srs'
 import { dayKey } from '../lib/utils'
+import { RecoveryScreen } from '../components/RecoveryScreen'
+
+export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
+
+export interface SaveState {
+  status: SaveStatus
+  error?: string
+}
 
 interface StoreValue {
   data: AppData
+  loadIssues: StorageIssue[]
+  clearLoadIssues: () => void
+  saveState: SaveState
+  retrySave: () => void
   update: (fn: (draft: AppData) => void) => void
   rateCard: (
     cardId: string,
@@ -36,22 +50,34 @@ interface StoreValue {
   replaceData: (raw: unknown) => void
   resetProgress: () => void
   resetDeckProgress: (deckId: string) => void
-  flush: () => Promise<void>
+  flush: () => Promise<boolean>
 }
 
 const StoreContext = createContext<StoreValue | null>(null)
 
-async function readStored(): Promise<unknown> {
+/** Пауза после последнего ответа, чтобы собрать пачку изменений прогресса. */
+const PROGRESS_SAVE_DELAY = 5000
+/** Даже при непрерывной учёбе прогресс пишется не реже этого интервала. */
+const MAX_PROGRESS_BATCH_AGE = 10_000
+
+async function readStored(): Promise<StorageLoadResult> {
   try {
-    const parts = await loadStorage()
-    return parts ? combineLoadedParts(parts) : null
-  } catch {
-    return null
+    return await loadStorage()
+  } catch (error) {
+    return {
+      parts: null,
+      issues: [{ part: 'content', kind: 'load-error', message: String(error) }],
+      blocked: true,
+    }
   }
 }
 
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<AppData | null>(null)
+  const [loadState, setLoadState] = useState<StorageLoadResult | null>(null)
+  const [loadIssues, setLoadIssues] = useState<StorageIssue[]>([])
+  const blockedRef = useRef(false)
+  const loadStartedRef = useRef(false)
   const dataRef = useRef<AppData | null>(null)
   dataRef.current = data
 
@@ -61,42 +87,142 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const savingPromiseRef = useRef<Promise<void> | null>(null)
   const inflightFlagsRef = useRef<DirtyFlags | null>(null)
   const saveAgainRef = useRef(false)
+  const lastProgressChangeRef = useRef(0)
+  const lastProgressWriteRef = useRef(0)
+  const progressSaveTimerRef = useRef<number | null>(null)
+  const [saveState, setSaveState] = useState<SaveState>({ status: 'idle' })
+  const savedTimerRef = useRef<number | null>(null)
 
-  useEffect(() => {
-    let alive = true
-    void readStored().then((raw) => {
-      if (alive) setData(normalizeData(raw))
-    })
-    return () => {
-      alive = false
+  const clearSavedTimer = useCallback(() => {
+    if (savedTimerRef.current !== null) {
+      window.clearTimeout(savedTimerRef.current)
+      savedTimerRef.current = null
     }
   }, [])
 
-  const persistDirty = useCallback(async () => {
+  const markSaving = useCallback(() => {
+    clearSavedTimer()
+    setSaveState((current) => (current.status === 'saving' ? current : { status: 'saving' }))
+  }, [clearSavedTimer])
+
+  const markSaved = useCallback(() => {
+    clearSavedTimer()
+    setSaveState({ status: 'saved' })
+    savedTimerRef.current = window.setTimeout(() => {
+      savedTimerRef.current = null
+      setSaveState((current) => (current.status === 'saved' ? { status: 'idle' } : current))
+    }, 2200)
+  }, [clearSavedTimer])
+
+  const markSaveError = useCallback(
+    (error: unknown) => {
+      clearSavedTimer()
+      console.error('[kotoba] save failed', error)
+      setSaveState({
+        status: 'error',
+        error: error instanceof Error ? error.message : String(error),
+      })
+    },
+    [clearSavedTimer],
+  )
+
+  useEffect(() => () => clearSavedTimer(), [clearSavedTimer])
+
+  useEffect(
+    () => () => {
+      if (progressSaveTimerRef.current !== null) {
+        window.clearTimeout(progressSaveTimerRef.current)
+        progressSaveTimerRef.current = null
+      }
+    },
+    [],
+  )
+
+  const applyLoaded = useCallback((result: StorageLoadResult) => {
+    blockedRef.current = result.blocked
+    setLoadState(result)
+    setLoadIssues(result.issues)
+    if (result.blocked) {
+      setData(null)
+      return
+    }
+    setData(normalizeData(result.parts ? combineLoadedParts(result.parts) : null))
+  }, [])
+
+  useEffect(() => {
+    // StrictMode в разработке запускает эффект дважды. Чтение с диска — это
+    // побочный эффект (оно может переименовать повреждённый файл), поэтому
+    // выполняем его один раз; повторный результат мог бы скрыть восстановление.
+    if (loadStartedRef.current) return
+    loadStartedRef.current = true
+    void readStored().then(applyLoaded)
+  }, [applyLoaded])
+
+  const persistDirty = useCallback(async (force = false): Promise<boolean> => {
+    if (blockedRef.current) return true
     if (savingRef.current) {
       saveAgainRef.current = true
-      return
+      return false
     }
 
     const current = dataRef.current
-    if (!current) return
+    if (!current) return true
 
     const flags = { ...dirtyRef.current }
-    if (!flags.content && !flags.settings && !flags.progress && !flags.history) return
+    if (!flags.content && !flags.settings && !flags.progress && !flags.history) return true
+
+    const onlyProgress =
+      !flags.content && !flags.settings && (flags.progress || flags.history)
+
+    if (onlyProgress && !force) {
+      const now = Date.now()
+      const sinceChange = now - lastProgressChangeRef.current
+      const sinceWrite = now - lastProgressWriteRef.current
+      const delay = Math.min(
+        Math.max(0, PROGRESS_SAVE_DELAY - sinceChange),
+        Math.max(0, MAX_PROGRESS_BATCH_AGE - sinceWrite),
+      )
+      if (delay > 0) {
+        if (progressSaveTimerRef.current !== null) {
+          window.clearTimeout(progressSaveTimerRef.current)
+        }
+        progressSaveTimerRef.current = window.setTimeout(() => {
+          progressSaveTimerRef.current = null
+          void persistDirty(true)
+        }, delay)
+        return true
+      }
+    }
+
+    if (progressSaveTimerRef.current !== null) {
+      window.clearTimeout(progressSaveTimerRef.current)
+      progressSaveTimerRef.current = null
+    }
 
     dirtyRef.current = { content: false, settings: false, progress: false, history: false }
     inflightFlagsRef.current = flags
     const parts = partsForFlags(current, flags)
 
     savingRef.current = true
-    const task = saveStorage(parts).catch(() => {
-      dirtyRef.current = {
-        content: dirtyRef.current.content || flags.content,
-        settings: dirtyRef.current.settings || flags.settings,
-        progress: dirtyRef.current.progress || flags.progress,
-        history: dirtyRef.current.history || flags.history,
-      }
-    })
+    markSaving()
+    let failed = false
+    const task = saveStorage(parts)
+      .then(() => {
+        if (flags.progress || flags.content) {
+          lastProgressWriteRef.current = Date.now()
+        }
+        markSaved()
+      })
+      .catch((error) => {
+        failed = true
+        dirtyRef.current = {
+          content: dirtyRef.current.content || flags.content,
+          settings: dirtyRef.current.settings || flags.settings,
+          progress: dirtyRef.current.progress || flags.progress,
+          history: dirtyRef.current.history || flags.history,
+        }
+        markSaveError(error)
+      })
     savingPromiseRef.current = task
     try {
       await task
@@ -109,7 +235,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         window.setTimeout(() => void persistDirty(), 0)
       }
     }
-  }, [])
+    return !failed
+  }, [markSaveError, markSaved, markSaving])
 
   useEffect(() => {
     if (!data) return
@@ -169,14 +296,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const snapshot: RatingUndo = {
         cardId,
         srs: { ...card.srs },
-        lastMistakeAt: card.lastMistakeAt ?? null,
         historyKey,
         day: previousDay ? { ...previousDay } : null,
       }
 
+      lastProgressChangeRef.current = now
       dirtyRef.current.progress = true
       dirtyRef.current.history = true
-      if (rating === 'again') dirtyRef.current.content = true
 
       setData((current) => {
         if (!current) return current
@@ -185,11 +311,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
         const target = current.cards[index]
         const wasNew = !target.srs.introduced
+        const nextSrs = applyRating(target.srs, rating, now)
+        if (rating === 'again') nextSrs.lastMistakeAt = now
         const cards = current.cards.slice()
         cards[index] = {
           ...target,
-          srs: applyRating(target.srs, rating, now),
-          lastMistakeAt: rating === 'again' ? now : target.lastMistakeAt,
+          srs: nextSrs,
         }
 
         const elapsed = Math.min(Math.max(0, elapsedMs), 120_000)
@@ -240,9 +367,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   )
 
   const undoRating = useCallback((snapshot: RatingUndo) => {
+    lastProgressChangeRef.current = Date.now()
     dirtyRef.current.progress = true
     dirtyRef.current.history = true
-    dirtyRef.current.content = true
 
     setData((prev) => {
       if (!prev) return prev
@@ -252,7 +379,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         cards[index] = {
           ...cards[index],
           srs: { ...snapshot.srs },
-          lastMistakeAt: snapshot.lastMistakeAt ?? undefined,
         }
       }
 
@@ -290,7 +416,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             cards: prev.cards.map((card) => ({
               ...card,
               srs: freshSrs(),
-              lastMistakeAt: undefined,
             })),
             history: {},
           }
@@ -307,7 +432,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             ...prev,
             cards: prev.cards.map((card) =>
               card.deckId === deckId
-                ? { ...card, srs: freshSrs(), lastMistakeAt: undefined }
+                ? { ...card, srs: freshSrs() }
                 : card,
             ),
           }
@@ -315,21 +440,46 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     )
   }, [])
 
-  const flush = useCallback(async () => {
-    // Дожидаемся уже идущей записи, затем отправляем всё, что накопилось.
-    if (savingPromiseRef.current) {
-      try {
-        await savingPromiseRef.current
-      } catch {
-        /* ignore */
-      }
+  const flush = useCallback(async (): Promise<boolean> => {
+    if (progressSaveTimerRef.current !== null) {
+      window.clearTimeout(progressSaveTimerRef.current)
+      progressSaveTimerRef.current = null
     }
-    await persistDirty()
-  }, [persistDirty])
 
-  const flushSync = useCallback(() => {
+    // Дожидаемся уже идущей записи и повторяем, если во время неё появились
+    // новые изменения. Возвращаем false, только если записать не удалось.
+    for (let attempt = 0; attempt < 6; attempt += 1) {
+      if (savingPromiseRef.current) {
+        try {
+          await savingPromiseRef.current
+        } catch {
+          /* ошибку обработает persistDirty */
+        }
+      }
+      const saved = await persistDirty(true)
+      if (!saved) {
+        if (savingRef.current || saveAgainRef.current) continue
+        return false
+      }
+      const hasDirty =
+        dirtyRef.current.content ||
+        dirtyRef.current.settings ||
+        dirtyRef.current.progress ||
+        dirtyRef.current.history
+      if (!savingRef.current && !saveAgainRef.current && !hasDirty) return true
+    }
+    markSaveError(new Error('Pending changes were not flushed'))
+    return false
+  }, [markSaveError, persistDirty])
+
+  const flushSync = useCallback((): boolean => {
+    if (progressSaveTimerRef.current !== null) {
+      window.clearTimeout(progressSaveTimerRef.current)
+      progressSaveTimerRef.current = null
+    }
+    if (blockedRef.current) return true
     const current = dataRef.current
-    if (!current) return
+    if (!current) return true
 
     const inflight = inflightFlagsRef.current
     const flags: DirtyFlags = {
@@ -338,16 +488,24 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       progress: dirtyRef.current.progress || Boolean(inflight?.progress),
       history: dirtyRef.current.history || Boolean(inflight?.history),
     }
-    if (!flags.content && !flags.settings && !flags.progress && !flags.history) return
+    if (!flags.content && !flags.settings && !flags.progress && !flags.history) {
+      return true
+    }
 
     const parts = partsForFlags(current, flags)
     try {
-      saveStorageSync(parts)
+      if (!saveStorageSync(parts)) {
+        markSaveError(new Error('Synchronous save failed'))
+        return false
+      }
       dirtyRef.current = { content: false, settings: false, progress: false, history: false }
-    } catch {
-      /* не блокируем закрытие окна */
+      markSaved()
+      return true
+    } catch (error) {
+      markSaveError(error)
+      return false
     }
-  }, [])
+  }, [markSaveError, markSaved])
 
   useEffect(() => {
     const onUnload = () => flushSync()
@@ -355,10 +513,46 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('beforeunload', onUnload)
   }, [flushSync])
 
+  const retryLoad = useCallback(() => {
+    setLoadState(null)
+    setLoadIssues([])
+    void readStored().then(applyLoaded)
+  }, [applyLoaded])
+
+  const startFresh = useCallback(() => {
+    blockedRef.current = false
+    setLoadState((previous) =>
+      previous ? { ...previous, blocked: false, issues: [] } : previous,
+    )
+    setLoadIssues([])
+    dirtyRef.current = { ...ALL_DIRTY }
+    setData(normalizeData(null))
+  }, [])
+
+  const importRecovery = useCallback((raw: unknown) => {
+    blockedRef.current = false
+    setLoadState((previous) =>
+      previous ? { ...previous, blocked: false, issues: [] } : previous,
+    )
+    setLoadIssues([])
+    dirtyRef.current = { ...ALL_DIRTY }
+    setData(normalizeData(raw))
+  }, [])
+
+  const clearLoadIssues = useCallback(() => setLoadIssues([]), [])
+
+  const retrySave = useCallback(() => {
+    void persistDirty(true)
+  }, [persistDirty])
+
   const value = useMemo<StoreValue | null>(() => {
     if (!data) return null
     return {
       data,
+      loadIssues,
+      clearLoadIssues,
+      saveState,
+      retrySave,
       update,
       rateCard,
       undoRating,
@@ -370,6 +564,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
   }, [
     data,
+    loadIssues,
+    clearLoadIssues,
+    saveState,
+    retrySave,
     update,
     rateCard,
     undoRating,
@@ -379,6 +577,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     resetDeckProgress,
     flush,
   ])
+
+  if (loadState?.blocked) {
+    return (
+      <RecoveryScreen
+        result={loadState}
+        onRetry={retryLoad}
+        onStartFresh={startFresh}
+        onImport={importRecovery}
+      />
+    )
+  }
 
   if (!value) {
     return (

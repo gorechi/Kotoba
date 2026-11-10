@@ -53,7 +53,7 @@ interface ActiveSession {
 }
 
 function Shell() {
-  const { data } = useStore()
+  const { data, loadIssues, clearLoadIssues, saveState, retrySave, flush } = useStore()
   const { t } = useI18n()
   const [route, setRoute] = useState<Route>({ name: 'home' })
   const [session, setSession] = useState<ActiveSession | null>(null)
@@ -158,6 +158,12 @@ function Shell() {
     setRoute(next)
   }
 
+  const closeSession = useCallback(async () => {
+    // Перед выходом из подхода фиксируем отложенную пачку прогресса.
+    await flush()
+    setSession(null)
+  }, [flush])
+
   const openTtsHelp = () => {
     setTtsNotice(null)
     navigate({ name: 'ttsHelp' })
@@ -200,8 +206,56 @@ function Shell() {
     return true
   }
 
+  const partsLabel = (kinds: string[]) => {
+    const seen = new Set<string>()
+    return loadIssues
+      .filter((issue) => kinds.includes(issue.kind))
+      .map((issue) => t(`recovery.part.${issue.part}`))
+      .filter((label) => {
+        if (seen.has(label)) return false
+        seen.add(label)
+        return true
+      })
+      .join(', ')
+  }
+
+  const recoveredParts = partsLabel(['recovered'])
+  const corruptParts = partsLabel(['corrupt', 'load-error'])
+  const missingParts = partsLabel(['missing'])
+  const loadNotice = recoveredParts
+    ? t('recovery.recoveredNotice', { parts: recoveredParts })
+    : corruptParts
+      ? t('recovery.corruptNotice', { parts: corruptParts })
+      : missingParts
+        ? t('recovery.missingNotice', { parts: missingParts })
+        : null
+
   return (
     <>
+      {!zen && loadNotice && saveState.status !== 'error' && (
+        <div className="app-banner" role="status">
+          <Icon name="alert" size={16} />
+          <span>{loadNotice}</span>
+          <button
+            type="button"
+            className="app-banner-close"
+            onClick={clearLoadIssues}
+            aria-label={t('common.close')}
+          >
+            <Icon name="x" size={14} />
+          </button>
+        </div>
+      )}
+      {saveState.status === 'error' && (
+        <div className="app-banner app-banner--error" role="alert">
+          <Icon name="alert" size={16} />
+          <span>{t('save.errorText')}</span>
+          <button type="button" className="app-banner-action" onClick={retrySave}>
+            <Icon name="rotate" size={14} />
+            {t('save.retry')}
+          </button>
+        </div>
+      )}
       <div className={`app${zen ? ' app--zen' : ''}`} inert={zen ? true : undefined}>
         <TitleBar />
       {session ? (
@@ -222,7 +276,7 @@ function Shell() {
                   )
               : undefined
           }
-          onClose={() => setSession(null)}
+          onClose={() => void closeSession()}
         />
       ) : (
         <div className="app-body">

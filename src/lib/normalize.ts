@@ -1,5 +1,6 @@
 import type {
   AppData,
+  AutoBackupFrequency,
   Card,
   CardExample,
   CardGroup,
@@ -37,6 +38,13 @@ const DECK_ORDERS: DeckOrder[] = ['order', 'random', 'frequency', 'jlpt']
 const DECK_STUDY_MODES: DeckStudyMode[] = ['global', 'reading', 'writing']
 const CUSTOM_STUDY_STATUSES: CustomStudyStatus[] = ['all', 'overdue', 'new', 'mistakes']
 const CUSTOM_STUDY_KINDS: CustomStudyKind[] = ['all', 'kana', 'kanji']
+const AUTO_BACKUP_FREQUENCIES: AutoBackupFrequency[] = [
+  'never',
+  'on-close',
+  'daily',
+  'every-2-days',
+  'every-3-days',
+]
 
 function isObj(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -61,6 +69,7 @@ function strArray(value: unknown): string[] {
 function normalizeSrs(raw: unknown): SrsState {
   if (!isObj(raw)) return freshSrs()
   const interval = clamp(num(raw.interval, 0), 0, 3650)
+  const lastMistakeAt = num(raw.lastMistakeAt, 0)
   return {
     due: Math.max(0, num(raw.due, 0)),
     interval,
@@ -69,6 +78,7 @@ function normalizeSrs(raw: unknown): SrsState {
     lapses: Math.max(0, Math.round(num(raw.lapses, 0))),
     introduced: Boolean(raw.introduced) || num(raw.reps, 0) > 0,
     lastReviewed: typeof raw.lastReviewed === 'number' ? raw.lastReviewed : null,
+    lastMistakeAt: lastMistakeAt > 0 ? lastMistakeAt : undefined,
   }
 }
 
@@ -162,7 +172,12 @@ function normalizeCard(raw: unknown): Card | null {
     : 'custom'
   const jlpt = Math.round(num(raw.jlpt, 0))
   const frequency = Math.round(num(raw.frequency, 0))
-  const lastMistakeAt = num(raw.lastMistakeAt, 0)
+  const srs = normalizeSrs(raw.srs)
+  const legacyMistakeAt = num(raw.lastMistakeAt, 0)
+  if (!srs.lastMistakeAt && legacyMistakeAt > 0) {
+    // Миграция старого формата: ошибка раньше лежала в контенте карточки.
+    srs.lastMistakeAt = legacyMistakeAt
+  }
   return {
     id: raw.id,
     deckId: raw.deckId,
@@ -175,12 +190,11 @@ function normalizeCard(raw: unknown): Card | null {
     jlpt: jlpt >= 1 && jlpt <= 5 ? jlpt : undefined,
     frequency: frequency > 0 ? frequency : undefined,
     suspended: Boolean(raw.suspended),
-    lastMistakeAt: lastMistakeAt > 0 ? lastMistakeAt : undefined,
     readings: normalizeReadings(raw.readings),
     examples: normalizeExamples(raw.examples),
     group,
     order: num(raw.order, 0),
-    srs: normalizeSrs(raw.srs),
+    srs,
     createdAt: num(raw.createdAt, Date.now()),
   }
 }
@@ -295,6 +309,8 @@ function normalizeSettings(raw: unknown): Settings {
     zenAuto: true,
     zenIdleMinutes: 5,
     language: DEFAULT_LOCALE,
+    autoBackup: 'daily',
+    backupFolder: null,
   }
   if (!isObj(raw)) return base
   return {
@@ -331,6 +347,13 @@ function normalizeSettings(raw: unknown): Settings {
       120,
     ),
     language: isLocaleCode(raw.language) ? raw.language : base.language,
+    autoBackup: AUTO_BACKUP_FREQUENCIES.includes(raw.autoBackup as AutoBackupFrequency)
+      ? (raw.autoBackup as AutoBackupFrequency)
+      : base.autoBackup,
+    backupFolder:
+      typeof raw.backupFolder === 'string' && raw.backupFolder.trim()
+        ? raw.backupFolder.trim()
+        : null,
   }
 }
 
@@ -359,6 +382,38 @@ function stripLegacyN5Text(cards: Card[]): void {
       }
     }
   }
+}
+
+/**
+ * Нормализует только колоды и карточки из резервной копии — без seed-данных.
+ * Нужна для предпросмотра и объединения, чтобы не подмешивать встроенные колоды.
+ */
+export function normalizeImported(raw: unknown): { decks: Deck[]; cards: Card[] } {
+  if (!isObj(raw)) return { decks: [], cards: [] }
+
+  const decks = (Array.isArray(raw.decks) ? raw.decks : [])
+    .map(normalizeDeck)
+    .filter((deck): deck is Deck => deck !== null)
+  const cards = (Array.isArray(raw.cards) ? raw.cards : [])
+    .map(normalizeCard)
+    .filter((card): card is Card => card !== null)
+
+  const seenDecks = new Set<string>()
+  const uniqueDecks = decks.filter((deck) => {
+    if (seenDecks.has(deck.id)) return false
+    seenDecks.add(deck.id)
+    return true
+  })
+
+  const validDeckIds = new Set(uniqueDecks.map((deck) => deck.id))
+  const seenCards = new Set<string>()
+  const uniqueCards = cards.filter((card) => {
+    if (!validDeckIds.has(card.deckId) || seenCards.has(card.id)) return false
+    seenCards.add(card.id)
+    return true
+  })
+
+  return { decks: uniqueDecks, cards: uniqueCards }
 }
 
 export function normalizeData(raw: unknown): AppData {

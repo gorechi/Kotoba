@@ -9,6 +9,13 @@ export type StudyMode = 'reading' | 'writing'
 export type WritingDifficulty = 'normal' | 'hard'
 /** Чем измеряется ежедневная цель. */
 export type DailyGoalType = 'reviews' | 'minutes'
+/** Как часто создавать автоматические резервные копии. */
+export type AutoBackupFrequency =
+  | 'never'
+  | 'on-close'
+  | 'daily'
+  | 'every-2-days'
+  | 'every-3-days'
 /** Порядок выдачи новых карточек в колоде. */
 export type DeckOrder = 'order' | 'random' | 'frequency' | 'jlpt'
 /** Режим изучения колоды: общий из настроек или собственный. */
@@ -48,6 +55,8 @@ export interface SrsState {
   lapses: number
   introduced: boolean
   lastReviewed: number | null
+  /** Время последней ошибки (оценки «Снова»), timestamp. Хранится вместе с прогрессом. */
+  lastMistakeAt?: number
 }
 
 export interface Card {
@@ -71,8 +80,6 @@ export interface Card {
   frequency?: number
   /** Карточка временно исключена из учёбы. */
   suspended?: boolean
-  /** Время последней ошибки (оценки «Снова»), timestamp. */
-  lastMistakeAt?: number
   /** Чтения иероглифа: кана + транскрипция (для карточек-иероглифов). */
   readings: CardReading[]
   /** Примеры использования (для карточек-иероглифов). */
@@ -158,6 +165,10 @@ export interface Settings {
   zenIdleMinutes: number
   /** Код языка интерфейса. */
   language: string
+  /** Частота автоматических резервных копий. */
+  autoBackup: AutoBackupFrequency
+  /** Своя папка для автоматических копий; null — стандартная папка приложения. */
+  backupFolder: string | null
 }
 
 export interface AppData {
@@ -205,7 +216,6 @@ export interface StudySet {
 export interface RatingUndo {
   cardId: string
   srs: SrsState
-  lastMistakeAt: number | null
   historyKey: string
   day: DayStat | null
 }
@@ -225,15 +235,40 @@ export interface UpdateCheckResult {
   error?: string
 }
 
+export interface AutoBackupInfo {
+  /** Фактическая папка, в которую пишутся автоматические копии. */
+  folder: string
+  /** Стандартная папка приложения. */
+  defaultFolder: string
+  isCustom: boolean
+  frequency: AutoBackupFrequency
+  lastBackupAt: number | null
+  lastBackupPath: string | null
+  count: number
+  retention: number
+}
+
+export interface AutoBackupResult {
+  path?: string
+  createdAt?: number
+  error?: string
+}
+
 export interface KotobaApi {
   load: () => Promise<unknown>
   saveParts: (parts: unknown) => Promise<boolean>
-  savePartsSync: (parts: unknown) => void
+  savePartsSync: (parts: unknown) => boolean
   exportData: (data: AppData, title?: string) => Promise<string | null>
   importData: (title?: string) => Promise<ImportResult | null>
   openDataFolder: () => Promise<string>
+  backupBeforeImport: (data: AppData) => Promise<string>
   openSpeechSettings: () => Promise<boolean>
   checkUpdates: () => Promise<UpdateCheckResult>
+  getAutoBackupInfo: (settings?: Settings) => Promise<AutoBackupInfo>
+  createAutoBackup: (settings?: Settings) => Promise<AutoBackupResult>
+  checkAutoBackup: (settings?: Settings) => Promise<AutoBackupInfo>
+  chooseBackupFolder: (title?: string) => Promise<string | null>
+  openBackupFolder: (settings?: Settings) => Promise<boolean>
   minimize: () => Promise<void>
   toggleMaximize: () => Promise<void>
   close: () => Promise<void>

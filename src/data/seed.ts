@@ -66,6 +66,8 @@ export function createBaseSeedData(now = Date.now()) {
       zenAuto: true,
       zenIdleMinutes: 5,
       language: DEFAULT_LOCALE,
+      autoBackup: 'daily' as const,
+      backupFolder: null,
     },
     createdAt: now,
   }

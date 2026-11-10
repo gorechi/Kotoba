@@ -61,7 +61,9 @@ function sortPool(cards: Card[], status: CustomStudyStatus): Card[] {
     return pool.sort((a, b) => a.createdAt - b.createdAt || a.order - b.order)
   }
   if (status === 'mistakes') {
-    return pool.sort((a, b) => (b.lastMistakeAt ?? 0) - (a.lastMistakeAt ?? 0))
+    return pool.sort(
+      (a, b) => (b.srs.lastMistakeAt ?? 0) - (a.srs.lastMistakeAt ?? 0),
+    )
   }
   return shuffle(pool)
 }
@@ -95,8 +97,8 @@ export function buildCustomStudyQueue(
     if (options.status === 'mistakes') {
       return (
         card.srs.introduced &&
-        typeof card.lastMistakeAt === 'number' &&
-        card.lastMistakeAt >= weekAgo
+        typeof card.srs.lastMistakeAt === 'number' &&
+        card.srs.lastMistakeAt >= weekAgo
       )
     }
     return true

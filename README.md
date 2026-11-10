@@ -32,7 +32,7 @@
 
 Get the latest installer from [GitHub Releases](https://github.com/gorechi/Kotoba/releases/latest):
 
-- **Kotoba-Setup-1.7.0.exe** — Windows x64 installer (NSIS). You can choose the installation folder; a desktop shortcut is created.
+- **Kotoba-Setup-1.8.0.exe** — Windows x64 installer (NSIS). You can choose the installation folder; a desktop shortcut is created.
 - The installer is not code-signed, so Windows SmartScreen may show a warning on first launch.
 
 Kotoba also runs in the browser for development — see [Development](#development).
@@ -77,6 +77,7 @@ Kotoba also runs in the browser for development — see [Development](#developme
 
 - **Statistics** — streak, accuracy, 14-day review activity, progress by deck, and a reading/writing practice breakdown.
 - **Goals and pace** — a daily goal by reviews or minutes, long-term targets for total reviews, learned cards, and days in a row, plus how many new cards each deck introduces per day.
+- **Lightweight progress saves** — reviews are batched on disk and flushed when you pause or leave a session, so studying does not rewrite files on every card.
 - **Per-deck settings** — new-card limits, review limits, card order, and the study mode can be adjusted for each deck.
 - **Themes** — light, dark, or system.
 - **Collapsible sidebar** — collapse the navigation into an icon-only rail to give the cards more room. Hover an icon to see its name; the collapsed state is remembered between launches.
@@ -84,6 +85,10 @@ Kotoba also runs in the browser for development — see [Development](#developme
 - **Help center** — nine friendly guides grouped into **System** and **Learning**: speech setup, import/export, CSV import, system setup, custom sets, the Cards screen, kana and kanji cards, and Reading/Writing modes.
 - **Update checks** — Kotoba checks GitHub Releases on startup and from Settings. If a newer version exists, Settings shows an **“Update available”** badge with a link to the release page. Nothing is downloaded or installed automatically.
 - **Backups** — export and import the full JSON backup, open the data folder, or reset progress from **Data → Backups**.
+- **Data recovery** — if a data file is damaged, Kotoba keeps the damaged file aside, tries the `.bak` copy, and otherwise offers to import a backup or start fresh instead of silently overwriting your progress.
+- **Automatic backups** — choose a folder and a schedule (never, on close, daily, every two or three days). The last seven automatic copies are kept.
+- **Save status** — the title bar shows when changes are saving or saved, and warns you if writing to disk fails, with a retry button.
+- **One window at a time** — launching Kotoba again brings the existing window to the front instead of opening a second copy that could compete for the same data files.
 
 ## Getting started
 
@@ -177,7 +182,7 @@ Then open `http://localhost:5173`.
 
 ```powershell
 npm run build   # web build in dist/
-npm run dist    # Windows installer in release/Kotoba-Setup-1.7.0.exe
+npm run dist    # Windows installer in release/Kotoba-Setup-1.8.0.exe
 ```
 
 The installer is an NSIS package: it lets the user choose the installation folder and creates a desktop shortcut. Code signing is not configured.

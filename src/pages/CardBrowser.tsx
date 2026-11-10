@@ -330,7 +330,6 @@ export function CardBrowser() {
       for (const card of draft.cards) {
         if (selected.has(card.id)) {
           card.srs = { ...known }
-          card.lastMistakeAt = undefined
         }
       }
     })
@@ -345,7 +344,6 @@ export function CardBrowser() {
       for (const card of draft.cards) {
         if (selected.has(card.id)) {
           card.srs = freshSrs()
-          card.lastMistakeAt = undefined
         }
       }
     })

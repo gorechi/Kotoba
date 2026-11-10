@@ -38,6 +38,7 @@ export type IconName =
   | 'eye'
   | 'bookmark'
   | 'help'
+  | 'alert'
 
 const paths: Record<IconName, ReactNode> = {
   book: (
@@ -260,6 +261,13 @@ const paths: Record<IconName, ReactNode> = {
   help: (
     <>
       <path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2.2-3 4" />
+      <path d="M12 17h.01" />
+    </>
+  ),
+  alert: (
+    <>
+      <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
+      <path d="M12 9v4" />
       <path d="M12 17h.01" />
     </>
   ),

@@ -35,6 +35,29 @@ export interface LoadedParts {
   legacy?: unknown
 }
 
+export type StoragePart = 'content' | 'settings' | 'progress' | 'history' | 'legacy'
+
+export type StorageIssueKind = 'recovered' | 'corrupt' | 'missing' | 'load-error'
+
+export interface StorageIssue {
+  part: StoragePart
+  kind: StorageIssueKind
+  /** Имя файла, с которым возникла проблема. */
+  file?: string
+  /** Резервная копия, из которой удалось восстановиться. */
+  backupFile?: string
+  /** Куда сохранён повреждённый файл. */
+  corruptFile?: string
+  message?: string
+}
+
+export interface StorageLoadResult {
+  parts: LoadedParts | null
+  issues: StorageIssue[]
+  /** true — данные читаются частично; рендерер не должен ничего сохранять. */
+  blocked: boolean
+}
+
 export interface DirtyFlags {
   content: boolean
   settings: boolean
@@ -132,6 +155,15 @@ export function hasParts(parts: StorageParts): boolean {
 
 function hasWindowApi(): boolean {
   return typeof window !== 'undefined' && Boolean(window.kotoba)
+}
+
+function isLoadResult(value: unknown): value is StorageLoadResult {
+  return (
+    isObj(value) &&
+    'parts' in value &&
+    Array.isArray(value.issues) &&
+    typeof value.blocked === 'boolean'
+  )
 }
 
 // ---------------------------------------------------------------------------
@@ -338,9 +370,27 @@ async function saveWeb(parts: StorageParts): Promise<void> {
 // Публичный интерфейс хранилища
 // ---------------------------------------------------------------------------
 
-export async function loadStorage(): Promise<LoadedParts | null> {
-  if (hasWindowApi()) return (await window.kotoba!.load()) as LoadedParts | null
-  return loadWeb()
+export async function loadStorage(): Promise<StorageLoadResult> {
+  if (hasWindowApi()) {
+    const raw = await window.kotoba!.load()
+    // Совместимость со старым preload, который возвращал только parts.
+    if (isLoadResult(raw)) return raw
+    return {
+      parts: (raw as LoadedParts | null) ?? null,
+      issues: [],
+      blocked: false,
+    }
+  }
+
+  try {
+    return { parts: await loadWeb(), issues: [], blocked: false }
+  } catch (error) {
+    return {
+      parts: null,
+      issues: [{ part: 'content', kind: 'load-error', message: String(error) }],
+      blocked: true,
+    }
+  }
 }
 
 export async function saveStorage(parts: StorageParts): Promise<void> {
@@ -357,19 +407,21 @@ export async function saveStorage(parts: StorageParts): Promise<void> {
   }
 }
 
-export function saveStorageSync(parts: StorageParts): void {
-  if (!hasParts(parts)) return
+export function saveStorageSync(parts: StorageParts): boolean {
+  if (!hasParts(parts)) return true
   if (hasWindowApi()) {
-    window.kotoba!.savePartsSync(parts)
-    return
+    return window.kotoba!.savePartsSync(parts)
   }
 
+  let emergencySaved = false
   try {
     localStorage.setItem(EMERGENCY_KEY, JSON.stringify({ savedAt: Date.now(), parts }))
+    emergencySaved = true
   } catch {
     /* если не влезло — останется последняя успешная запись */
   }
   void saveStorage(parts).catch(() => {
-    /* аварийный снимок уже записан */
+    /* аварийный снимок уже записан, если это удалось */
   })
+  return emergencySaved
 }

@@ -1,15 +1,20 @@
+import { useState } from 'react'
 import { Icon } from './Icon'
 import { useStore } from '../state/store'
 import { useI18n } from '../lib/i18n-react'
 
 export function TitleBar() {
-  const { flush } = useStore()
+  const { flush, saveState, retrySave } = useStore()
   const { t } = useI18n()
   const hasApi = Boolean(window.kotoba)
+  const [closing, setClosing] = useState(false)
 
   const close = async () => {
-    await flush()
-    await window.kotoba?.close()
+    if (closing) return
+    setClosing(true)
+    const saved = await flush()
+    setClosing(false)
+    if (saved) await window.kotoba?.close()
   }
 
   return (
@@ -20,6 +25,26 @@ export function TitleBar() {
         <span className="brand-tag">{t('brand.tag')}</span>
       </div>
       <div className="titlebar-fill" />
+      {saveState.status !== 'idle' && (
+        <div
+          className={`save-status save-status--${saveState.status}`}
+          title={saveState.error}
+        >
+          {saveState.status === 'saving' ? (
+            <span className="save-spinner" aria-hidden="true" />
+          ) : (
+            <Icon name={saveState.status === 'saved' ? 'check' : 'alert'} size={13} />
+          )}
+          <span className="save-status-text" role="status" aria-live="polite">
+            {t(`save.${saveState.status}`)}
+          </span>
+          {saveState.status === 'error' && (
+            <button type="button" className="save-retry" onClick={retrySave}>
+              {t('save.retry')}
+            </button>
+          )}
+        </div>
+      )}
       {hasApi && (
         <div className="window-controls">
           <button
@@ -45,6 +70,7 @@ export function TitleBar() {
           <button
             className="win-btn win-close"
             onClick={() => void close()}
+            disabled={closing}
             aria-label={t('titlebar.close')}
             title={t('titlebar.close')}
           >

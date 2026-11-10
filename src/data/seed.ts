@@ -1,4 +1,4 @@
-import type { Card, Deck } from '../types'
+import type { Card, Deck, StudySet } from '../types'
 import { freshSrs } from '../lib/srs'
 import { DEFAULT_LOCALE } from '../lib/i18n'
 import {
@@ -47,6 +47,7 @@ export function createSeedData(now = Date.now()) {
     version: 2 as const,
     decks,
     cards,
+    studySets: [] as StudySet[],
     history: {} as Record<string, { reviews: number; correct: number; newCards: number; ms: number }>,
     settings: {
       theme: 'system' as const,

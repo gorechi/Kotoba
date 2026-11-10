@@ -1,9 +1,20 @@
-import type { Card, Deck, QueueItem } from '../types'
+import type {
+  Card,
+  CustomStudyKind,
+  CustomStudyOptions,
+  CustomStudyStatus,
+  Deck,
+  QueueItem,
+} from '../types'
 import { DAY } from './srs'
 import { shuffle } from './utils'
 
-export type CustomStudyStatus = 'all' | 'overdue' | 'new' | 'mistakes'
-export type CustomStudyKind = 'all' | 'kana' | 'kanji'
+export type {
+  CustomStudyKind,
+  CustomStudyOptions,
+  CustomStudyStatus,
+} from '../types'
+
 export type CustomStudyPreset =
   | 'overdue'
   | 'new'
@@ -12,18 +23,6 @@ export type CustomStudyPreset =
   | 'kanji'
   | 'marathon'
   | 'mistakes'
-
-export interface CustomStudyOptions {
-  /** 'all' или id конкретной колоды. */
-  deckId: string
-  status: CustomStudyStatus
-  kind: CustomStudyKind
-  /** 5 = N5, 1 = N1. */
-  jlpt?: number
-  tag?: string
-  /** 0 — без ограничения. */
-  limit: number
-}
 
 /** Готовые подборки с главного экрана. */
 export function presetOptions(preset: CustomStudyPreset, tag?: string): CustomStudyOptions {

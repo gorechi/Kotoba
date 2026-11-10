@@ -161,6 +161,7 @@ export interface AppData {
   version: 2
   decks: Deck[]
   cards: Card[]
+  studySets: StudySet[]
   history: Record<string, DayStat>
   settings: Settings
   createdAt: number
@@ -169,6 +170,30 @@ export interface AppData {
 export interface QueueItem {
   cardId: string
   isNew: boolean
+}
+
+export type CustomStudyStatus = 'all' | 'overdue' | 'new' | 'mistakes'
+export type CustomStudyKind = 'all' | 'kana' | 'kanji'
+
+export interface CustomStudyOptions {
+  /** 'all' или id конкретной колоды. */
+  deckId: string
+  status: CustomStudyStatus
+  kind: CustomStudyKind
+  /** 5 = N5, 1 = N1. */
+  jlpt?: number
+  tag?: string
+  /** 0 — без ограничения. */
+  limit: number
+}
+
+/** Сохранённая пользовательская подборка. */
+export interface StudySet {
+  id: string
+  name: string
+  options: CustomStudyOptions
+  createdAt: number
+  updatedAt: number
 }
 
 /** Снимок изменений одной оценки — позволяет отменить последнюю оценку. */

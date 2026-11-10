@@ -8,6 +8,7 @@ export interface StoredContent {
   version: 2
   decks: AppData['decks']
   cards: StoredCard[]
+  studySets: AppData['studySets']
   createdAt: number
 }
 
@@ -68,6 +69,7 @@ export function splitAppData(data: AppData): Required<StorageParts> {
       version: 2,
       decks: data.decks,
       cards,
+      studySets: data.studySets ?? [],
       createdAt: data.createdAt,
     },
     settings: data.settings,

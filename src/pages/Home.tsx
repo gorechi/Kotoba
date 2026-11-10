@@ -25,7 +25,6 @@ export function Home({ onNavigate, onStudy, onCustomStudy }: HomeProps) {
   const { data } = useStore()
   const { t } = useI18n()
   const [creatingDeck, setCreatingDeck] = useState(false)
-  const [creatingDeckKind, setCreatingDeckKind] = useState<'kana' | 'kanji'>('kana')
   const now = Date.now()
   const overall = overallStat(data.cards, now)
   const queue = buildStudyQueue(
@@ -40,9 +39,6 @@ export function Home({ onNavigate, onStudy, onCustomStudy }: HomeProps) {
   const newCount = queue.filter((item) => item.isNew).length
   const today = todayStat(data, now)
   const days = streak(data.history, now)
-  const decks = data.decks
-    .filter((deck) => deck.kind !== 'kanji')
-    .sort((a, b) => Number(b.builtin) - Number(a.builtin) || a.createdAt - b.createdAt)
 
   const kanjiDecks = data.decks
     .filter((deck) => deck.kind === 'kanji')
@@ -105,51 +101,6 @@ export function Home({ onNavigate, onStudy, onCustomStudy }: HomeProps) {
 
       <CustomStudy onStart={onCustomStudy} />
 
-      <section className="section">
-        <div className="section-head">
-          <h2>{t('home.sectionKana')}</h2>
-          <button className="link-btn" onClick={() => onNavigate({ name: 'decks' })}>
-            {t('home.allDecks')}
-            <Icon name="chevron-right" size={15} />
-          </button>
-        </div>
-
-        <div className="deck-grid">
-          {decks.map((deck) => {
-            const stat = deckStat(data.cards, deck.id, now)
-            return (
-              <DeckCard
-                key={deck.id}
-                deck={deck}
-                stat={stat}
-                newCount={Math.min(
-                  stat.fresh,
-                  remainingNewForDeck(data.history, deck, data.settings, now),
-                )}
-                dueCount={Math.min(stat.due, remainingReviewForDeck(data.history, deck, now))}
-                onOpen={() => onNavigate({ name: 'deck', deckId: deck.id })}
-                onStudy={() => onStudy(deck.id)}
-              />
-            )
-          })}
-
-          <button
-            className="deck-new"
-            onClick={() => {
-              setCreatingDeckKind('kana')
-              setCreatingDeck(true)
-            }}
-            aria-label={t('home.newDeckAria')}
-          >
-            <span className="deck-new-icon">
-              <Icon name="plus" size={20} />
-            </span>
-            <strong>{t('home.newDeckTitle')}</strong>
-            <span>{t('home.newDeckKanaHint')}</span>
-          </button>
-        </div>
-      </section>
-
       {kanjiDecks.length > 0 && (
         <section className="section">
           <div className="section-head">
@@ -181,10 +132,7 @@ export function Home({ onNavigate, onStudy, onCustomStudy }: HomeProps) {
 
             <button
               className="deck-new"
-              onClick={() => {
-                setCreatingDeckKind('kanji')
-                setCreatingDeck(true)
-              }}
+              onClick={() => setCreatingDeck(true)}
               aria-label={t('home.newDeckAria')}
             >
               <span className="deck-new-icon">
@@ -197,7 +145,7 @@ export function Home({ onNavigate, onStudy, onCustomStudy }: HomeProps) {
         </section>
       )}
 
-      {creatingDeck && <DeckForm kind={creatingDeckKind} onClose={() => setCreatingDeck(false)} />}
+      {creatingDeck && <DeckForm kind="kanji" onClose={() => setCreatingDeck(false)} />}
     </div>
   )
 }

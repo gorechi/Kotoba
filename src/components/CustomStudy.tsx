@@ -1,17 +1,19 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { IconName } from './Icon'
+import type { StudySet } from '../types'
 import type {
+  CustomStudyKind,
   CustomStudyOptions,
   CustomStudyPreset,
   CustomStudyStatus,
-  CustomStudyKind,
 } from '../lib/custom-study'
 import { buildCustomStudyQueue, presetOptions } from '../lib/custom-study'
 import { useStore } from '../state/store'
 import { useI18n } from '../lib/i18n-react'
 import { deckTitle } from '../lib/content'
+import { uid } from '../lib/utils'
 import { Icon } from './Icon'
-import { Modal } from './Modal'
+import { ConfirmDialog, Modal } from './Modal'
 import { Select } from './Select'
 
 type HomePreset = CustomStudyPreset | 'tag'
@@ -41,16 +43,30 @@ const DEFAULT_OPTIONS: CustomStudyOptions = {
 
 const LIMITS = [10, 20, 30, 50, 100, 200, 0]
 
+const STATUS_LABEL_KEYS: Record<Exclude<CustomStudyStatus, 'all'>, string> = {
+  overdue: 'customStudy.statusOverdue',
+  new: 'customStudy.statusNew',
+  mistakes: 'customStudy.statusMistakes',
+}
+
+const KIND_LABEL_KEYS: Record<Exclude<CustomStudyKind, 'all'>, string> = {
+  kana: 'customStudy.typeKana',
+  kanji: 'customStudy.typeKanji',
+}
+
 export function CustomStudy({
   onStart,
 }: {
   onStart: (options: CustomStudyOptions, title: string) => boolean
 }) {
-  const { data } = useStore()
+  const { data, update } = useStore()
   const { t } = useI18n()
   const [notice, setNotice] = useState<string | null>(null)
   const [builderOpen, setBuilderOpen] = useState(false)
+  const [editingSet, setEditingSet] = useState<StudySet | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<StudySet | null>(null)
   const [form, setForm] = useState<CustomStudyOptions>(DEFAULT_OPTIONS)
+  const [setName, setSetName] = useState('')
   const now = Date.now()
 
   const allTags = useMemo(() => {
@@ -60,6 +76,8 @@ export function CustomStudy({
     }
     return [...tags].sort((a, b) => a.localeCompare(b))
   }, [data.cards])
+
+  const studySets = data.studySets ?? []
 
   useEffect(() => {
     if (!notice) return
@@ -80,8 +98,7 @@ export function CustomStudy({
   const startPreset = (preset: HomePreset) => {
     setNotice(null)
     if (preset === 'tag') {
-      setForm(DEFAULT_OPTIONS)
-      setBuilderOpen(true)
+      openBuilder()
       return
     }
     const options = presetOptions(preset)
@@ -89,9 +106,55 @@ export function CustomStudy({
     if (!started) setNotice(t('customStudy.empty'))
   }
 
-  const openBuilder = () => {
-    setForm(DEFAULT_OPTIONS)
+  const openBuilder = (set?: StudySet) => {
+    setNotice(null)
+    setEditingSet(set ?? null)
+    setForm(set ? { ...set.options } : DEFAULT_OPTIONS)
+    setSetName(set?.name ?? '')
     setBuilderOpen(true)
+  }
+
+  const startSavedSet = (set: StudySet) => {
+    setNotice(null)
+    const started = onStart(set.options, set.name)
+    if (!started) setNotice(t('customStudy.empty'))
+  }
+
+  const saveSet = () => {
+    const name = setName.trim()
+    if (!name) return
+    const stamp = Date.now()
+    if (editingSet) {
+      update((draft) => {
+        const target = draft.studySets?.find((item) => item.id === editingSet.id)
+        if (target) {
+          target.name = name
+          target.options = { ...form }
+          target.updatedAt = stamp
+        }
+      })
+      setNotice(t('customStudy.updated'))
+    } else {
+      update((draft) => {
+        if (!draft.studySets) draft.studySets = []
+        draft.studySets.push({
+          id: uid('set'),
+          name,
+          options: { ...form },
+          createdAt: stamp,
+          updatedAt: stamp,
+        })
+      })
+      setNotice(t('customStudy.saved'))
+    }
+    setBuilderOpen(false)
+  }
+
+  const deleteSet = (set: StudySet) => {
+    update((draft) => {
+      draft.studySets = (draft.studySets ?? []).filter((item) => item.id !== set.id)
+    })
+    setNotice(t('customStudy.deleted'))
   }
 
   const builderQueue = builderOpen
@@ -109,15 +172,59 @@ export function CustomStudy({
     return t('customStudy.title')
   }
 
+  const summaryForOptions = (options: CustomStudyOptions): string => {
+    const parts: string[] = []
+    if (options.deckId !== 'all') {
+      const deck = data.decks.find((item) => item.id === options.deckId)
+      if (deck) parts.push(deckTitle(deck, t))
+    }
+    if (options.jlpt) parts.push(`JLPT N${options.jlpt}`)
+    if (options.status !== 'all') parts.push(t(STATUS_LABEL_KEYS[options.status]))
+    if (options.kind !== 'all') parts.push(t(KIND_LABEL_KEYS[options.kind]))
+    if (options.tag) parts.push(t('customStudy.tagTitle', { tag: options.tag }))
+    if (options.limit > 0) parts.push(t('customStudy.limitN', { n: options.limit }))
+    return parts.length ? parts.join(' · ') : t('customStudy.allCardsSummary')
+  }
+
   const startCustom = () => {
     if (!available) return
-    const started = onStart(form, titleForOptions(form))
+    const title = setName.trim() || titleForOptions(form)
+    const started = onStart(form, title)
     if (started) {
       setBuilderOpen(false)
       return
     }
     setNotice(t('customStudy.empty'))
   }
+
+  const presetCards = PRESETS.map((preset) => {
+    const count = countForPreset(preset.id)
+    return (
+      <div className="custom-study-card-wrap" key={preset.id}>
+        <button
+          type="button"
+          className={`custom-study-card custom-study-card--preset${
+            count === 0 ? ' is-empty' : ''
+          }`}
+          onClick={() => startPreset(preset.id)}
+        >
+          <span className="custom-study-lock" title={t('customStudy.locked')}>
+            <Icon name="lock" size={12} />
+          </span>
+          <span className="custom-study-icon">
+            <Icon name={preset.icon} size={18} />
+          </span>
+          <strong>{t(preset.labelKey)}</strong>
+          <span className="custom-study-desc">{t(preset.descKey)}</span>
+          <span className="custom-study-count">
+            {preset.id === 'tag'
+              ? t('customStudy.chooseTag')
+              : t('customStudy.cardsCount', { n: count ?? 0 })}
+          </span>
+        </button>
+      </div>
+    )
+  })
 
   return (
     <section className="section custom-study-section">
@@ -126,35 +233,10 @@ export function CustomStudy({
           <h2>{t('customStudy.title')}</h2>
           <p className="section-sub">{t('customStudy.sub')}</p>
         </div>
-        <button type="button" className="link-btn" onClick={openBuilder}>
+        <button type="button" className="link-btn" onClick={() => openBuilder()}>
           {t('customStudy.setup')}
           <Icon name="sliders" size={15} />
         </button>
-      </div>
-
-      <div className="custom-study-grid">
-        {PRESETS.map((preset) => {
-          const count = countForPreset(preset.id)
-          return (
-            <button
-              type="button"
-              key={preset.id}
-              className={`custom-study-card${count === 0 ? ' is-empty' : ''}`}
-              onClick={() => startPreset(preset.id)}
-            >
-              <span className="custom-study-icon">
-                <Icon name={preset.icon} size={18} />
-              </span>
-              <strong>{t(preset.labelKey)}</strong>
-              <span className="custom-study-desc">{t(preset.descKey)}</span>
-              <span className="custom-study-count">
-                {preset.id === 'tag'
-                  ? t('customStudy.chooseTag')
-                  : t('customStudy.cardsCount', { n: count ?? 0 })}
-              </span>
-            </button>
-          )
-        })}
       </div>
 
       {notice && (
@@ -164,10 +246,82 @@ export function CustomStudy({
         </p>
       )}
 
+      <div className="custom-study-group">
+        <div className="custom-study-group-head">
+          <h3>{t('customStudy.presetsGroup')}</h3>
+          <span>{t('customStudy.presetsHint')}</span>
+        </div>
+        <div className="custom-study-grid">{presetCards}</div>
+      </div>
+
+      <div className="custom-study-group">
+        <div className="custom-study-group-head">
+          <h3>{t('customStudy.mySetsGroup')}</h3>
+          <span>{t('customStudy.mySetsHint')}</span>
+        </div>
+
+        {studySets.length > 0 ? (
+          <div className="custom-study-grid">
+            {studySets.map((set) => {
+              const count = buildCustomStudyQueue(
+                data.cards,
+                data.decks,
+                set.options,
+                now,
+              ).length
+              return (
+                <div className="custom-study-card-wrap" key={set.id}>
+                  <button
+                    type="button"
+                    className={`custom-study-card custom-study-card--user${
+                      count === 0 ? ' is-empty' : ''
+                    }`}
+                    onClick={() => startSavedSet(set)}
+                  >
+                    <span className="custom-study-icon">
+                      <Icon name="bookmark" size={18} />
+                    </span>
+                    <strong>{set.name}</strong>
+                    <span className="custom-study-desc">
+                      {summaryForOptions(set.options)}
+                    </span>
+                    <span className="custom-study-count">
+                      {t('customStudy.cardsCount', { n: count })}
+                    </span>
+                  </button>
+                  <div className="custom-study-actions">
+                    <button
+                      type="button"
+                      className="custom-study-action"
+                      title={t('customStudy.editSet')}
+                      aria-label={t('customStudy.editSet')}
+                      onClick={() => openBuilder(set)}
+                    >
+                      <Icon name="pencil" size={13} />
+                    </button>
+                    <button
+                      type="button"
+                      className="custom-study-action danger"
+                      title={t('customStudy.deleteSet')}
+                      aria-label={t('customStudy.deleteSet')}
+                      onClick={() => setDeleteTarget(set)}
+                    >
+                      <Icon name="trash" size={13} />
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        ) : (
+          <p className="custom-study-placeholder">{t('customStudy.noSets')}</p>
+        )}
+      </div>
+
       {builderOpen && (
         <Modal
-          title={t('customStudy.builderTitle')}
-          subtitle={t('customStudy.builderSub')}
+          title={editingSet ? t('customStudy.editTitle') : t('customStudy.builderTitle')}
+          subtitle={editingSet ? t('customStudy.editSub') : t('customStudy.builderSub')}
           onClose={() => setBuilderOpen(false)}
           wide
           footer={
@@ -181,6 +335,14 @@ export function CustomStudy({
               </button>
               <button
                 type="button"
+                className="btn btn-ghost"
+                disabled={!setName.trim()}
+                onClick={saveSet}
+              >
+                {t('common.save')}
+              </button>
+              <button
+                type="button"
                 className="btn btn-primary"
                 disabled={!available}
                 onClick={startCustom}
@@ -191,6 +353,19 @@ export function CustomStudy({
           }
         >
           <div className="form">
+            <div className="field">
+              <label htmlFor="custom-name">{t('customStudy.name')}</label>
+              <input
+                id="custom-name"
+                value={setName}
+                onChange={(event) => setSetName(event.target.value)}
+                placeholder={t('customStudy.namePlaceholder')}
+                maxLength={60}
+                autoFocus
+              />
+              <p className="field-hint">{t('customStudy.nameHint')}</p>
+            </div>
+
             <div className="form-row">
               <div className="field">
                 <label htmlFor="custom-deck">{t('customStudy.deck')}</label>
@@ -307,6 +482,17 @@ export function CustomStudy({
             {available === 0 && <p className="form-error">{t('customStudy.noCards')}</p>}
           </div>
         </Modal>
+      )}
+
+      {deleteTarget && (
+        <ConfirmDialog
+          title={t('customStudy.deleteTitle')}
+          text={t('customStudy.deleteText', { name: deleteTarget.name })}
+          confirmLabel={t('customStudy.deleteConfirm')}
+          danger
+          onClose={() => setDeleteTarget(null)}
+          onConfirm={() => deleteSet(deleteTarget)}
+        />
       )}
     </section>
   )

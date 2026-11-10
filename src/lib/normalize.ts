@@ -4,6 +4,9 @@ import type {
   CardExample,
   CardGroup,
   CardReading,
+  CustomStudyKind,
+  CustomStudyOptions,
+  CustomStudyStatus,
   DailyGoalType,
   DayStat,
   Deck,
@@ -14,6 +17,7 @@ import type {
   Settings,
   SrsState,
   StudyMode,
+  StudySet,
   StudyTotals,
   Theme,
   WritingDifficulty,
@@ -30,6 +34,8 @@ const WRITING_DIFFICULTIES: WritingDifficulty[] = ['normal', 'hard']
 const DAILY_GOAL_TYPES: DailyGoalType[] = ['reviews', 'minutes']
 const DECK_ORDERS: DeckOrder[] = ['order', 'random', 'frequency', 'jlpt']
 const DECK_STUDY_MODES: DeckStudyMode[] = ['global', 'reading', 'writing']
+const CUSTOM_STUDY_STATUSES: CustomStudyStatus[] = ['all', 'overdue', 'new', 'mistakes']
+const CUSTOM_STUDY_KINDS: CustomStudyKind[] = ['all', 'kana', 'kanji']
 
 function isObj(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -178,6 +184,55 @@ function normalizeCard(raw: unknown): Card | null {
   }
 }
 
+function normalizeStudySetOptions(raw: unknown): CustomStudyOptions {
+  const value = isObj(raw) ? raw : {}
+  const jlpt = Math.round(num(value.jlpt, 0))
+  const limit = Math.max(0, Math.round(num(value.limit, 50)))
+  const deckId = typeof value.deckId === 'string' && value.deckId.trim()
+    ? value.deckId.trim()
+    : 'all'
+  const status = CUSTOM_STUDY_STATUSES.includes(value.status as CustomStudyStatus)
+    ? (value.status as CustomStudyStatus)
+    : 'all'
+  const kind = CUSTOM_STUDY_KINDS.includes(value.kind as CustomStudyKind)
+    ? (value.kind as CustomStudyKind)
+    : 'all'
+  const tag = typeof value.tag === 'string' && value.tag.trim()
+    ? value.tag.trim()
+    : undefined
+  return {
+    deckId,
+    status,
+    kind,
+    jlpt: jlpt >= 1 && jlpt <= 5 ? jlpt : undefined,
+    tag,
+    limit,
+  }
+}
+
+function normalizeStudySets(raw: unknown): StudySet[] {
+  if (!Array.isArray(raw)) return []
+  const seen = new Set<string>()
+  const result: StudySet[] = []
+  for (const item of raw) {
+    if (!isObj(item)) continue
+    const id = typeof item.id === 'string' && item.id ? item.id : uid('set')
+    if (seen.has(id)) continue
+    const name = str(item.name).trim()
+    if (!name) continue
+    seen.add(id)
+    const createdAt = num(item.createdAt, Date.now())
+    result.push({
+      id,
+      name,
+      options: normalizeStudySetOptions(item.options),
+      createdAt,
+      updatedAt: num(item.updatedAt, createdAt),
+    })
+  }
+  return result
+}
+
 function normalizeTotals(raw: unknown): StudyTotals | null {
   if (!isObj(raw)) return null
   return {
@@ -323,6 +378,7 @@ export function normalizeData(raw: unknown): AppData {
     version: 2,
     decks: mergedDecks,
     cards: mergedCards,
+    studySets: normalizeStudySets(raw.studySets),
     history: normalizeHistory(raw.history),
     settings: normalizeSettings(raw.settings),
     createdAt: num(raw.createdAt, Date.now()),

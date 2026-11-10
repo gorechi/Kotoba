@@ -128,10 +128,8 @@
   document.querySelectorAll('[data-flip]').forEach((card) => {
     card.addEventListener('click', () => {
       const flipped = card.classList.toggle('is-flipped')
-      card.setAttribute(
-        'aria-label',
-        flipped ? 'Показать лицевую сторону карточки みず' : 'Перевернуть карточку みず',
-      )
+      const label = flipped ? card.dataset.flipBack : card.dataset.flipFront
+      if (label) card.setAttribute('aria-label', label)
     })
   })
 
@@ -149,7 +147,9 @@
     const face = modeFaces[activeMode]
     if (!revealButton || !face) return
     const revealed = face.classList.contains('is-revealed')
-    revealButton.textContent = revealed ? 'Скрыть ответ' : 'Показать ответ'
+    const showLabel = revealButton.dataset.showLabel || 'Показать ответ'
+    const hideLabel = revealButton.dataset.hideLabel || 'Скрыть ответ'
+    revealButton.textContent = revealed ? hideLabel : showLabel
     revealButton.setAttribute('aria-expanded', String(revealed))
     revealButton.setAttribute('aria-controls', face.id)
   }

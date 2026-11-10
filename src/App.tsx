@@ -16,11 +16,17 @@ import { KanaMap } from './pages/KanaMap'
 import { ZenMode } from './components/ZenMode'
 import { effectiveStudyMode } from './lib/deck-settings'
 import { practiceQueue, buildStudyQueue } from './lib/study'
+import {
+  buildCustomStudyQueue,
+  type CustomStudyOptions,
+} from './lib/custom-study'
 
 interface ActiveSession {
   deckId: string
   items: QueueItem[]
   mode: StudyMode
+  title?: string
+  custom?: CustomStudyOptions
 }
 
 function Shell() {
@@ -102,6 +108,23 @@ function Shell() {
     })
   }
 
+  const startCustomStudy = (options: CustomStudyOptions, title: string): boolean => {
+    const items = buildCustomStudyQueue(data.cards, data.decks, options, Date.now())
+    if (!items.length) return false
+    const deck =
+      options.deckId === 'all'
+        ? undefined
+        : data.decks.find((item) => item.id === options.deckId)
+    setSession({
+      deckId: options.deckId,
+      items,
+      mode: effectiveStudyMode(deck, data.settings.studyMode),
+      title,
+      custom: options,
+    })
+    return true
+  }
+
   return (
     <>
       <div className={`app${zen ? ' app--zen' : ''}`} inert={zen ? true : undefined}>
@@ -112,13 +135,31 @@ function Shell() {
           deckId={session.deckId}
           items={session.items}
           mode={session.mode}
+          title={session.title}
+          restartItems={
+            session.custom
+              ? () =>
+                  buildCustomStudyQueue(
+                    data.cards,
+                    data.decks,
+                    session.custom as CustomStudyOptions,
+                    Date.now(),
+                  )
+              : undefined
+          }
           onClose={() => setSession(null)}
         />
       ) : (
         <div className="app-body">
           <Sidebar route={route} onNavigate={navigate} onZen={() => setZen(true)} />
           <main className="main" ref={mainRef}>
-            {route.name === 'home' && <Home onNavigate={navigate} onStudy={startStudy} />}
+            {route.name === 'home' && (
+              <Home
+                onNavigate={navigate}
+                onStudy={startStudy}
+                onCustomStudy={startCustomStudy}
+              />
+            )}
             {route.name === 'decks' && <Decks onNavigate={navigate} onStudy={startStudy} />}
             {route.name === 'kanji' && <KanjiDecks onNavigate={navigate} onStudy={startStudy} />}
             {route.name === 'cards' && <CardBrowser />}

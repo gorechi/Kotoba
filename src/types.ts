@@ -68,6 +68,8 @@ export interface Card {
   frequency?: number
   /** Карточка временно исключена из учёбы. */
   suspended?: boolean
+  /** Время последней ошибки (оценки «Снова»), timestamp. */
+  lastMistakeAt?: number
   /** Чтения иероглифа: кана + транскрипция (для карточек-иероглифов). */
   readings: CardReading[]
   /** Примеры использования (для карточек-иероглифов). */
@@ -159,6 +161,7 @@ export interface AppData {
   version: 2
   decks: Deck[]
   cards: Card[]
+  studySets: StudySet[]
   history: Record<string, DayStat>
   settings: Settings
   createdAt: number
@@ -169,10 +172,35 @@ export interface QueueItem {
   isNew: boolean
 }
 
+export type CustomStudyStatus = 'all' | 'overdue' | 'new' | 'mistakes'
+export type CustomStudyKind = 'all' | 'kana' | 'kanji'
+
+export interface CustomStudyOptions {
+  /** 'all' или id конкретной колоды. */
+  deckId: string
+  status: CustomStudyStatus
+  kind: CustomStudyKind
+  /** 5 = N5, 1 = N1. */
+  jlpt?: number
+  tag?: string
+  /** 0 — без ограничения. */
+  limit: number
+}
+
+/** Сохранённая пользовательская подборка. */
+export interface StudySet {
+  id: string
+  name: string
+  options: CustomStudyOptions
+  createdAt: number
+  updatedAt: number
+}
+
 /** Снимок изменений одной оценки — позволяет отменить последнюю оценку. */
 export interface RatingUndo {
   cardId: string
   srs: SrsState
+  lastMistakeAt: number | null
   historyKey: string
   day: DayStat | null
 }

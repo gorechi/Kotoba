@@ -327,7 +327,10 @@ export function CardBrowser() {
     const known = knownSrs()
     update((draft) => {
       for (const card of draft.cards) {
-        if (selected.has(card.id)) card.srs = { ...known }
+        if (selected.has(card.id)) {
+          card.srs = { ...known }
+          card.lastMistakeAt = undefined
+        }
       }
     })
     setNotice(t('browser.noticeKnown', { n: count }))
@@ -339,7 +342,10 @@ export function CardBrowser() {
     const count = selected.size
     update((draft) => {
       for (const card of draft.cards) {
-        if (selected.has(card.id)) card.srs = freshSrs()
+        if (selected.has(card.id)) {
+          card.srs = freshSrs()
+          card.lastMistakeAt = undefined
+        }
       }
     })
     setNotice(t('browser.noticeReset', { n: count }))

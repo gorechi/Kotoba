@@ -1,6 +1,7 @@
 import type { Card, Deck, StudySet } from '../types'
 import { freshSrs } from '../lib/srs'
 import { DEFAULT_LOCALE } from '../lib/i18n'
+import { installContentPacks } from './content-packs'
 import {
   HIRAGANA_BASIC,
   HIRAGANA_VOICED,
@@ -34,7 +35,7 @@ export function createSeedDecks(now = Date.now()): Deck[] {
   ]
 }
 
-export function createSeedData(now = Date.now()) {
+export function createBaseSeedData(now = Date.now()) {
   const decks = createSeedDecks(now)
   const cards: Card[] = [
     ...seedCards('hiragana', 'hira', HIRAGANA_BASIC, 'basic', 1, now),
@@ -48,6 +49,7 @@ export function createSeedData(now = Date.now()) {
     decks,
     cards,
     studySets: [] as StudySet[],
+    installedPacks: [] as string[],
     history: {} as Record<string, { reviews: number; correct: number; newCards: number; ms: number }>,
     settings: {
       theme: 'system' as const,
@@ -67,6 +69,19 @@ export function createSeedData(now = Date.now()) {
     },
     createdAt: now,
   }
+}
+
+export function createSeedData(now = Date.now()) {
+  const base = createBaseSeedData(now)
+  const packed = installContentPacks(
+    {
+      decks: base.decks,
+      cards: base.cards,
+      installedPacks: base.installedPacks,
+    },
+    now,
+  )
+  return { ...base, ...packed }
 }
 
 function seedCards(

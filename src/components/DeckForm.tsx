@@ -2,6 +2,7 @@ import { useState, type CSSProperties, type FormEvent } from 'react'
 import type { Deck, DeckKind } from '../types'
 import { useStore } from '../state/store'
 import { useI18n } from '../lib/i18n-react'
+import { deckDescription, deckTitle } from '../lib/content'
 import { finalizeRomajiTail, guessKanaMode, type KanaMode } from '../lib/romaji'
 import { uid } from '../lib/utils'
 import { KanaInput } from './KanaInput'
@@ -21,10 +22,12 @@ export function DeckForm({ deck, kind = 'kana', onClose }: DeckFormProps) {
   const { t } = useI18n()
   const deckKind: DeckKind = deck?.kind ?? kind
   const isKanji = deckKind === 'kanji'
-  const [name, setName] = useState(deck?.name ?? '')
+  const [name, setName] = useState(() => (deck ? deckTitle(deck, t) : ''))
   const [nameJp, setNameJp] = useState(deck?.nameJp ?? '')
   const [nameJpMode, setNameJpMode] = useState<KanaMode>(() => guessKanaMode(deck?.nameJp, 'hiragana'))
-  const [description, setDescription] = useState(deck?.description ?? '')
+  const [description, setDescription] = useState(() =>
+    deck ? deckDescription(deck, t) : '',
+  )
   const [accent, setAccent] = useState(deck?.accent ?? ACCENTS[0])
   const [error, setError] = useState('')
 

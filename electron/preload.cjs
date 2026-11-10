@@ -7,6 +7,7 @@ contextBridge.exposeInMainWorld('kotoba', {
   exportData: (data, title) => ipcRenderer.invoke('data:export', data, title),
   importData: (title) => ipcRenderer.invoke('data:import', title),
   openDataFolder: () => ipcRenderer.invoke('data:openFolder'),
+  openSpeechSettings: () => ipcRenderer.invoke('system:open-speech-settings'),
   minimize: () => ipcRenderer.invoke('window:minimize'),
   toggleMaximize: () => ipcRenderer.invoke('window:toggleMaximize'),
   close: () => ipcRenderer.invoke('window:close'),

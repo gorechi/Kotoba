@@ -22,6 +22,8 @@ A simple desktop app for learning Japanese with flashcards. Hiragana and katakan
 ## Features
 
 - **Built-in decks**: hiragana and katakana, 71 cards each (46 basic characters + 25 voiced). Basic characters include example words.
+- **N5 kanji deck**: 103 basic N5 kanji with readings and up to two example words. Meanings and example translations follow the app language, and your edits override them. The deck is fully editable, so you can change cards or add your own.
+- **N4 kanji deck**: 181 N4 kanji in the same format — readings, meanings, and up to two example words. It is also fully editable.
 - **Kana map**: a grid of hiragana and katakana with progress for each character, study status colors, and a mnemonic indicator. Clicking a character starts a session with just that card.
 - **Kana mnemonics**: you can save a personal association for a character on the front of the card. It is hidden by default and opens when you click the lightbulb.
 - **Custom decks and cards**: word or character, reading, translation, and a note. A deck can be renamed, recolored, and deleted.
@@ -30,7 +32,7 @@ A simple desktop app for learning Japanese with flashcards. Hiragana and katakan
 - **Spaced repetition with a simplified SRS**: a card comes back after 10 minutes, 12 hours, 1 day, 3 days, and so on, depending on your rating. New cards are introduced in small batches to avoid overload.
 - **Mistake review at the end of a session**: at the end of a session, the app shows the cards you marked "Again", with their reading, translation, and a "Listen" button. The "Review mistakes again" button starts a session with just those cards.
 - **Undo the last rating**: if you press the wrong button, return to the card with the "Undo" button or `Ctrl+Z` — progress and statistics will be restored.
-- **Text-to-speech**: the speaker button reads Japanese text using the system voice (Web Speech API, `ja-JP`).
+- **Text-to-speech**: the speaker button reads Japanese text using the system voice (Web Speech API, `ja-JP`). Requires a Japanese voice installed in Windows: Settings → Time & Language → Language & region → add Japanese with the speech component. If no Japanese voice is found, the app shows a hint instead of playing the wrong voice.
 - **Statistics**: streak, accuracy, 14-day review activity, and progress by deck.
 - **Themes**: light, dark, or system.
 - **Zen mode**: full-screen review with no interface. The card shows the Japanese side, flips to the translation after 10 seconds, and fades out and is replaced by the next card after another 10 seconds. The mode can be started from the menu or automatically after a configurable period of inactivity; exit with the button or `Esc`.
@@ -88,7 +90,7 @@ and open `http://localhost:5173`.
 npm run dist
 ```
 
-The installer will appear in `release\Kotoba-Setup-1.5.0.exe`. It is an NSIS installer: you can choose the installation folder, and a desktop shortcut is created.
+The installer will appear in `release\Kotoba-Setup-1.6.0.exe`. It is an NSIS installer: you can choose the installation folder, and a desktop shortcut is created.
 
 Web build only (no installer):
 
@@ -151,6 +153,8 @@ The app works offline and does not download fonts from the network — they are 
 - **Caveat** — translations on Zen cards (Cyrillic and Latin). Author: The Caveat Project Authors. License: SIL Open Font License 1.1. Font file: `src/assets/fonts/Caveat-Regular.ttf`, license text: [`public/fonts/OFL-Caveat.txt`](public/fonts/OFL-Caveat.txt).
 
 Both fonts are distributed under SIL OFL 1.1: they can be freely used, modified, and embedded in the app. The MIT license in [`LICENSE`](LICENSE) applies to the app code; it does not apply to the fonts.
+
+The built-in N4 kanji readings, vocabulary, and example-word glosses are derived from **KANJIDIC2** and **JMdict** (Electronic Dictionary Research and Development Group), distributed under **CC BY-SA 4.0**. The word selection structure was adapted from the open [JLPT Kanji](https://github.com/vakho10/jlpt-kanji) project. Russian translations and the compact card format were prepared for this project. The derived N4 content remains available under CC BY-SA 4.0.
 
 ## Ideas for future development
 

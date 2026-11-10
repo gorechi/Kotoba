@@ -34,6 +34,8 @@ export type Route =
   | { name: 'stats' }
   | { name: 'data' }
   | { name: 'settings' }
+  | { name: 'help' }
+  | { name: 'ttsHelp' }
 
 export interface SrsState {
   /** Когда карточку нужно повторить (timestamp, мс). 0 — ещё не изучена. */
@@ -162,6 +164,8 @@ export interface AppData {
   decks: Deck[]
   cards: Card[]
   studySets: StudySet[]
+  /** Идентификаторы готовых наборов, которые уже установлены один раз. */
+  installedPacks: string[]
   history: Record<string, DayStat>
   settings: Settings
   createdAt: number
@@ -218,6 +222,7 @@ export interface KotobaApi {
   exportData: (data: AppData, title?: string) => Promise<string | null>
   importData: (title?: string) => Promise<ImportResult | null>
   openDataFolder: () => Promise<string>
+  openSpeechSettings: () => Promise<boolean>
   minimize: () => Promise<void>
   toggleMaximize: () => Promise<void>
   close: () => Promise<void>

@@ -2,9 +2,11 @@ import { useEffect, useMemo, useState, type DragEvent } from 'react'
 import type { Card, Deck, DeckKind } from '../types'
 import { useStore } from '../state/store'
 import { useI18n } from '../lib/i18n-react'
-import { deckTitle } from '../lib/content'
+import { cardExampleTranslation, cardMeaning, deckTitle, isProtectedDeck } from '../lib/content'
+import type { Translate } from '../lib/i18n'
 import { freshSrs, knownSrs } from '../lib/srs'
-import { dueLabel, formatDate, speakJa } from '../lib/utils'
+import { dueLabel, formatDate } from '../lib/utils'
+import { speakJa } from '../lib/tts'
 import { Icon } from '../components/Icon'
 import { ConfirmDialog, Modal } from '../components/Modal'
 import { Select } from '../components/Select'
@@ -51,10 +53,6 @@ const STATUS_LABEL_KEY: Record<CardStatus, string> = {
   learned: 'browser.statusLearned',
 }
 
-function isProtectedDeck(deck: Deck): boolean {
-  return deck.builtin && deck.kind === 'kana'
-}
-
 function cardStatus(card: Card, now: number): CardStatus {
   if (!card.srs.introduced) return 'new'
   if (card.srs.due <= now) return 'due'
@@ -62,14 +60,17 @@ function cardStatus(card: Card, now: number): CardStatus {
   return 'learning'
 }
 
-function cardSearchText(card: Card): string {
+function cardSearchText(card: Card, t: Translate): string {
   const readings = card.readings
     .map((item) => `${item.kana} ${item.transcription}`)
     .join(' ')
   const examples = card.examples
-    .map((item) => `${item.text} ${item.transcription} ${item.translation}`)
+    .map(
+      (item) =>
+        `${item.text} ${item.transcription} ${cardExampleTranslation(card, item, t)}`,
+    )
     .join(' ')
-  return `${card.front} ${card.reading} ${card.meaning} ${card.note} ${card.mnemonic} ${card.tags.join(' ')} ${readings} ${examples}`.toLowerCase()
+  return `${card.front} ${card.reading} ${cardMeaning(card, t)} ${card.note} ${card.mnemonic} ${card.tags.join(' ')} ${readings} ${examples}`.toLowerCase()
 }
 
 export function CardBrowser() {
@@ -155,7 +156,7 @@ export function CardBrowser() {
       }
       if (mnemonicOnly && !card.mnemonic.trim()) return false
       if (activeTags.size > 0 && !card.tags.some((tag) => activeTags.has(tag))) return false
-      if (search && !cardSearchText(card).includes(search)) return false
+      if (search && !cardSearchText(card, t).includes(search)) return false
       return true
     })
 
@@ -814,7 +815,7 @@ export function CardBrowser() {
                         </div>
                         <div className="browser-row-meta">
                           {card.reading && <span>{card.reading}</span>}
-                          {card.meaning && <span>{card.meaning}</span>}
+                          {cardMeaning(card, t) && <span>{cardMeaning(card, t)}</span>}
                           {deck && (
                             <span className="browser-row-deck">
                               <i style={{ background: deck.accent }} />
@@ -914,7 +915,7 @@ export function CardBrowser() {
               </div>
               <div>
                 <span>{t('browser.meaning')}</span>
-                <strong>{preview.meaning || t('browser.noValue')}</strong>
+                <strong>{cardMeaning(preview, t) || t('browser.noValue')}</strong>
               </div>
               <div>
                 <span>{t('browser.status')}</span>
@@ -991,13 +992,16 @@ export function CardBrowser() {
               <div className="browser-preview-section">
                 <span>{t('browser.examples')}</span>
                 <ul>
-                  {preview.examples.map((item) => (
-                    <li key={item.id}>
-                      {item.text}
-                      {item.transcription ? ` — ${item.transcription}` : ''}
-                      {item.translation ? ` — ${item.translation}` : ''}
-                    </li>
-                  ))}
+                  {preview.examples.map((item) => {
+                    const translation = cardExampleTranslation(preview, item, t)
+                    return (
+                      <li key={item.id}>
+                        {item.text}
+                        {item.transcription ? ` — ${item.transcription}` : ''}
+                        {translation ? ` — ${translation}` : ''}
+                      </li>
+                    )
+                  })}
                 </ul>
               </div>
             )}

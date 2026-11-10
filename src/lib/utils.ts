@@ -64,18 +64,3 @@ export function formatDuration(ms: number): string {
   if (minutes === 0) return translate('duration.seconds', { s: seconds })
   return translate('duration.minutes', { m: minutes, s: String(seconds).padStart(2, '0') })
 }
-
-export function speakJa(text: string): void {
-  if (!text || typeof window === 'undefined' || !('speechSynthesis' in window)) return
-  try {
-    const utterance = new SpeechSynthesisUtterance(text)
-    utterance.lang = 'ja-JP'
-    utterance.rate = 0.85
-    const voice = window.speechSynthesis.getVoices().find((v) => v.lang.toLowerCase().startsWith('ja'))
-    if (voice) utterance.voice = voice
-    window.speechSynthesis.cancel()
-    window.speechSynthesis.speak(utterance)
-  } catch {
-    /* озвучка недоступна — не мешаем работе */
-  }
-}

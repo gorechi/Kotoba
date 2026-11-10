@@ -2,10 +2,11 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { QueueItem, Rating, RatingUndo, StudyMode } from '../types'
 import { useStore } from '../state/store'
 import { useI18n } from '../lib/i18n-react'
-import { deckTitle } from '../lib/content'
+import { cardExampleTranslation, cardMeaning, deckTitle } from '../lib/content'
 import { intervalPreview } from '../lib/srs'
 import { buildStudyQueue } from '../lib/study'
-import { formatDuration, speakJa } from '../lib/utils'
+import { formatDuration } from '../lib/utils'
+import { speakJa } from '../lib/tts'
 import { FitText } from './FitText'
 import { Icon } from './Icon'
 
@@ -80,7 +81,8 @@ export function Session({ deckId, items, mode, title, restartItems, onClose }: S
   const current = finished ? undefined : queue[pos]
   const card = current ? data.cards.find((item) => item.id === current.cardId) : undefined
   const cardDeck = card ? data.decks.find((item) => item.id === card.deckId) : undefined
-  const canUseMnemonic = Boolean(cardDeck?.builtin)
+  const meaningText = card ? cardMeaning(card, t) : ''
+  const canUseMnemonic = Boolean(cardDeck?.builtin && cardDeck.kind === 'kana')
   const mnemonic = card?.mnemonic?.trim() ?? ''
   const deck =
     deckId === 'all' ? undefined : data.decks.find((item) => item.id === deckId)
@@ -95,7 +97,7 @@ export function Session({ deckId, items, mode, title, restartItems, onClose }: S
   const isKanji = cardDeck?.kind === 'kanji'
   const isWriting = mode === 'writing'
   const writingDifficulty = data.settings.writingDifficulty
-  const hasMeaning = Boolean(card?.meaning.trim())
+  const hasMeaning = Boolean(meaningText)
   const cardReading = card?.reading.trim() ?? ''
   const firstReading = isKanji
     ? card?.readings.find((item) => item.kana.trim() || item.transcription.trim())
@@ -103,9 +105,9 @@ export function Session({ deckId, items, mode, title, restartItems, onClose }: S
   const readingKana = firstReading?.kana.trim() ?? ''
   const readingTranscription = firstReading?.transcription.trim() ?? ''
   const writingPrompt = isKanji
-    ? readingKana || readingTranscription || card?.meaning.trim() || ''
+    ? readingKana || readingTranscription || meaningText
     : hasMeaning
-      ? card?.meaning.trim() ?? ''
+      ? meaningText
       : cardReading
   const writingReading = isKanji
     ? readingKana && readingTranscription
@@ -452,8 +454,8 @@ export function Session({ deckId, items, mode, title, restartItems, onClose }: S
                           <span className="mistake-reading">{mistakeCard.reading}</span>
                         )
                       )}
-                      {mistakeCard.meaning && (
-                        <span className="mistake-meaning">{mistakeCard.meaning}</span>
+                      {cardMeaning(mistakeCard, t) && (
+                        <span className="mistake-meaning">{cardMeaning(mistakeCard, t)}</span>
                       )}
                     </span>
                     {count > 1 && <span className="mistake-count">×{count}</span>}
@@ -701,7 +703,7 @@ export function Session({ deckId, items, mode, title, restartItems, onClose }: S
                         minFontSize={20}
                       />
                     )}
-                    {card.meaning && <div className="answer-meaning">{card.meaning}</div>}
+                    {meaningText && <div className="answer-meaning">{meaningText}</div>}
                     {card.readings.length > 0 && (
                       <div className="kanji-readings">
                         {card.readings.map((item) => (
@@ -721,26 +723,29 @@ export function Session({ deckId, items, mode, title, restartItems, onClose }: S
                     {card.examples.length > 0 && (
                       <div className="kanji-usages">
                         <div className="kanji-usage-label">{t('session.examples')}</div>
-                        {card.examples.map((item) => (
-                          <div className="kanji-usage" key={item.id}>
-                            <div className="kanji-usage-jp">
-                              {item.text}
-                              {item.transcription && (
-                                <span className="kanji-usage-transcription">
-                                  {item.transcription}
-                                </span>
+                        {card.examples.map((item) => {
+                          const translation = cardExampleTranslation(card, item, t)
+                          return (
+                            <div className="kanji-usage" key={item.id}>
+                              <div className="kanji-usage-jp">
+                                {item.text}
+                                {item.transcription && (
+                                  <span className="kanji-usage-transcription">
+                                    {item.transcription}
+                                  </span>
+                                )}
+                              </div>
+                              {translation && (
+                                <div className="kanji-usage-translation">{translation}</div>
                               )}
                             </div>
-                            {item.translation && (
-                              <div className="kanji-usage-translation">{item.translation}</div>
-                            )}
-                          </div>
-                        ))}
+                          )
+                        })}
                       </div>
                     )}
                     {card.note && <p className="answer-note">{card.note}</p>}
                     {!isWriting &&
-                      !card.meaning &&
+                      !meaningText &&
                       card.readings.length === 0 &&
                       card.examples.length === 0 &&
                       !card.note && <div className="answer-meaning">{card.front}</div>}
@@ -756,9 +761,9 @@ export function Session({ deckId, items, mode, title, restartItems, onClose }: S
                       />
                     )}
                     {card.reading && <div className="answer-reading">{card.reading}</div>}
-                    {card.meaning && <div className="answer-meaning">{card.meaning}</div>}
+                    {meaningText && <div className="answer-meaning">{meaningText}</div>}
                     {card.note && <p className="answer-note">{card.note}</p>}
-                    {!isWriting && !card.reading && !card.meaning && !card.note && (
+                    {!isWriting && !card.reading && !meaningText && !card.note && (
                       <div className="answer-meaning">{card.front}</div>
                     )}
                   </div>

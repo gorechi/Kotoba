@@ -2,7 +2,14 @@ import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import type { Card, Route } from '../types'
 import { useStore } from '../state/store'
 import { useI18n } from '../lib/i18n-react'
-import { cardNote, deckDescription, deckTitle } from '../lib/content'
+import {
+  cardExampleTranslation,
+  cardMeaning,
+  cardNote,
+  deckDescription,
+  deckTitle,
+  isProtectedDeck,
+} from '../lib/content'
 import { DeckCard } from '../components/DeckCard'
 import { DeckForm } from '../components/DeckForm'
 import { DeckSettingsForm } from '../components/DeckSettingsForm'
@@ -121,6 +128,7 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
   }
 
   const isKanji = deck.kind === 'kanji'
+  const protectedDeck = isProtectedDeck(deck)
   const title = deckTitle(deck, t)
   const listRoute: Route = isKanji ? { name: 'kanji' } : { name: 'decks' }
   const listLabel = isKanji ? t('deckDetail.backKanji') : t('deckDetail.backKana')
@@ -161,10 +169,13 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
         .map((item) => `${item.kana} ${item.transcription}`)
         .join(' ')
       const examplesText = card.examples
-        .map((item) => `${item.text} ${item.transcription} ${item.translation}`)
+        .map(
+          (item) =>
+            `${item.text} ${item.transcription} ${cardExampleTranslation(card, item, t)}`,
+        )
         .join(' ')
       const text =
-        `${card.front} ${card.reading} ${card.meaning} ${card.note} ${card.mnemonic} ${readingsText} ${examplesText}`.toLowerCase()
+        `${card.front} ${card.reading} ${cardMeaning(card, t)} ${card.note} ${card.mnemonic} ${readingsText} ${examplesText}`.toLowerCase()
       if (!text.includes(search)) return false
     }
     // По тегам: если выбраны теги, карточка должна иметь хотя бы один из них
@@ -256,13 +267,13 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
               {studyLabel}
               <Icon name="arrow-right" size={17} />
             </button>
-            {!deck.builtin && (
+            {!protectedDeck && (
               <button className="btn btn-ghost" onClick={() => setAdding(true)}>
                 <Icon name="plus" size={17} />
                 {isKanji ? t('deckDetail.addKanji') : t('deckDetail.addCard')}
               </button>
             )}
-            {!deck.builtin && (
+            {!protectedDeck && (
               <button
                 className="icon-btn bordered"
                 onClick={() => setEditingDeck(true)}
@@ -288,7 +299,7 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
             >
               <Icon name="rotate" size={17} />
             </button>
-            {!deck.builtin && (
+            {!protectedDeck && (
               <button
                 className="icon-btn bordered danger"
                 onClick={() => setDeletingDeck(true)}
@@ -415,7 +426,7 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
         </button>
       </div>
 
-      {deck.builtin && (
+      {protectedDeck && (
         <p className="builtin-note">
           <Icon name="lock" size={14} /> {t('deckDetail.builtinNote')}
         </p>
@@ -453,20 +464,23 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
                   <div className="row-main">
                     {(isKanji
                       ? [
-                          card.meaning,
+                          cardMeaning(card, t),
                           card.readings
                             .map((item) => item.kana)
                             .filter(Boolean)
                             .join('、'),
                         ]
-                      : [card.reading, card.meaning]
+                      : [card.reading, cardMeaning(card, t)]
                     )
                       .filter(Boolean)
                       .join('  ·  ') || '—'}
                   </div>
                   {isKanji && card.examples[0] && (
                     <div className="row-note">
-                      {[card.examples[0].text, card.examples[0].translation]
+                      {[
+                        card.examples[0].text,
+                        cardExampleTranslation(card, card.examples[0], t),
+                      ]
                         .filter(Boolean)
                         .join(' — ')}
                     </div>
@@ -481,7 +495,7 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
                   )}
                 </div>
                 <span className={statusClass}>{dueLabel(card.srs.due, card.srs.introduced, now)}</span>
-                {!deck.builtin && (
+                {!protectedDeck && (
                   <div className="row-actions">
                     <button
                       className="icon-btn"
@@ -507,7 +521,7 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
         </div>
       )}
 
-      {!deck.builtin && (
+      {!protectedDeck && (
         <p className="list-total">
           {t(isKanji ? 'deckDetail.kanjiInDeck' : 'deckDetail.cardsInDeck', { n: cards.length })}
         </p>

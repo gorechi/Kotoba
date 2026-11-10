@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import type { QueueItem, Route, StudyMode } from './types'
 import { StoreProvider, useStore } from './state/store'
-import { I18nProvider } from './lib/i18n-react'
+import { I18nProvider, useI18n } from './lib/i18n-react'
 import { TitleBar } from './components/TitleBar'
 import { Sidebar } from './components/Sidebar'
 import { Session } from './components/Session'
+import { Icon } from './components/Icon'
 import { Home } from './pages/Home'
 import { Decks, DeckDetail } from './pages/Decks'
 import { KanjiDecks } from './pages/KanjiDecks'
@@ -13,6 +14,8 @@ import { Stats } from './pages/Stats'
 import { Data } from './pages/Data'
 import { Settings } from './pages/Settings'
 import { KanaMap } from './pages/KanaMap'
+import { Help } from './pages/Help'
+import { TtsHelp } from './pages/TtsHelp'
 import { ZenMode } from './components/ZenMode'
 import { effectiveStudyMode } from './lib/deck-settings'
 import { practiceQueue, buildStudyQueue } from './lib/study'
@@ -20,6 +23,23 @@ import {
   buildCustomStudyQueue,
   type CustomStudyOptions,
 } from './lib/custom-study'
+import {
+  TTS_ERROR_EVENT,
+  warmUpTts,
+  type TtsErrorDetail,
+  type TtsFailureReason,
+} from './lib/tts'
+
+const TTS_NOTICE_KEY: Record<TtsFailureReason, string> = {
+  unsupported: 'tts.unsupported',
+  'missing-voice': 'tts.missingVoice',
+  error: 'tts.error',
+}
+
+interface TtsNotice {
+  reason: TtsFailureReason
+  message: string
+}
 
 interface ActiveSession {
   deckId: string
@@ -31,10 +51,37 @@ interface ActiveSession {
 
 function Shell() {
   const { data } = useStore()
+  const { t } = useI18n()
   const [route, setRoute] = useState<Route>({ name: 'home' })
   const [session, setSession] = useState<ActiveSession | null>(null)
   const [zen, setZen] = useState(false)
+  const [ttsNotice, setTtsNotice] = useState<TtsNotice | null>(null)
   const mainRef = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    warmUpTts()
+  }, [])
+
+  useEffect(() => {
+    const onTtsError = (event: Event) => {
+      const detail = (event as CustomEvent<TtsErrorDetail>).detail
+      if (!detail?.reason) return
+      setTtsNotice({
+        reason: detail.reason,
+        message: t(TTS_NOTICE_KEY[detail.reason] ?? 'tts.error'),
+      })
+    }
+    window.addEventListener(TTS_ERROR_EVENT, onTtsError)
+    return () => window.removeEventListener(TTS_ERROR_EVENT, onTtsError)
+  }, [t])
+
+  useEffect(() => {
+    // Инструкцию по установке голоса пользователь должен успеть прочитать,
+    // поэтому это уведомление не скрывается само.
+    if (!ttsNotice || ttsNotice.reason === 'missing-voice') return
+    const timer = window.setTimeout(() => setTtsNotice(null), 10_000)
+    return () => window.clearTimeout(timer)
+  }, [ttsNotice])
 
   useEffect(() => {
     mainRef.current?.scrollTo({ top: 0 })
@@ -86,6 +133,11 @@ function Shell() {
   const navigate = (next: Route) => {
     setSession(null)
     setRoute(next)
+  }
+
+  const openTtsHelp = () => {
+    setTtsNotice(null)
+    navigate({ name: 'ttsHelp' })
   }
 
   const startStudy = (deckId: string) => {
@@ -169,6 +221,10 @@ function Shell() {
             {route.name === 'stats' && <Stats />}
             {route.name === 'data' && <Data />}
             {route.name === 'settings' && <Settings onZen={() => setZen(true)} />}
+            {route.name === 'help' && (
+              <Help onOpenTtsHelp={() => navigate({ name: 'ttsHelp' })} />
+            )}
+            {route.name === 'ttsHelp' && <TtsHelp onBack={() => navigate({ name: 'help' })} />}
             {route.name === 'kanamap' && (
               <KanaMap
                 onStudyCard={(cardId, deckId) => {
@@ -189,6 +245,28 @@ function Shell() {
       )}
       </div>
       {zen && <ZenMode cards={data.cards} onClose={() => setZen(false)} />}
+      {ttsNotice && (
+        <div className="app-toast" role="status">
+          <Icon name="speaker" size={16} />
+          <div className="app-toast-body">
+            <span className="app-toast-text">{ttsNotice.message}</span>
+            {ttsNotice.reason === 'missing-voice' && (
+              <button type="button" className="app-toast-link" onClick={openTtsHelp}>
+                {t('tts.openHelp')}
+                <Icon name="chevron-right" size={14} />
+              </button>
+            )}
+          </div>
+          <button
+            type="button"
+            className="app-toast-close"
+            onClick={() => setTtsNotice(null)}
+            aria-label={t('tts.dismiss')}
+          >
+            <Icon name="x" size={14} />
+          </button>
+        </div>
+      )}
     </>
   )
 }

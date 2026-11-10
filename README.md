@@ -35,7 +35,7 @@ A simple desktop app for learning Japanese with flashcards. Hiragana and katakan
 - **Themes**: light, dark, or system.
 - **Zen mode**: full-screen review with no interface. The card shows the Japanese side, flips to the translation after 10 seconds, and fades out and is replaced by the next card after another 10 seconds. The mode can be started from the menu or automatically after a configurable period of inactivity; exit with the button or `Esc`.
 - **CSV/TSV card import**: separate sections for kana and kanji. Upload a file, choose or create a deck, and map columns to card fields.
-- **Custom study**: quick sets for overdue, new, JLPT N5/N4, kanji-only, tag-based, a 50-card marathon, and mistakes from the last week. You can also build a set with filters for deck, type, JLPT, tag, and size.
+- **Custom study**: quick sets for overdue, new, JLPT N5/N4, kanji-only, tag-based, a 50-card marathon, and mistakes from the last week. You can also build a set with filters for deck, type, JLPT, tag, and size. Preset sets are read-only and grouped separately; your own sets can be named, saved, edited, and deleted, and stay on the home screen.
 - **Backups**: JSON export and import, and progress reset.
 
 ## Adding cards
@@ -88,7 +88,7 @@ and open `http://localhost:5173`.
 npm run dist
 ```
 
-The installer will appear in `release\Kotoba-Setup-1.4.0.exe`. It is an NSIS installer: you can choose the installation folder, and a desktop shortcut is created.
+The installer will appear in `release\Kotoba-Setup-1.5.0.exe`. It is an NSIS installer: you can choose the installation folder, and a desktop shortcut is created.
 
 Web build only (no installer):
 

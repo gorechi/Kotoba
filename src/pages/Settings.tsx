@@ -417,7 +417,7 @@ export function Settings({ onZen }: SettingsProps) {
         <span className="brand-mark small">言</span>
         <div>
           <strong>{t('brand.name')} · 言葉</strong>
-          <span>{t('settings.about', { version: '1.4.0' })}</span>
+          <span>{t('settings.about', { version: '1.5.0' })}</span>
         </div>
       </footer>
     </div>

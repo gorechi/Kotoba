@@ -81,12 +81,7 @@
     updateParallax()
   }
 
-  const hero = document.querySelector('.hero')
-  if (
-    !reduceMotion &&
-    hero &&
-    window.matchMedia('(hover: hover) and (pointer: fine)').matches
-  ) {
+  const bindPointerParallax = (scene) => {
     let targetX = 0
     let targetY = 0
     let currentX = 0
@@ -95,8 +90,8 @@
     const animatePointer = () => {
       currentX += (targetX - currentX) * 0.09
       currentY += (targetY - currentY) * 0.09
-      hero.style.setProperty('--mx', currentX.toFixed(4))
-      hero.style.setProperty('--my', currentY.toFixed(4))
+      scene.style.setProperty('--mx', currentX.toFixed(4))
+      scene.style.setProperty('--my', currentY.toFixed(4))
       if (Math.abs(targetX - currentX) > 0.0015 || Math.abs(targetY - currentY) > 0.0015) {
         pointerFrame = window.requestAnimationFrame(animatePointer)
       } else {
@@ -107,17 +102,26 @@
       if (pointerFrame) return
       pointerFrame = window.requestAnimationFrame(animatePointer)
     }
-    hero.addEventListener('pointermove', (event) => {
-      const rect = hero.getBoundingClientRect()
+    scene.addEventListener('pointermove', (event) => {
+      const rect = scene.getBoundingClientRect()
       targetX = ((event.clientX - rect.left) / rect.width - 0.5) * 2
       targetY = ((event.clientY - rect.top) / rect.height - 0.5) * 2
       startPointer()
     })
-    hero.addEventListener('pointerleave', () => {
+    scene.addEventListener('pointerleave', () => {
       targetX = 0
       targetY = 0
       startPointer()
     })
+  }
+
+  if (
+    !reduceMotion &&
+    window.matchMedia('(hover: hover) and (pointer: fine)').matches
+  ) {
+    for (const scene of document.querySelectorAll('[data-pointer-parallax]')) {
+      bindPointerParallax(scene)
+    }
   }
 
   // The hero card flips on click, Enter or Space.

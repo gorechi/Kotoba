@@ -56,6 +56,70 @@
     revealItems.forEach((item) => observer.observe(item))
   }
 
+  // Subtle depth: decorative layers drift with the scroll, the hero reacts to the pointer.
+  const parallaxLayers = [...document.querySelectorAll('[data-parallax]')]
+  if (!reduceMotion && parallaxLayers.length) {
+    let parallaxFrame = 0
+    const updateParallax = () => {
+      parallaxFrame = 0
+      const viewport = window.innerHeight
+      for (const layer of parallaxLayers) {
+        const rect = layer.getBoundingClientRect()
+        if (rect.bottom < -viewport * 0.25 || rect.top > viewport * 1.25) continue
+        const center = rect.top + rect.height / 2
+        const offset = (center - viewport / 2) / viewport
+        const speed = Number(layer.dataset.parallax) || 0
+        layer.style.setProperty('--shift', `${(-offset * speed * 58).toFixed(2)}px`)
+      }
+    }
+    const requestParallax = () => {
+      if (parallaxFrame) return
+      parallaxFrame = window.requestAnimationFrame(updateParallax)
+    }
+    window.addEventListener('scroll', requestParallax, { passive: true })
+    window.addEventListener('resize', requestParallax)
+    updateParallax()
+  }
+
+  const hero = document.querySelector('.hero')
+  if (
+    !reduceMotion &&
+    hero &&
+    window.matchMedia('(hover: hover) and (pointer: fine)').matches
+  ) {
+    let targetX = 0
+    let targetY = 0
+    let currentX = 0
+    let currentY = 0
+    let pointerFrame = 0
+    const animatePointer = () => {
+      currentX += (targetX - currentX) * 0.09
+      currentY += (targetY - currentY) * 0.09
+      hero.style.setProperty('--mx', currentX.toFixed(4))
+      hero.style.setProperty('--my', currentY.toFixed(4))
+      if (Math.abs(targetX - currentX) > 0.0015 || Math.abs(targetY - currentY) > 0.0015) {
+        pointerFrame = window.requestAnimationFrame(animatePointer)
+      } else {
+        pointerFrame = 0
+      }
+    }
+    const startPointer = () => {
+      if (pointerFrame) return
+      pointerFrame = window.requestAnimationFrame(animatePointer)
+    }
+    hero.addEventListener('pointermove', (event) => {
+      const rect = hero.getBoundingClientRect()
+      targetX = ((event.clientX - rect.left) / rect.width - 0.5) * 2
+      targetY = ((event.clientY - rect.top) / rect.height - 0.5) * 2
+      startPointer()
+    })
+    hero.addEventListener('pointerleave', () => {
+      targetX = 0
+      targetY = 0
+      startPointer()
+    })
+  }
+
   // The hero card flips on click, Enter or Space.
   document.querySelectorAll('[data-flip]').forEach((card) => {
     card.addEventListener('click', () => {

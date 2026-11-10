@@ -4,7 +4,7 @@ import { useI18n } from '../lib/i18n-react'
 import { CustomStudy } from '../components/CustomStudy'
 import { Icon } from '../components/Icon'
 import type { CustomStudyOptions } from '../lib/custom-study'
-import { overallStat, streak, todayStat } from '../lib/stats'
+import { dailyGoalProgress, overallStat, streak, todayStat } from '../lib/stats'
 import { buildStudyQueue } from '../lib/study'
 import { formatDate, greeting } from '../lib/utils'
 
@@ -30,7 +30,12 @@ export function Home({ onNavigate, onStudy, onCustomStudy }: HomeProps) {
   const due = queue.filter((item) => !item.isNew).length
   const newCount = queue.filter((item) => item.isNew).length
   const today = todayStat(data, now)
+  const goal = dailyGoalProgress(today, data.settings)
+  const goalComplete = goal.goal > 0 && goal.done >= goal.goal
   const days = streak(data.history, now)
+  const goalRadius = 40
+  const goalCircumference = 2 * Math.PI * goalRadius
+  const goalOffset = goalCircumference * (1 - goal.percent / 100)
 
   const ready = queue.length
   const canPractice = overall.learned > 0
@@ -65,6 +70,44 @@ export function Home({ onNavigate, onStudy, onCustomStudy }: HomeProps) {
               <Icon name="arrow-right" size={18} />
             </button>
           </div>
+
+          <button
+            type="button"
+            className={`hero-goal${goalComplete ? ' is-complete' : ''}`}
+            onClick={() => onNavigate({ name: 'stats' })}
+            aria-label={t('home.goalAria', {
+              done: goal.done,
+              goal: goal.goal,
+            })}
+          >
+            <span className="hero-goal-ring" aria-hidden="true">
+              <svg viewBox="0 0 100 100">
+                <circle className="goal-ring-track" cx="50" cy="50" r={goalRadius} />
+                <circle
+                  className="goal-ring-value"
+                  cx="50"
+                  cy="50"
+                  r={goalRadius}
+                  strokeDasharray={goalCircumference}
+                  strokeDashoffset={goalOffset}
+                />
+              </svg>
+              <span className="hero-goal-percent">{goal.percent}%</span>
+            </span>
+            <span className="hero-goal-copy">
+              <strong>
+                {goalComplete && <Icon name="sparkles" size={13} />}
+                {t('stats.dailyGoalProgress', { done: goal.done, goal: goal.goal })}
+              </strong>
+              <span>
+                {t('common.today')} ·{' '}
+                {goal.unit === 'minutes'
+                  ? t('stats.dailyGoalUnitMinutes')
+                  : t('stats.dailyGoalUnitReviews')}
+              </span>
+            </span>
+            <Icon name="chevron-right" size={15} />
+          </button>
 
           <div className="hero-meta">
             <span>

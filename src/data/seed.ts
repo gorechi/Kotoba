@@ -1,6 +1,6 @@
 import type { Card, Deck, StudySet } from '../types'
 import { freshSrs } from '../lib/srs'
-import { DEFAULT_LOCALE } from '../lib/i18n'
+import { detectSystemLocale } from '../lib/i18n'
 import {
   HIRAGANA_BASIC,
   HIRAGANA_VOICED,
@@ -64,7 +64,8 @@ export function createBaseSeedData(now = Date.now()) {
       goalStreak: 30,
       zenAuto: true,
       zenIdleMinutes: 5,
-      language: DEFAULT_LOCALE,
+      language: detectSystemLocale(),
+      onboardingDone: false,
       autoBackup: 'daily' as const,
       backupFolder: null,
     },

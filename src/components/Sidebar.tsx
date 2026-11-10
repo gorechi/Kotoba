@@ -9,6 +9,7 @@ interface SidebarProps {
   route: Route
   onNavigate: (route: Route) => void
   onZen: () => void
+  onSearch: () => void
 }
 
 const NAV: {
@@ -27,7 +28,7 @@ const NAV: {
 
 const SIDEBAR_STORAGE_KEY = 'kotoba.sidebarCollapsed'
 
-export function Sidebar({ route, onNavigate, onZen }: SidebarProps) {
+export function Sidebar({ route, onNavigate, onZen, onSearch }: SidebarProps) {
   const { data } = useStore()
   const { t } = useI18n()
   const days = streak(data.history)
@@ -78,6 +79,18 @@ export function Sidebar({ route, onNavigate, onZen }: SidebarProps) {
         </div>
 
         <nav className="nav">
+          <button
+            type="button"
+            className="nav-item nav-search"
+            onClick={onSearch}
+            data-label={t('palette.openAria')}
+            title={t('palette.openAria')}
+            aria-label={t('palette.openAria')}
+          >
+            <Icon name="search" size={19} />
+            <span className="nav-label">{t('nav.search')}</span>
+            <kbd className="nav-kbd">Ctrl K</kbd>
+          </button>
           {NAV.map((item) => (
             <button
               key={item.id}

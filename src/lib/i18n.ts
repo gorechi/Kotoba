@@ -28,6 +28,19 @@ export const LOCALES: LocaleInfo[] = [
 
 export const DEFAULT_LOCALE = 'en'
 
+/** Первый поддерживаемый язык из системных настроек браузера/Windows. */
+export function detectSystemLocale(): string {
+  if (typeof navigator === 'undefined') return DEFAULT_LOCALE
+  const tags = [...(navigator.languages ?? []), navigator.language]
+  for (const tag of tags) {
+    if (!tag) continue
+    const base = String(tag).toLowerCase().split('-')[0]
+    const match = LOCALES.find((locale) => locale.code === base)
+    if (match) return match.code
+  }
+  return DEFAULT_LOCALE
+}
+
 type MessageModule = { messages: Record<string, string> }
 
 // UI-строки неактивных языков подгружаются отдельно. UI английского

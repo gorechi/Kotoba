@@ -6,6 +6,9 @@ import { TitleBar } from './components/TitleBar'
 import { Sidebar } from './components/Sidebar'
 import { Session } from './components/Session'
 import { Icon } from './components/Icon'
+import { Onboarding } from './components/Onboarding'
+import { CommandPalette } from './components/CommandPalette'
+import { ShortcutsDialog } from './components/ShortcutsDialog'
 import { Home } from './pages/Home'
 
 const Decks = lazy(() => import('./pages/Decks').then((module) => ({ default: module.Decks })))
@@ -79,11 +82,14 @@ interface ActiveSession {
 }
 
 function Shell() {
-  const { data, loadIssues, clearLoadIssues, saveState, retrySave, flush } = useStore()
+  const { data, loadIssues, clearLoadIssues, saveState, retrySave, flush, setSettings } =
+    useStore()
   const { t } = useI18n()
   const [route, setRoute] = useState<Route>({ name: 'home' })
   const [session, setSession] = useState<ActiveSession | null>(null)
   const [zen, setZen] = useState(false)
+  const [paletteOpen, setPaletteOpen] = useState(false)
+  const [shortcutsOpen, setShortcutsOpen] = useState(false)
   const [ttsNotice, setTtsNotice] = useState<TtsNotice | null>(null)
   const [updateState, setUpdateState] = useState<UpdateState>({
     status: 'idle',
@@ -137,6 +143,36 @@ function Shell() {
   }, [route])
 
   useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null
+      const typing =
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.tagName === 'SELECT' ||
+          target.isContentEditable)
+
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault()
+        if (!session) {
+          setShortcutsOpen(false)
+          setPaletteOpen(true)
+        }
+        return
+      }
+
+      if (typing || event.ctrlKey || event.metaKey || event.altKey) return
+      if (event.key === '?') {
+        event.preventDefault()
+        setPaletteOpen(false)
+        setShortcutsOpen(true)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [session])
+
+  useEffect(() => {
     if (!data.settings.zenAuto || zen) return
 
     const delay = Math.max(1, data.settings.zenIdleMinutes) * 60_000
@@ -180,6 +216,8 @@ function Shell() {
   }, [data.settings.zenAuto, data.settings.zenIdleMinutes, zen])
 
   const navigate = (next: Route) => {
+    setPaletteOpen(false)
+    setShortcutsOpen(false)
     setSession(null)
     setRoute(next)
   }
@@ -256,6 +294,20 @@ function Shell() {
         ? t('recovery.missingNotice', { parts: missingParts })
         : null
 
+  const finishOnboarding = (deckId?: string) => {
+    setSettings({ onboardingDone: true })
+    if (deckId && data.decks.some((deck) => deck.id === deckId)) startStudy(deckId)
+  }
+
+  if (!data.settings.onboardingDone) {
+    return (
+      <div className="onboarding-app">
+        <TitleBar />
+        <Onboarding onFinish={finishOnboarding} />
+      </div>
+    )
+  }
+
   return (
     <>
       {!zen && loadNotice && saveState.status !== 'error' && (
@@ -306,7 +358,12 @@ function Shell() {
         />
       ) : (
         <div className="app-body">
-          <Sidebar route={route} onNavigate={navigate} onZen={() => setZen(true)} />
+          <Sidebar
+            route={route}
+            onNavigate={navigate}
+            onZen={() => setZen(true)}
+            onSearch={() => setPaletteOpen(true)}
+          />
           <main className="main" ref={mainRef}>
             <Suspense fallback={<PageLoader />}>
             {route.name === 'home' && (
@@ -318,7 +375,9 @@ function Shell() {
             )}
             {route.name === 'decks' && <Decks onNavigate={navigate} onStudy={startStudy} />}
             {route.name === 'kanji' && <KanjiDecks onNavigate={navigate} onStudy={startStudy} />}
-            {route.name === 'cards' && <CardBrowser />}
+            {route.name === 'cards' && (
+              <CardBrowser focusCardId={route.cardId} initialQuery={route.query} />
+            )}
             {route.name === 'deck' && (
               <DeckDetail deckId={route.deckId} onNavigate={navigate} onStudy={startStudy} />
             )}
@@ -367,6 +426,10 @@ function Shell() {
       )}
       </div>
       {zen && <ZenMode cards={data.cards} onClose={() => setZen(false)} />}
+      {paletteOpen && (
+        <CommandPalette onClose={() => setPaletteOpen(false)} onNavigate={navigate} />
+      )}
+      {shortcutsOpen && <ShortcutsDialog onClose={() => setShortcutsOpen(false)} />}
       {ttsNotice && (
         <div className="app-toast" role="status">
           <Icon name="speaker" size={16} />

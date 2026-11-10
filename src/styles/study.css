@@ -37,6 +37,17 @@
   font-variant-numeric: tabular-nums;
 }
 
+.session-tools {
+  display: flex;
+  gap: 2px;
+  flex: none;
+}
+
+.session-tools .icon-btn {
+  width: 34px;
+  height: 34px;
+}
+
 .session-progress {
   flex: 1;
   height: 4px;
@@ -551,6 +562,37 @@
   font-size: 9.5px;
   padding: 1px 5px;
   box-shadow: none;
+}
+
+.session-notice {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  z-index: 110;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: min(520px, calc(100vw - 32px));
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text-soft);
+  box-shadow: var(--shadow-md);
+  font-size: 12.5px;
+  animation: modalIn 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.session-notice button {
+  flex: none;
+  padding: 2px 0;
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 .show-answer {

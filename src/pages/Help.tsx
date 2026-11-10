@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { HELP_GUIDES, helpText, type HelpGuide } from '../data/help-guides'
 import { Icon, type IconName } from '../components/Icon'
 import { useI18n } from '../lib/i18n-react'
@@ -34,11 +35,39 @@ export function Help({
   onOpenGuide: (guideId: string) => void
 }) {
   const { t, language } = useI18n()
-  const system = HELP_GUIDES.filter((guide) => guide.section === 'system')
-  const learning = HELP_GUIDES.filter((guide) => guide.section === 'learning')
+  const [query, setQuery] = useState('')
+  const search = query.trim().toLowerCase()
+
+  const matches = (guide: HelpGuide) => {
+    if (!search) return true
+    const text = [
+      helpText(guide.title, language),
+      helpText(guide.description, language),
+      helpText(guide.intro, language),
+      ...guide.steps.flatMap((step) => [
+        helpText(step.title, language),
+        helpText(step.text, language),
+        step.tip ? helpText(step.tip, language) : '',
+      ]),
+    ]
+      .join(' ')
+      .toLowerCase()
+    return text.includes(search)
+  }
+
+  const ttsMatches =
+    !search ||
+    `${t('help.ttsTitle')} ${t('help.ttsDesc')}`.toLowerCase().includes(search)
+
+  const system = HELP_GUIDES.filter((guide) => guide.section === 'system' && matches(guide))
+  const learning = HELP_GUIDES.filter(
+    (guide) => guide.section === 'learning' && matches(guide),
+  )
 
   const metaFor = (guide: HelpGuide) =>
     `${t('help.stepCount', { n: guide.steps.length })} · ${helpText(guide.time, language)}`
+
+  const nothingFound = !ttsMatches && system.length === 0 && learning.length === 0
 
   return (
     <div className="page help-page">
@@ -50,6 +79,28 @@ export function Help({
         </div>
       </header>
 
+      <div className="help-search">
+        <Icon name="search" size={17} />
+        <input
+          type="text"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder={t('help.searchPlaceholder')}
+          aria-label={t('help.searchPlaceholder')}
+        />
+        {query && (
+          <button
+            type="button"
+            className="icon-btn"
+            onClick={() => setQuery('')}
+            aria-label={t('common.reset')}
+            title={t('common.reset')}
+          >
+            <Icon name="x" size={15} />
+          </button>
+        )}
+      </div>
+
       <div className="help-overview">
         <span className="help-overview-icon">
           <Icon name="help" size={24} />
@@ -60,50 +111,58 @@ export function Help({
         </div>
       </div>
 
-      <section className="help-section">
-        <div className="help-section-head">
-          <h2>{t('help.sectionSystem')}</h2>
-          <span>{t('help.sectionCount', { n: system.length + 1 })}</span>
-        </div>
-        <div className="help-list">
-          <GuideCard
-            icon="speaker"
-            title={t('help.ttsTitle')}
-            description={t('help.ttsDesc')}
-            meta={t('help.ttsMeta')}
-            onClick={onOpenTtsHelp}
-          />
-          {system.map((guide) => (
-            <GuideCard
-              key={guide.id}
-              icon={guide.icon}
-              title={helpText(guide.title, language)}
-              description={helpText(guide.description, language)}
-              meta={metaFor(guide)}
-              onClick={() => onOpenGuide(guide.id)}
-            />
-          ))}
-        </div>
-      </section>
+      {nothingFound && <p className="help-empty">{t('help.searchEmpty')}</p>}
 
-      <section className="help-section">
-        <div className="help-section-head">
-          <h2>{t('help.sectionLearning')}</h2>
-          <span>{t('help.sectionCount', { n: learning.length })}</span>
-        </div>
-        <div className="help-list">
-          {learning.map((guide) => (
-            <GuideCard
-              key={guide.id}
-              icon={guide.icon}
-              title={helpText(guide.title, language)}
-              description={helpText(guide.description, language)}
-              meta={metaFor(guide)}
-              onClick={() => onOpenGuide(guide.id)}
-            />
-          ))}
-        </div>
-      </section>
+      {(ttsMatches || system.length > 0) && (
+        <section className="help-section">
+          <div className="help-section-head">
+            <h2>{t('help.sectionSystem')}</h2>
+            <span>{t('help.sectionCount', { n: system.length + (ttsMatches ? 1 : 0) })}</span>
+          </div>
+          <div className="help-list">
+            {ttsMatches && (
+              <GuideCard
+                icon="speaker"
+                title={t('help.ttsTitle')}
+                description={t('help.ttsDesc')}
+                meta={t('help.ttsMeta')}
+                onClick={onOpenTtsHelp}
+              />
+            )}
+            {system.map((guide) => (
+              <GuideCard
+                key={guide.id}
+                icon={guide.icon}
+                title={helpText(guide.title, language)}
+                description={helpText(guide.description, language)}
+                meta={metaFor(guide)}
+                onClick={() => onOpenGuide(guide.id)}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {learning.length > 0 && (
+        <section className="help-section">
+          <div className="help-section-head">
+            <h2>{t('help.sectionLearning')}</h2>
+            <span>{t('help.sectionCount', { n: learning.length })}</span>
+          </div>
+          <div className="help-list">
+            {learning.map((guide) => (
+              <GuideCard
+                key={guide.id}
+                icon={guide.icon}
+                title={helpText(guide.title, language)}
+                description={helpText(guide.description, language)}
+                meta={metaFor(guide)}
+                onClick={() => onOpenGuide(guide.id)}
+              />
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   )
 }

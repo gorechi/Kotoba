@@ -86,7 +86,7 @@ export function ZenMode({ cards, onClose }: { cards: Card[]; onClose: () => void
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
+      if (event.key === 'Escape' && !document.querySelector('.modal')) {
         event.preventDefault()
         event.stopImmediatePropagation()
         onClose()

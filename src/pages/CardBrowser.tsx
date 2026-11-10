@@ -1,4 +1,4 @@
-import { useEffect, useState, type DragEvent } from 'react'
+import { useEffect, useRef, useState, type DragEvent } from 'react'
 import type { Card, Deck, DeckKind } from '../types'
 import { useStore } from '../state/store'
 import { useI18n } from '../lib/i18n-react'
@@ -22,7 +22,12 @@ import {
 } from '../lib/card-browser'
 import { useCardBrowserFilters } from './card-browser/useCardBrowserFilters'
 
-export function CardBrowser() {
+interface CardBrowserProps {
+  focusCardId?: string
+  initialQuery?: string
+}
+
+export function CardBrowser({ focusCardId, initialQuery }: CardBrowserProps) {
   const { data, update } = useStore()
   const { t, locale } = useI18n()
   const now = Date.now()
@@ -53,6 +58,10 @@ export function CardBrowser() {
     setVisibleCount,
   } = useCardBrowserFilters(data.cards, data.decks, t, locale.intl)
 
+  useEffect(() => {
+    if (initialQuery !== undefined) setQuery(initialQuery)
+  }, [initialQuery, setQuery])
+
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [preview, setPreview] = useState<Card | null>(null)
   const [pendingDelete, setPendingDelete] = useState(false)
@@ -60,6 +69,15 @@ export function CardBrowser() {
   const [notice, setNotice] = useState<string | null>(null)
   const [draggingIds, setDraggingIds] = useState<string[]>([])
   const [dragOverDeck, setDragOverDeck] = useState<string | null>(null)
+  const openedFocusRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    if (!focusCardId || openedFocusRef.current === focusCardId) return
+    const target = data.cards.find((card) => card.id === focusCardId)
+    if (!target) return
+    openedFocusRef.current = focusCardId
+    setPreview(target)
+  }, [data.cards, focusCardId])
 
   useEffect(() => {
     if (!notice) return

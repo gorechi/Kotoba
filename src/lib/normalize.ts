@@ -309,6 +309,8 @@ function normalizeSettings(raw: unknown): Settings {
     zenAuto: true,
     zenIdleMinutes: 5,
     language: DEFAULT_LOCALE,
+    // Для уже существующих данных знакомство не показываем повторно.
+    onboardingDone: true,
     autoBackup: 'daily',
     backupFolder: null,
   }
@@ -347,6 +349,7 @@ function normalizeSettings(raw: unknown): Settings {
       120,
     ),
     language: isLocaleCode(raw.language) ? raw.language : base.language,
+    onboardingDone: raw.onboardingDone !== false,
     autoBackup: AUTO_BACKUP_FREQUENCIES.includes(raw.autoBackup as AutoBackupFrequency)
       ? (raw.autoBackup as AutoBackupFrequency)
       : base.autoBackup,

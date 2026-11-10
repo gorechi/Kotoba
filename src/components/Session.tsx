@@ -9,6 +9,8 @@ import { formatDuration } from '../lib/utils'
 import { speakJa } from '../lib/tts'
 import { FitText } from './FitText'
 import { Icon } from './Icon'
+import { CardForm } from './CardForm'
+import { KanjiCardForm } from './KanjiCardForm'
 import { useSessionShortcuts } from './session/useSessionShortcuts'
 
 const RATINGS: { rating: Rating; labelKey: string; key: string }[] = [
@@ -77,13 +79,16 @@ export function Session({ deckId, items, mode, title, restartItems, onClose }: S
   const [mnemonicEditing, setMnemonicEditing] = useState(false)
   const [mnemonicDraft, setMnemonicDraft] = useState('')
   const [readingRevealed, setReadingRevealed] = useState(false)
+  const [editingCard, setEditingCard] = useState(false)
+  const [suspendedNotice, setSuspendedNotice] = useState<string | null>(null)
   const shownAt = useRef(Date.now())
 
   const current = finished ? undefined : queue[pos]
   const card = current ? data.cards.find((item) => item.id === current.cardId) : undefined
   const cardDeck = card ? data.decks.find((item) => item.id === card.deckId) : undefined
   const meaningText = card ? cardMeaning(card, t) : ''
-  const canUseMnemonic = Boolean(cardDeck?.builtin && cardDeck.kind === 'kana')
+  // Поле мнемоники есть у всех карточек, не только у встроенной каны.
+  const canUseMnemonic = Boolean(card)
   const mnemonic = card?.mnemonic?.trim() ?? ''
   const deck =
     deckId === 'all' ? undefined : data.decks.find((item) => item.id === deckId)
@@ -132,7 +137,14 @@ export function Session({ deckId, items, mode, title, restartItems, onClose }: S
     setMnemonicEditing(false)
     setMnemonicDraft('')
     setReadingRevealed(false)
+    setEditingCard(false)
   }, [card?.id, pos])
+
+  useEffect(() => {
+    if (!suspendedNotice) return
+    const timer = window.setTimeout(() => setSuspendedNotice(null), 6000)
+    return () => window.clearTimeout(timer)
+  }, [suspendedNotice])
 
   const openMnemonicEditor = () => {
     if (!card) return
@@ -171,6 +183,36 @@ export function Session({ deckId, items, mode, title, restartItems, onClose }: S
     setMnemonicDraft('')
     setMnemonicEditing(false)
     setMnemonicOpen(false)
+  }
+
+  const suspendCurrent = () => {
+    if (!card) return
+    const cardId = card.id
+    update((current) => ({
+      ...current,
+      cards: current.cards.map((item) =>
+        item.id === cardId ? { ...item, suspended: true } : item,
+      ),
+    }))
+    const nextQueue = queue.filter((item) => item.cardId !== cardId)
+    setQueue(nextQueue)
+    setSuspendedNotice(cardId)
+    setRevealed(false)
+    setEditingCard(false)
+    if (pos >= nextQueue.length) setFinished(true)
+    else shownAt.current = Date.now()
+  }
+
+  const restoreSuspended = () => {
+    if (!suspendedNotice) return
+    const cardId = suspendedNotice
+    update((current) => ({
+      ...current,
+      cards: current.cards.map((item) =>
+        item.id === cardId ? { ...item, suspended: false } : item,
+      ),
+    }))
+    setSuspendedNotice(null)
   }
 
   const toggleMnemonic = () => {
@@ -269,11 +311,13 @@ export function Session({ deckId, items, mode, title, restartItems, onClose }: S
     mnemonicEditing,
     mnemonicOpen,
     canUndo: Boolean(lastRating),
+    disabled: editingCard,
     onClose,
     onUndo: undoLastRating,
     onToggleAnswer: toggleAnswer,
     onCancelMnemonic: cancelMnemonicEditor,
     onCloseMnemonic: () => setMnemonicOpen(false),
+    onSpeak: () => speakJa(speakText),
     onRate: rate,
   })
 
@@ -345,6 +389,28 @@ export function Session({ deckId, items, mode, title, restartItems, onClose }: S
             {finished ? queue.length : `${pos + 1} / ${queue.length}`}
           </span>
         </div>
+        {!finished && card && (
+          <div className="session-tools">
+            <button
+              type="button"
+              className="icon-btn"
+              onClick={() => setEditingCard(true)}
+              title={t('session.editCard')}
+              aria-label={t('session.editCard')}
+            >
+              <Icon name="pencil" size={17} />
+            </button>
+            <button
+              type="button"
+              className="icon-btn"
+              onClick={suspendCurrent}
+              title={t('session.suspend')}
+              aria-label={t('session.suspend')}
+            >
+              <Icon name="pause" size={17} />
+            </button>
+          </div>
+        )}
         <div className="session-progress">
           <span style={{ width: `${finished ? 100 : Math.round((pos / total) * 100)}%` }} />
         </div>
@@ -792,6 +858,27 @@ export function Session({ deckId, items, mode, title, restartItems, onClose }: S
           <h1>{t('session.cardsDone')}</h1>
           <button className="btn btn-primary" onClick={onClose}>
             {t('session.doneButton')}
+          </button>
+        </div>
+      )}
+
+      {editingCard &&
+        card &&
+        (isKanji ? (
+          <KanjiCardForm
+            deckId={card.deckId}
+            card={card}
+            onClose={() => setEditingCard(false)}
+          />
+        ) : (
+          <CardForm deckId={card.deckId} card={card} onClose={() => setEditingCard(false)} />
+        ))}
+
+      {suspendedNotice && (
+        <div className="session-notice" role="status">
+          <span>{t('session.suspendedNotice')}</span>
+          <button type="button" onClick={restoreSuspended}>
+            {t('session.suspendedUndo')}
           </button>
         </div>
       )}

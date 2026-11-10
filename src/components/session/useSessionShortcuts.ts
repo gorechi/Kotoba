@@ -7,11 +7,14 @@ interface SessionShortcutsOptions {
   mnemonicEditing: boolean
   mnemonicOpen: boolean
   canUndo: boolean
+  /** Отключить клавиши, пока открыт другой диалог. */
+  disabled?: boolean
   onClose: () => void
   onUndo: () => void
   onToggleAnswer: () => void
   onCancelMnemonic: () => void
   onCloseMnemonic: () => void
+  onSpeak: () => void
   onRate: (rating: Rating) => void
 }
 
@@ -29,15 +32,20 @@ export function useSessionShortcuts({
   mnemonicEditing,
   mnemonicOpen,
   canUndo,
+  disabled = false,
   onClose,
   onUndo,
   onToggleAnswer,
   onCancelMnemonic,
   onCloseMnemonic,
+  onSpeak,
   onRate,
 }: SessionShortcutsOptions) {
   useEffect(() => {
+    if (disabled) return undefined
     const onKey = (event: KeyboardEvent) => {
+      // Пока открыт диалог, клавишами управляет только он.
+      if (document.querySelector('.modal')) return
       const target = event.target as HTMLElement | null
       if (
         target &&
@@ -81,6 +89,12 @@ export function useSessionShortcuts({
         return
       }
 
+      if (!event.ctrlKey && !event.metaKey && !event.altKey && event.key.toLowerCase() === 's') {
+        event.preventDefault()
+        onSpeak()
+        return
+      }
+
       if (!revealed) return
       const rating = RATING_KEYS[event.key]
       if (rating) {
@@ -93,6 +107,7 @@ export function useSessionShortcuts({
     return () => window.removeEventListener('keydown', onKey)
   }, [
     canUndo,
+    disabled,
     finished,
     mnemonicEditing,
     mnemonicOpen,
@@ -100,6 +115,7 @@ export function useSessionShortcuts({
     onClose,
     onCloseMnemonic,
     onRate,
+    onSpeak,
     onToggleAnswer,
     onUndo,
     revealed,

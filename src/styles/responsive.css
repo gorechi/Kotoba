@@ -92,4 +92,13 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+
+  /* Переворот карточки и кольцо цели должны меняться мгновенно,
+     а не проигрывать укороченную анимацию. */
+  .flashcard,
+  .hero-goal,
+  .goal-ring-value {
+    transition: none !important;
+    animation: none !important;
+  }
 }

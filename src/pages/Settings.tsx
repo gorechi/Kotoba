@@ -365,6 +365,21 @@ export function Settings({
               ))}
             </Select>
           </div>
+
+          <div className="settings-replay">
+            <div>
+              <strong>{t('settings.replayOnboarding')}</strong>
+              <span>{t('settings.replayOnboardingHint')}</span>
+            </div>
+            <button
+              type="button"
+              className="btn btn-ghost btn-small"
+              onClick={() => setSettings({ onboardingDone: false })}
+            >
+              <Icon name="sparkles" size={15} />
+              {t('settings.replayOnboardingAction')}
+            </button>
+          </div>
         </section>
 
         <section className="panel">

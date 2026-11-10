@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, dialog, ipcMain, shell } = require('electron')
+const { app, BrowserWindow, Menu, dialog, ipcMain, screen, shell } = require('electron')
 const path = require('node:path')
 const fs = require('node:fs')
 const { checkUpdates } = require('./updates.cjs')
@@ -15,12 +15,16 @@ const storage = require('./storage.cjs')
 
 const isDev = !app.isPackaged
 const AUTO_BACKUP_CHECK_MS = 60 * 60 * 1000
+const WINDOW_STATE_FILE = 'window-state.json'
+const DEFAULT_WINDOW = { width: 1200, height: 820 }
+const MIN_WINDOW = { width: 960, height: 660 }
 let mainWindow = null
 let windowReady = false
 let pendingFocus = false
 let backupTimer = null
 let backupWarmupTimer = null
 let closeBackupDone = false
+let windowSaveTimer = null
 
 /**
  * Brings the existing window back to the foreground when a second instance
@@ -90,17 +94,106 @@ function runOnCloseBackup() {
   }
 }
 
+function windowStatePath() {
+  return path.join(app.getPath('userData'), WINDOW_STATE_FILE)
+}
+
+/** Окно должно оставаться хотя бы частично видимым после смены монитора. */
+function isVisibleOnDisplays(bounds) {
+  try {
+    return screen.getAllDisplays().some((display) => {
+      const area = display.workArea
+      return (
+        bounds.x < area.x + area.width - 80 &&
+        bounds.x + bounds.width > area.x + 80 &&
+        bounds.y < area.y + area.height - 80 &&
+        bounds.y + bounds.height > area.y + 40
+      )
+    })
+  } catch {
+    return false
+  }
+}
+
+function readWindowState() {
+  try {
+    const raw = JSON.parse(fs.readFileSync(windowStatePath(), 'utf8'))
+    if (!raw || typeof raw !== 'object') return null
+    const width = Math.max(MIN_WINDOW.width, Math.round(Number(raw.width) || DEFAULT_WINDOW.width))
+    const height = Math.max(
+      MIN_WINDOW.height,
+      Math.round(Number(raw.height) || DEFAULT_WINDOW.height),
+    )
+    const hasPosition = Number.isFinite(raw.x) && Number.isFinite(raw.y)
+    if (!hasPosition) return { width, height, maximized: Boolean(raw.maximized) }
+
+    const state = {
+      x: Math.round(raw.x),
+      y: Math.round(raw.y),
+      width,
+      height,
+      maximized: Boolean(raw.maximized),
+    }
+    if (!isVisibleOnDisplays(state)) {
+      return { width, height, maximized: state.maximized }
+    }
+    return state
+  } catch {
+    return null
+  }
+}
+
+function saveWindowState() {
+  if (windowSaveTimer) {
+    clearTimeout(windowSaveTimer)
+    windowSaveTimer = null
+  }
+  if (!mainWindow || mainWindow.isDestroyed()) return
+  try {
+    const maximized = mainWindow.isMaximized()
+    const bounds = mainWindow.getNormalBounds()
+    if (bounds.width < MIN_WINDOW.width || bounds.height < MIN_WINDOW.height) return
+    fs.writeFileSync(
+      windowStatePath(),
+      JSON.stringify({
+        x: bounds.x,
+        y: bounds.y,
+        width: bounds.width,
+        height: bounds.height,
+        maximized,
+      }),
+      'utf8',
+    )
+  } catch (error) {
+    console.error('[kotoba] could not save window state', error)
+  }
+}
+
+function scheduleWindowStateSave() {
+  if (windowSaveTimer) clearTimeout(windowSaveTimer)
+  windowSaveTimer = setTimeout(saveWindowState, 400)
+}
+
 function createWindow() {
   windowReady = false
+  const savedWindow = readWindowState()
+  const windowBounds = savedWindow
+    ? {
+        width: savedWindow.width,
+        height: savedWindow.height,
+        ...(savedWindow.x !== undefined && savedWindow.y !== undefined
+          ? { x: savedWindow.x, y: savedWindow.y }
+          : {}),
+      }
+    : DEFAULT_WINDOW
   mainWindow = new BrowserWindow({
-    width: 1200,
-    height: 820,
-    minWidth: 960,
-    minHeight: 660,
+    ...windowBounds,
+    minWidth: MIN_WINDOW.width,
+    minHeight: MIN_WINDOW.height,
     frame: false,
     show: false,
     backgroundColor: '#F6F2EB',
-    title: 'Котоба',
+    title: 'Kotoba',
     icon: path.join(__dirname, '..', 'build', 'icon.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
@@ -112,6 +205,7 @@ function createWindow() {
   })
 
   mainWindow.once('ready-to-show', () => {
+    if (savedWindow?.maximized) mainWindow.maximize()
     windowReady = true
     mainWindow.show()
     if (pendingFocus) {
@@ -119,6 +213,12 @@ function createWindow() {
       focusMainWindow()
     }
   })
+
+  mainWindow.on('resize', scheduleWindowStateSave)
+  mainWindow.on('move', scheduleWindowStateSave)
+  mainWindow.on('maximize', scheduleWindowStateSave)
+  mainWindow.on('unmaximize', scheduleWindowStateSave)
+  mainWindow.on('close', saveWindowState)
 
   mainWindow.on('closed', () => {
     mainWindow = null

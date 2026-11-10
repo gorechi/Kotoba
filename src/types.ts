@@ -36,7 +36,7 @@ export type Route =
   | { name: 'decks' }
   | { name: 'kanji' }
   | { name: 'deck'; deckId: string }
-  | { name: 'cards' }
+  | { name: 'cards'; cardId?: string; query?: string }
   | { name: 'kanamap' }
   | { name: 'stats' }
   | { name: 'data' }
@@ -165,6 +165,8 @@ export interface Settings {
   zenIdleMinutes: number
   /** Код языка интерфейса. */
   language: string
+  /** Показывать ли знакомство при запуске (первый запуск). */
+  onboardingDone: boolean
   /** Частота автоматических резервных копий. */
   autoBackup: AutoBackupFrequency
   /** Своя папка для автоматических копий; null — стандартная папка приложения. */

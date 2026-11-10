@@ -37,7 +37,7 @@
       type="font/ttf"
       crossorigin
     />
-    <link rel="stylesheet" href="assets/landing.css?v=1.8.0-2" />
+    <link rel="stylesheet" href="assets/landing.css?v=1.8.0-3" />
   </head>
   <body>
     <div class="scroll-progress" aria-hidden="true"><span></span></div>
@@ -347,31 +347,45 @@
               </button>
             </div>
 
-            <div class="mode-panel is-active" id="mode-reading" data-panel="reading" role="tabpanel" aria-labelledby="tab-reading" tabindex="0">
-              <div class="demo-card">
-                <span class="demo-badge">Чтение</span>
-                <span class="demo-prompt">水</span>
-                <span class="demo-hint">Вспомните чтение и значение</span>
-                <span class="demo-answer">
-                  <b>みず</b><span class="demo-dot">·</span>вода
-                  <span class="demo-example">水を飲む — пить воду</span>
-                </span>
+            <div class="mode-card" data-mode-card>
+              <div class="mode-card-inner">
+                <div
+                  class="demo-card"
+                  id="mode-reading"
+                  role="tabpanel"
+                  aria-labelledby="tab-reading"
+                  tabindex="0"
+                >
+                  <span class="demo-badge">Чтение</span>
+                  <span class="demo-prompt">水</span>
+                  <span class="demo-hint">Вспомните чтение и значение</span>
+                  <span class="demo-answer">
+                    <b>みず</b><span class="demo-dot">·</span>вода
+                    <span class="demo-example">水を飲む — пить воду</span>
+                  </span>
+                </div>
+
+                <div
+                  class="demo-card demo-card--back"
+                  id="mode-writing"
+                  role="tabpanel"
+                  aria-labelledby="tab-writing"
+                  tabindex="0"
+                  aria-hidden="true"
+                  inert
+                >
+                  <span class="demo-badge">Письмо</span>
+                  <span class="demo-prompt demo-prompt--meaning">вода</span>
+                  <span class="demo-hint">Напишите японское слово</span>
+                  <span class="demo-answer">
+                    <b>水</b><span class="demo-dot">·</span>みず
+                    <span class="demo-example">水を飲む — пить воду</span>
+                  </span>
+                </div>
               </div>
-              <button class="btn btn-quiet demo-reveal" type="button">Показать ответ</button>
             </div>
 
-            <div class="mode-panel" id="mode-writing" data-panel="writing" role="tabpanel" aria-labelledby="tab-writing" tabindex="0" hidden>
-              <div class="demo-card">
-                <span class="demo-badge">Письмо</span>
-                <span class="demo-prompt demo-prompt--meaning">вода</span>
-                <span class="demo-hint">Напишите японское слово</span>
-                <span class="demo-answer">
-                  <b>水</b><span class="demo-dot">·</span>みず
-                  <span class="demo-example">水を飲む — пить воду</span>
-                </span>
-              </div>
-              <button class="btn btn-quiet demo-reveal" type="button">Показать ответ</button>
-            </div>
+            <button class="btn btn-quiet demo-reveal" type="button">Показать ответ</button>
 
             <p class="mode-footnote">
               Нормальный режим письма показывает транскрипцию; сложный оставляет
@@ -680,6 +694,6 @@
       </div>
     </footer>
 
-    <script src="assets/landing.js?v=1.8.0-2" defer></script>
+    <script src="assets/landing.js?v=1.8.0-3" defer></script>
   </body>
 </html>

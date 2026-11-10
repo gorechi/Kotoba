@@ -131,19 +131,42 @@
     })
   })
 
-  // Reading / writing demo.
+  // Reading / writing demo: switching modes flips the card.
   const modeTabs = [...document.querySelectorAll('.mode-tab')]
-  const modePanels = [...document.querySelectorAll('.mode-panel')]
+  const modeCard = document.querySelector('[data-mode-card]')
+  const modeFaces = {
+    reading: document.getElementById('mode-reading'),
+    writing: document.getElementById('mode-writing'),
+  }
+  const revealButton = document.querySelector('.demo-reveal')
+  let activeMode = 'reading'
+
+  const syncReveal = () => {
+    const face = modeFaces[activeMode]
+    if (!revealButton || !face) return
+    const revealed = face.classList.contains('is-revealed')
+    revealButton.textContent = revealed ? 'Скрыть ответ' : 'Показать ответ'
+    revealButton.setAttribute('aria-expanded', String(revealed))
+    revealButton.setAttribute('aria-controls', face.id)
+  }
+
   const activateMode = (mode) => {
+    if (!modeFaces[mode]) return
+    activeMode = mode
+    modeCard?.classList.toggle('is-flipped', mode === 'writing')
     for (const tab of modeTabs) {
       const active = tab.dataset.mode === mode
       tab.classList.toggle('is-active', active)
       tab.setAttribute('aria-selected', String(active))
       tab.tabIndex = active ? 0 : -1
     }
-    for (const panel of modePanels) {
-      panel.hidden = panel.dataset.panel !== mode
+    for (const [name, face] of Object.entries(modeFaces)) {
+      if (!face) continue
+      const active = name === mode
+      face.setAttribute('aria-hidden', String(!active))
+      face.toggleAttribute('inert', !active)
     }
+    syncReveal()
   }
 
   for (const tab of modeTabs) {
@@ -161,17 +184,19 @@
     })
   }
 
-  if (modeTabs.length) activateMode(modeTabs.find((tab) => tab.classList.contains('is-active'))?.dataset.mode ?? 'reading')
+  if (modeTabs.length) {
+    activateMode(
+      modeTabs.find((tab) => tab.classList.contains('is-active'))?.dataset.mode ?? 'reading',
+    )
+  }
 
-  for (const panel of modePanels) {
-    const card = panel.querySelector('.demo-card')
-    const button = panel.querySelector('.demo-reveal')
-    if (!card || !button) continue
-    button.setAttribute('aria-expanded', 'false')
-    button.addEventListener('click', () => {
-      const revealed = card.classList.toggle('is-revealed')
-      button.textContent = revealed ? 'Скрыть ответ' : 'Показать ответ'
-      button.setAttribute('aria-expanded', String(revealed))
+  if (revealButton) {
+    revealButton.setAttribute('aria-expanded', 'false')
+    revealButton.addEventListener('click', () => {
+      const face = modeFaces[activeMode]
+      if (!face) return
+      face.classList.toggle('is-revealed')
+      syncReveal()
     })
   }
 })()

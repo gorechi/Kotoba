@@ -90,7 +90,7 @@ and open `http://localhost:5173`.
 npm run dist
 ```
 
-The installer will appear in `release\Kotoba-Setup-1.6.0.exe`. It is an NSIS installer: you can choose the installation folder, and a desktop shortcut is created.
+The installer will appear in `release\Kotoba-Setup-1.7.0.exe`. It is an NSIS installer: you can choose the installation folder, and a desktop shortcut is created.
 
 Web build only (no installer):
 

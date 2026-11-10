@@ -35,6 +35,7 @@ export type Route =
   | { name: 'data' }
   | { name: 'settings' }
   | { name: 'help' }
+  | { name: 'helpGuide'; guideId: string }
   | { name: 'ttsHelp' }
 
 export interface SrsState {
@@ -215,6 +216,15 @@ export interface ImportResult {
   error?: string
 }
 
+export interface UpdateCheckResult {
+  currentVersion?: string
+  latestVersion?: string
+  releaseUrl?: string
+  releaseName?: string
+  publishedAt?: string
+  error?: string
+}
+
 export interface KotobaApi {
   load: () => Promise<unknown>
   saveParts: (parts: unknown) => Promise<boolean>
@@ -223,6 +233,7 @@ export interface KotobaApi {
   importData: (title?: string) => Promise<ImportResult | null>
   openDataFolder: () => Promise<string>
   openSpeechSettings: () => Promise<boolean>
+  checkUpdates: () => Promise<UpdateCheckResult>
   minimize: () => Promise<void>
   toggleMaximize: () => Promise<void>
   close: () => Promise<void>

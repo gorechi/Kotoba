@@ -1,6 +1,7 @@
 const { app, BrowserWindow, Menu, dialog, ipcMain, shell } = require('electron')
 const path = require('node:path')
 const fs = require('node:fs')
+const { checkUpdates } = require('./updates.cjs')
 
 const isDev = !app.isPackaged
 let mainWindow = null
@@ -189,6 +190,8 @@ ipcMain.handle('system:open-speech-settings', async () => {
     }
   }
 })
+
+ipcMain.handle('app:check-updates', () => checkUpdates(app.getVersion()))
 
 ipcMain.handle('window:minimize', () => mainWindow?.minimize())
 ipcMain.handle('window:toggleMaximize', () => {

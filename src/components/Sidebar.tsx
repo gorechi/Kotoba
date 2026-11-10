@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import type { Route } from '../types'
 import { useStore } from '../state/store'
 import { useI18n } from '../lib/i18n-react'
@@ -24,10 +25,27 @@ const NAV: {
   { id: 'data', labelKey: 'nav.data', icon: 'database' },
 ]
 
+const SIDEBAR_STORAGE_KEY = 'kotoba.sidebarCollapsed'
+
 export function Sidebar({ route, onNavigate, onZen }: SidebarProps) {
   const { data } = useStore()
   const { t } = useI18n()
   const days = streak(data.history)
+  const [collapsed, setCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem(SIDEBAR_STORAGE_KEY) === '1'
+    } catch {
+      return false
+    }
+  })
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(SIDEBAR_STORAGE_KEY, collapsed ? '1' : '0')
+    } catch {
+      /* настройка не критична */
+    }
+  }, [collapsed])
 
   const deckKind = route.name === 'deck'
     ? data.decks.find((deck) => deck.id === route.deckId)?.kind ?? 'kana'
@@ -44,26 +62,51 @@ export function Sidebar({ route, onNavigate, onZen }: SidebarProps) {
   }
 
   return (
-    <aside className="sidebar">
-      <nav className="nav">
-        {NAV.map((item) => (
+    <aside className={`sidebar${collapsed ? ' is-collapsed' : ''}`}>
+      <div className="sidebar-top">
+        <div className="sidebar-head">
           <button
-            key={item.id}
-            className={`nav-item${isActive(item.id) ? ' active' : ''}`}
-            onClick={() => onNavigate({ name: item.id } as Route)}
+            type="button"
+            className="sidebar-toggle"
+            onClick={() => setCollapsed((value) => !value)}
+            aria-label={collapsed ? t('sidebar.expand') : t('sidebar.collapse')}
+            data-label={collapsed ? t('sidebar.expand') : t('sidebar.collapse')}
+            title={collapsed ? t('sidebar.expand') : t('sidebar.collapse')}
           >
-            <Icon name={item.icon} size={19} />
-            <span>{t(item.labelKey)}</span>
+            <Icon name={collapsed ? 'chevron-right' : 'chevron-left'} size={16} />
           </button>
-        ))}
-        <button type="button" className="nav-item nav-zen" onClick={onZen}>
-          <Icon name="sparkles" size={19} />
-          <span>{t('nav.zen')}</span>
-        </button>
-      </nav>
+        </div>
+
+        <nav className="nav">
+          {NAV.map((item) => (
+            <button
+              key={item.id}
+              className={`nav-item${isActive(item.id) ? ' active' : ''}`}
+              onClick={() => onNavigate({ name: item.id } as Route)}
+              data-label={t(item.labelKey)}
+            >
+              <Icon name={item.icon} size={19} />
+              <span className="nav-label">{t(item.labelKey)}</span>
+            </button>
+          ))}
+          <button
+            type="button"
+            className="nav-item nav-zen"
+            onClick={onZen}
+            data-label={t('nav.zen')}
+          >
+            <Icon name="sparkles" size={19} />
+            <span className="nav-label">{t('nav.zen')}</span>
+          </button>
+        </nav>
+      </div>
 
       <div className="sidebar-bottom">
-        <button className="streak-card" onClick={() => onNavigate({ name: 'stats' })}>
+        <button
+          className="streak-card"
+          onClick={() => onNavigate({ name: 'stats' })}
+          data-label={t('nav.stats')}
+        >
           <span className={`streak-flame${days > 0 ? ' lit' : ''}`}>
             <Icon name="flame" size={18} />
           </span>
@@ -76,19 +119,25 @@ export function Sidebar({ route, onNavigate, onZen }: SidebarProps) {
         <button
           className={`nav-item nav-settings${route.name === 'settings' ? ' active' : ''}`}
           onClick={() => onNavigate({ name: 'settings' })}
+          data-label={t('nav.settings')}
         >
           <Icon name="sliders" size={19} />
-          <span>{t('nav.settings')}</span>
+          <span className="nav-label">{t('nav.settings')}</span>
         </button>
 
         <button
           className={`nav-item nav-help${
-            route.name === 'help' || route.name === 'ttsHelp' ? ' active' : ''
+            route.name === 'help' ||
+            route.name === 'helpGuide' ||
+            route.name === 'ttsHelp'
+              ? ' active'
+              : ''
           }`}
           onClick={() => onNavigate({ name: 'help' })}
+          data-label={t('nav.help')}
         >
           <Icon name="help" size={19} />
-          <span>{t('nav.help')}</span>
+          <span className="nav-label">{t('nav.help')}</span>
         </button>
 
         <p className="sidebar-note">

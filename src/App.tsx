@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { QueueItem, Route, StudyMode } from './types'
 import { StoreProvider, useStore } from './state/store'
 import { I18nProvider, useI18n } from './lib/i18n-react'
@@ -15,6 +15,7 @@ import { Data } from './pages/Data'
 import { Settings } from './pages/Settings'
 import { KanaMap } from './pages/KanaMap'
 import { Help } from './pages/Help'
+import { HelpGuidePage } from './pages/HelpGuidePage'
 import { TtsHelp } from './pages/TtsHelp'
 import { ZenMode } from './components/ZenMode'
 import { effectiveStudyMode } from './lib/deck-settings'
@@ -29,6 +30,8 @@ import {
   type TtsErrorDetail,
   type TtsFailureReason,
 } from './lib/tts'
+import { checkForUpdates, type UpdateState } from './lib/updates'
+import { APP_VERSION } from './lib/version'
 
 const TTS_NOTICE_KEY: Record<TtsFailureReason, string> = {
   unsupported: 'tts.unsupported',
@@ -56,7 +59,27 @@ function Shell() {
   const [session, setSession] = useState<ActiveSession | null>(null)
   const [zen, setZen] = useState(false)
   const [ttsNotice, setTtsNotice] = useState<TtsNotice | null>(null)
+  const [updateState, setUpdateState] = useState<UpdateState>({
+    status: 'idle',
+    currentVersion: APP_VERSION,
+  })
+  const [updateChecking, setUpdateChecking] = useState(false)
+  const updateCheckedRef = useRef(false)
   const mainRef = useRef<HTMLElement>(null)
+
+  const checkUpdates = useCallback(async () => {
+    setUpdateChecking(true)
+    setUpdateState((previous) => ({ ...previous, status: 'checking' }))
+    const result = await checkForUpdates()
+    setUpdateState(result)
+    setUpdateChecking(false)
+  }, [])
+
+  useEffect(() => {
+    if (updateCheckedRef.current) return
+    updateCheckedRef.current = true
+    void checkUpdates()
+  }, [checkUpdates])
 
   useEffect(() => {
     warmUpTts()
@@ -220,9 +243,26 @@ function Shell() {
             )}
             {route.name === 'stats' && <Stats />}
             {route.name === 'data' && <Data />}
-            {route.name === 'settings' && <Settings onZen={() => setZen(true)} />}
+            {route.name === 'settings' && (
+              <Settings
+                onZen={() => setZen(true)}
+                update={updateState}
+                updateChecking={updateChecking}
+                onCheckUpdates={() => void checkUpdates()}
+              />
+            )}
             {route.name === 'help' && (
-              <Help onOpenTtsHelp={() => navigate({ name: 'ttsHelp' })} />
+              <Help
+                onOpenTtsHelp={() => navigate({ name: 'ttsHelp' })}
+                onOpenGuide={(guideId) => navigate({ name: 'helpGuide', guideId })}
+              />
+            )}
+            {route.name === 'helpGuide' && (
+              <HelpGuidePage
+                guideId={route.guideId}
+                onBack={() => navigate({ name: 'help' })}
+                onNavigate={navigate}
+              />
             )}
             {route.name === 'ttsHelp' && <TtsHelp onBack={() => navigate({ name: 'help' })} />}
             {route.name === 'kanamap' && (

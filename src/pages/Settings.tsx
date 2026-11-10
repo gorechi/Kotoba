@@ -1,6 +1,8 @@
 import type { Theme } from '../types'
 import { useStore } from '../state/store'
 import { useI18n } from '../lib/i18n-react'
+import { APP_VERSION } from '../lib/version'
+import type { UpdateState } from '../lib/updates'
 import { Icon, type IconName } from '../components/Icon'
 import { Select } from '../components/Select'
 
@@ -12,9 +14,17 @@ const THEMES: { value: Theme; labelKey: string; icon: IconName }[] = [
 
 interface SettingsProps {
   onZen: () => void
+  update: UpdateState
+  updateChecking: boolean
+  onCheckUpdates: () => void
 }
 
-export function Settings({ onZen }: SettingsProps) {
+export function Settings({
+  onZen,
+  update,
+  updateChecking,
+  onCheckUpdates,
+}: SettingsProps) {
   const { data, setSettings } = useStore()
   const { t, locales, language, setLanguage } = useI18n()
 
@@ -68,6 +78,93 @@ export function Settings({ onZen }: SettingsProps) {
       </header>
 
       <div className="settings-grid">
+        <section className="panel panel-wide update-panel">
+          <div className="panel-head">
+            <div>
+              <h2>{t('settings.updates')}</h2>
+              <p>{t('settings.updatesSub')}</p>
+            </div>
+            {update.status === 'available' && (
+              <span className="update-badge">
+                <Icon name="download" size={12} />
+                {t('settings.updateAvailableBadge')}
+              </span>
+            )}
+          </div>
+
+          <div className="update-row">
+            <div className="update-copy">
+              {update.status === 'available' ? (
+                <>
+                  <strong>
+                    {t('settings.updateAvailableTitle', {
+                      version: update.latestVersion ?? '',
+                    })}
+                  </strong>
+                  <span>
+                    {t('settings.updateAvailableText', {
+                      current: update.currentVersion,
+                    })}
+                  </span>
+                </>
+              ) : update.status === 'current' ? (
+                <>
+                  <strong>{t('settings.updateCurrentTitle')}</strong>
+                  <span>
+                    {t('settings.updateCurrentText', {
+                      version: update.currentVersion,
+                    })}
+                  </span>
+                </>
+              ) : update.status === 'error' ? (
+                <>
+                  <strong>{t('settings.updateErrorTitle')}</strong>
+                  <span>{t('settings.updateErrorText')}</span>
+                </>
+              ) : (
+                <>
+                  <strong>
+                    {updateChecking
+                      ? t('settings.updateChecking')
+                      : t('settings.updateIdleTitle')}
+                  </strong>
+                  <span>{t('settings.updateIdleText')}</span>
+                </>
+              )}
+            </div>
+
+            <div className="update-actions">
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={onCheckUpdates}
+                disabled={updateChecking}
+              >
+                <Icon name="rotate" size={16} />
+                {updateChecking
+                  ? t('settings.updateCheckingShort')
+                  : t('settings.updateCheck')}
+              </button>
+              {update.status === 'available' && update.releaseUrl && (
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() =>
+                    window.open(update.releaseUrl, '_blank', 'noopener,noreferrer')
+                  }
+                >
+                  <Icon name="download" size={16} />
+                  {t('settings.updateDownload')}
+                </button>
+              )}
+            </div>
+          </div>
+
+          {update.status === 'available' && (
+            <p className="hint">{t('settings.updateHint')}</p>
+          )}
+        </section>
+
         <section className="panel panel-wide">
           <div className="panel-head">
             <div>
@@ -417,7 +514,7 @@ export function Settings({ onZen }: SettingsProps) {
         <span className="brand-mark small">言</span>
         <div>
           <strong>{t('brand.name')} · 言葉</strong>
-          <span>{t('settings.about', { version: '1.6.0' })}</span>
+          <span>{t('settings.about', { version: APP_VERSION })}</span>
         </div>
       </footer>
     </div>

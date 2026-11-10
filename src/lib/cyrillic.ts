@@ -1,6 +1,6 @@
 /** Транскрипция японской кана в кириллицу по правилам из файла хирагана.txt */
 
-const VOWELS = 'аеиоу'
+const VOWELS = 'аеиоуэёюя'
 
 /** Одиночные символы: ка → ка, ши → ши и т.д. */
 const KANA_TO_CYRILLIC: Record<string, string> = {
@@ -67,11 +67,11 @@ const KANA_TO_CYRILLIC: Record<string, string> = {
   '\u3052': '\u0433\u044d', // げ → гэ
   '\u3054': '\u0433\u043e', // ご → го
   // z-ряд
-  '\u3056': '\u0437\u0430', // ざ → за
-  '\u3058': '\u0434\u0436\u0438', // じ → джи
-  '\u305A': '\u0437\u0443', // ず → зу
-  '\u305C': '\u0437\u044d', // ぜ → зэ
-  '\u305E': '\u0437\u043e', // ぞ → зо
+  '\u3056': '\u0434\u0437\u0430', // ざ → дза
+  '\u3058': '\u0434\u0437\u0438', // じ → дзи
+  '\u305A': '\u0434\u0437\u0443', // ず → дзу
+  '\u305C': '\u0434\u0437\u044d', // ぜ → дзэ
+  '\u305E': '\u0434\u0437\u043e', // ぞ → дзо
   // d-ряд
   '\u3060': '\u0434\u0430', // だ → да
   '\u3062': '\u0434\u0438', // ぢ → ди
@@ -90,6 +90,7 @@ const KANA_TO_CYRILLIC: Record<string, string> = {
   '\u3077': '\u043f\u0443', // ぷ → пу
   '\u307A': '\u043f\u044d', // ぺ → пэ
   '\u307D': '\u043f\u043e', // ぽ → по
+  '\u3094': '\u0432\u0443', // ゔ (ヴ) → ву
 }
 
 /** Слоги с дополнительными символами (きゃ, шя и т.д.) */
@@ -115,12 +116,12 @@ const Y_COMBINATIONS: Record<string, string> = {
   '\u308A\u3083': '\u0440\u044f', //ря → ря
   '\u308A\u3085': '\u0440\u044e', //рю → рю
   '\u308A\u3087': '\u0440\u0451', //рё → рё
-  '\u3052\u3083': '\u0433\u044f', //гя → гя
-  '\u3052\u3085': '\u0433\u044e', //гю → гю
-  '\u3052\u3087': '\u0433\u0451', //гё → гё
-  '\u3058\u3083': '\u0434\u0436\u044f', //じゃ → джя
-  '\u3058\u3085': '\u0434\u0436\u044e', //джю → джю
-  '\u3058\u3087': '\u0434\u0436\u0451', //джё → джё
+  '\u304E\u3083': '\u0433\u044f', //ぎゃ → гя
+  '\u304E\u3085': '\u0433\u044e', //ぎゅ → гю
+  '\u304E\u3087': '\u0433\u0451', //ぎょ → гё
+  '\u3058\u3083': '\u0434\u0437\u044f', //じゃ → дзя
+  '\u3058\u3085': '\u0434\u0437\u044e', //じゅ → дзю
+  '\u3058\u3087': '\u0434\u0437\u0451', //じょ → дзё
   '\u3073\u3083': '\u0431\u044f', //бя → бя
   '\u3073\u3085': '\u0431\u044e', //бю → бю
   '\u3073\u3087': '\u0431\u0451', //бё → бё
@@ -150,10 +151,27 @@ const KANA_VOWEL: Record<string, string> = {
   '\u304A': '\u043E', // お → о
 }
 
+/** Звук кириллической гласной: я/ю/ё — это а/у/о с мягкостью. */
+const CYRILLIC_VOWEL_SOUND: Record<string, string> = {
+  '\u0430': '\u0430', // а
+  '\u044F': '\u0430', // я
+  '\u0438': '\u0438', // и
+  '\u0443': '\u0443', // у
+  '\u044E': '\u0443', // ю
+  '\u044D': '\u044D', // э
+  '\u0435': '\u044D', // е
+  '\u043E': '\u043E', // о
+  '\u0451': '\u043E', // ё
+}
+
+/** Малые я/ю/ё, образующие слог с предыдущей каной. */
+const SMALL_Y = '\u3083\u3085\u3087'
+
 /** Начальная согласная кириллической транскрипции (для удвоения после っ) */
 function getInitialConsonant(cyr: string): string | null {
-  // Digraph 'дж'
+  // Digraphs 'дж' и 'дз'
   if (cyr.startsWith('\u0434\u0436')) return '\u0434\u0436'
+  if (cyr.startsWith('\u0434\u0437')) return '\u0434\u0437'
   const first = cyr[0]
   if (first && !VOWELS.includes(first)) return first
   return null
@@ -175,6 +193,49 @@ function extendVowel(cyr: string): string {
     }
   }
   return cyr
+}
+
+/**
+ * Следующая отдельная гласная удлиняет слог?
+ * Кроме совпадающих гласных (すう → су:) учитываем японские правила:
+ * おう → о:, きょう → кё:, えい → э:.
+ */
+function shouldExtendVowel(lastVowel: string | null, token: string): boolean {
+  if (!lastVowel) return false
+  const lastSound = CYRILLIC_VOWEL_SOUND[lastVowel]
+  const kanaSound = KANA_VOWEL[token]
+  if (!lastSound || !kanaSound) return false
+  if (lastSound === kanaSound) return true
+  if (lastSound === '\u043E' && token === '\u3046') return true // おう / きょう
+  if (lastSound === '\u044D' && token === '\u3044') return true // えい / けい
+  return false
+}
+
+/** Заменить гласную базового слога на я/ю/ё: ぎ + ょ → гё. */
+function combineSmallY(base: string, small: string): string | null {
+  const baseCyr = KANA_TO_CYRILLIC[base]
+  if (!baseCyr) return null
+  const replacement =
+    small === '\u3083' ? '\u044F' : small === '\u3085' ? '\u044E' : '\u0451'
+
+  for (let i = baseCyr.length - 1; i >= 0; i--) {
+    if (VOWELS.includes(baseCyr[i])) {
+      return baseCyr.slice(0, i) + replacement + baseCyr.slice(i + 1)
+    }
+  }
+  return null
+}
+
+function transcribeToken(token: string): string {
+  const direct =
+    KANA_TO_CYRILLIC[token] ??
+    Y_COMBINATIONS[token] ??
+    SMALL_VOWELS[token]
+  if (direct) return direct
+  if (token.length === 2 && SMALL_Y.includes(token[1])) {
+    return combineSmallY(token[0], token[1]) ?? token
+  }
+  return token
 }
 
 /** Разбить kana-строку на токены (слоги и маркеры) */
@@ -199,13 +260,10 @@ function tokenize(kana: string): string[] {
     }
 
     // слог с дополнительным символом: консонант + малый я/ю/ё
-    if (i + 1 < kana.length && '\u3083\u3085\u3087'.includes(kana[i + 1])) {
-      const combo = kana[i] + kana[i + 1]
-      if (combo in Y_COMBINATIONS) {
-        tokens.push(combo)
-        i += 2
-        continue
-      }
+    if (i + 1 < kana.length && SMALL_Y.includes(kana[i + 1])) {
+      tokens.push(kana[i] + kana[i + 1])
+      i += 2
+      continue
     }
 
     // малая гласная
@@ -233,7 +291,11 @@ function tokenize(kana: string): string[] {
 export function toCyrillic(kana: string): string {
   if (!kana) return ''
 
-  const tokens = tokenize(kana)
+  // Катакана приводится к хирагане, чтобы работали те же правила.
+  const normalized = kana.replace(/[\u30A1-\u30F6]/g, (char) =>
+    String.fromCharCode(char.charCodeAt(0) - 0x60),
+  )
+  const tokens = tokenize(normalized)
   const syllables: string[] = []
   let pendingDouble = false
 
@@ -254,19 +316,13 @@ export function toCyrillic(kana: string): string {
     }
 
     // ищем транскрипцию
-    let cyr =
-      KANA_TO_CYRILLIC[token] ??
-      Y_COMBINATIONS[token] ??
-      SMALL_VOWELS[token] ??
-      token
+    let cyr = transcribeToken(token)
 
-    // правило удлиннения гласной: standalone vowel kana после той же гласной
+    // правило удлиннения гласной: отдельная гласная после слога
     if (STANDALONE_VOWELS.has(token) && syllables.length > 0) {
       const last = syllables[syllables.length - 1]
-      const lastVowel = getLastVowel(last)
-      const currentVowel = KANA_VOWEL[token]
-      if (lastVowel && currentVowel && lastVowel === currentVowel) {
-        syllables[syllables.length - 1] = last + ':'
+      if (shouldExtendVowel(getLastVowel(last), token)) {
+        syllables[syllables.length - 1] = extendVowel(last)
         continue
       }
     }

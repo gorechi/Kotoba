@@ -12,6 +12,7 @@ import { dayKey, shuffle } from './utils'
 export const DEFAULT_DECK_SETTINGS: DeckStudySettings = {
   newPerDay: null,
   reviewLimit: null,
+  sessionSize: null,
   order: 'order',
   allowNew: true,
   studyMode: 'global',
@@ -25,6 +26,18 @@ export function effectiveStudyMode(deck: Deck | undefined, global: StudyMode): S
   if (!deck) return global
   const mode = getDeckSettings(deck).studyMode
   return mode === 'global' ? global : mode
+}
+
+/** Размер сессии для колоды: 0 — без ограничения. */
+export function sessionSizeForDeck(
+  deck: Deck | undefined,
+  settings: Settings,
+): number {
+  if (deck) {
+    const own = getDeckSettings(deck).sessionSize
+    if (own !== null) return own
+  }
+  return settings.sessionSize
 }
 
 export function usedNewForDeck(

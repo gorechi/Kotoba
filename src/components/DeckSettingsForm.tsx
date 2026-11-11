@@ -31,6 +31,10 @@ export function DeckSettingsForm({ deck, onClose }: { deck: Deck; onClose: () =>
   const [newPerDay, setNewPerDay] = useState(initial.newPerDay ?? data.settings.newPerDay)
   const [limitReviews, setLimitReviews] = useState(initial.reviewLimit !== null)
   const [reviewLimit, setReviewLimit] = useState(initial.reviewLimit ?? 100)
+  const [useGlobalSession, setUseGlobalSession] = useState(initial.sessionSize === null)
+  const [sessionSize, setSessionSize] = useState(
+    initial.sessionSize ?? (data.settings.sessionSize || 20),
+  )
   const [order, setOrder] = useState<DeckOrder>(initial.order)
   const [studyMode, setStudyMode] = useState<DeckStudyMode>(initial.studyMode)
 
@@ -40,6 +44,8 @@ export function DeckSettingsForm({ deck, onClose }: { deck: Deck; onClose: () =>
     setNewPerDay(data.settings.newPerDay)
     setLimitReviews(false)
     setReviewLimit(100)
+    setUseGlobalSession(true)
+    setSessionSize(data.settings.sessionSize || 20)
     setOrder('order')
     setStudyMode('global')
   }
@@ -52,6 +58,9 @@ export function DeckSettingsForm({ deck, onClose }: { deck: Deck; onClose: () =>
     const safeReviewLimit = Number.isFinite(reviewLimit)
       ? Math.min(2000, Math.max(1, Math.round(reviewLimit)))
       : 1
+    const safeSessionSize = Number.isFinite(sessionSize)
+      ? Math.min(500, Math.max(0, Math.round(sessionSize)))
+      : 0
 
     update((current) => ({
       ...current,
@@ -62,6 +71,7 @@ export function DeckSettingsForm({ deck, onClose }: { deck: Deck; onClose: () =>
               settings: {
                 newPerDay: allowNew && !useGlobalNew ? safeNewPerDay : null,
                 reviewLimit: limitReviews ? safeReviewLimit : null,
+                sessionSize: useGlobalSession ? null : safeSessionSize,
                 order,
                 allowNew,
                 studyMode,
@@ -158,6 +168,41 @@ export function DeckSettingsForm({ deck, onClose }: { deck: Deck; onClose: () =>
             </div>
           )}
           <p className="hint">{t('deckSettings.reviewLimitHint')}</p>
+        </section>
+
+        <section className="deck-settings-section">
+          <h3>{t('deckSettings.session')}</h3>
+
+          <label className="deck-settings-check">
+            <input
+              type="checkbox"
+              checked={useGlobalSession}
+              onChange={(event) => setUseGlobalSession(event.target.checked)}
+            />
+            <span>
+              {t('deckSettings.useGlobalSession', {
+                n:
+                  data.settings.sessionSize === 0
+                    ? t('settings.sessionSizeAll')
+                    : data.settings.sessionSize,
+              })}
+            </span>
+          </label>
+
+          {!useGlobalSession && (
+            <div className="field">
+              <label htmlFor="deck-session-size">{t('deckSettings.sessionSizeLabel')}</label>
+              <input
+                id="deck-session-size"
+                type="number"
+                min={0}
+                max={500}
+                value={sessionSize}
+                onChange={(event) => setSessionSize(Number(event.target.value))}
+              />
+            </div>
+          )}
+          <p className="hint">{t('deckSettings.sessionSizeHint')}</p>
         </section>
 
         <section className="deck-settings-section">

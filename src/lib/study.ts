@@ -68,6 +68,12 @@ export function buildStudyQueue(
   return [...dueItems, ...freshItems]
 }
 
+/** Ограничивает подход первыми карточками очереди. 0 — без ограничения. */
+export function limitStudySession(queue: QueueItem[], size: number): QueueItem[] {
+  if (!Number.isFinite(size) || size <= 0 || queue.length <= size) return queue
+  return queue.slice(0, size)
+}
+
 export function practiceQueue(
   cards: Card[],
   deckId: string,

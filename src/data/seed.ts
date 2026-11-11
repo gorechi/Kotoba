@@ -62,6 +62,7 @@ export function createBaseSeedData(now = Date.now()) {
       goalReviews: 1000,
       goalCards: 100,
       goalStreak: 30,
+      sessionSize: 0,
       zenAuto: true,
       zenIdleMinutes: 5,
       language: detectSystemLocale(),

@@ -1057,5 +1057,15 @@ export const messages: Record<string, string> = {
   "help.searchEmpty": "По вашему запросу ничего не найдено.",
   "settings.replayOnboarding": "Показать знакомство снова",
   "settings.replayOnboardingHint": "Ещё раз пройти шаги с языком, целью дня и первой колодой.",
-  "settings.replayOnboardingAction": "Показать знакомство"
+  "settings.replayOnboardingAction": "Показать знакомство",
+  "settings.session": "Сессия обучения",
+  "settings.sessionSub": "Сколько карточек проходить за один раз",
+  "settings.sessionSize": "Карточек за сессию",
+  "settings.sessionSizeAria": "Карточек за сессию обучения",
+  "settings.sessionHint": "0 — все доступные карточки. Действует для обычного изучения колоды.",
+  "settings.sessionSizeAll": "все",
+  "deckSettings.session": "Сессия",
+  "deckSettings.useGlobalSession": "Использовать общий размер ({n})",
+  "deckSettings.sessionSizeLabel": "Карточек за сессию для этой колоды",
+  "deckSettings.sessionSizeHint": "В сессию попадают следующие карточки в обычном порядке. 0 — без ограничения."
 }

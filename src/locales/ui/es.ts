@@ -1051,5 +1051,15 @@ export const messages: Record<string, string> = {
   "help.searchEmpty": "Ninguna guía coincide con tu búsqueda.",
   "settings.replayOnboarding": "Mostrar la introducción de nuevo",
   "settings.replayOnboardingHint": "Repasa los pasos de idioma, meta diaria y primer mazo.",
-  "settings.replayOnboardingAction": "Mostrar introducción"
+  "settings.replayOnboardingAction": "Mostrar introducción",
+  "settings.session": "Sesión de estudio",
+  "settings.sessionSub": "Cuántas tarjetas estudiar a la vez",
+  "settings.sessionSize": "Tarjetas por sesión",
+  "settings.sessionSizeAria": "Tarjetas por sesión de estudio",
+  "settings.sessionHint": "0 significa todas las tarjetas disponibles. Se aplica al estudio normal de un mazo.",
+  "settings.sessionSizeAll": "todas",
+  "deckSettings.session": "Sesión",
+  "deckSettings.useGlobalSession": "Usar el tamaño global ({n})",
+  "deckSettings.sessionSizeLabel": "Tarjetas por sesión para este mazo",
+  "deckSettings.sessionSizeHint": "La sesión toma las siguientes tarjetas en el orden habitual. 0 significa sin límite."
 }

@@ -37,8 +37,8 @@ const TtsHelp = lazy(() =>
   import('./pages/TtsHelp').then((module) => ({ default: module.TtsHelp })),
 )
 import { ZenMode } from './components/ZenMode'
-import { effectiveStudyMode } from './lib/deck-settings'
-import { practiceQueue, buildStudyQueue } from './lib/study'
+import { effectiveStudyMode, sessionSizeForDeck } from './lib/deck-settings'
+import { practiceQueue, buildStudyQueue, limitStudySession } from './lib/study'
 import {
   buildCustomStudyQueue,
   type CustomStudyOptions,
@@ -235,6 +235,7 @@ function Shell() {
 
   const startStudy = (deckId: string) => {
     const now = Date.now()
+    const deck = deckId === 'all' ? undefined : data.decks.find((item) => item.id === deckId)
     let items = buildStudyQueue(
       data.cards,
       data.decks,
@@ -244,8 +245,8 @@ function Shell() {
       now,
     )
     if (!items.length) items = practiceQueue(data.cards, deckId, now)
+    items = limitStudySession(items, sessionSizeForDeck(deck, data.settings))
     if (!items.length) return
-    const deck = deckId === 'all' ? undefined : data.decks.find((item) => item.id === deckId)
     setSession({
       deckId,
       items,
@@ -343,17 +344,31 @@ function Shell() {
           items={session.items}
           mode={session.mode}
           title={session.title}
-          restartItems={
-            session.custom
-              ? () =>
-                  buildCustomStudyQueue(
-                    data.cards,
-                    data.decks,
-                    session.custom as CustomStudyOptions,
-                    Date.now(),
-                  )
-              : undefined
-          }
+          restartItems={() => {
+            if (session.custom) {
+              return buildCustomStudyQueue(
+                data.cards,
+                data.decks,
+                session.custom as CustomStudyOptions,
+                Date.now(),
+              )
+            }
+            const now = Date.now()
+            const deck =
+              session.deckId === 'all'
+                ? undefined
+                : data.decks.find((item) => item.id === session.deckId)
+            let items = buildStudyQueue(
+              data.cards,
+              data.decks,
+              session.deckId,
+              data.history,
+              data.settings,
+              now,
+            )
+            if (!items.length) items = practiceQueue(data.cards, session.deckId, now)
+            return limitStudySession(items, sessionSizeForDeck(deck, data.settings))
+          }}
           onClose={() => void closeSession()}
         />
       ) : (

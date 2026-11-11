@@ -26,6 +26,8 @@ export interface DeckStudySettings {
   newPerDay: number | null
   /** null — без ограничения повторений. */
   reviewLimit: number | null
+  /** null — использовать общий размер сессии; 0 — без ограничения. */
+  sessionSize: number | null
   order: DeckOrder
   allowNew: boolean
   studyMode: DeckStudyMode
@@ -159,6 +161,8 @@ export interface Settings {
   goalCards: number
   /** Личная цель по серии дней. */
   goalStreak: number
+  /** Сколько карточек проходить за одну сессию; 0 — без ограничения. */
+  sessionSize: number
   /** Автоматически включать режим Дзен при бездействии. */
   zenAuto: boolean
   /** Через сколько минут бездействия включать Дзен. */

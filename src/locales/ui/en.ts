@@ -1051,5 +1051,15 @@ export const messages: Record<string, string> = {
   "help.searchEmpty": "No guides match your search.",
   "settings.replayOnboarding": "Show the introduction again",
   "settings.replayOnboardingHint": "Revisit the language, daily goal, and first deck steps.",
-  "settings.replayOnboardingAction": "Show introduction"
+  "settings.replayOnboardingAction": "Show introduction",
+  "settings.session": "Study session",
+  "settings.sessionSub": "How many cards to study at a time",
+  "settings.sessionSize": "Cards per session",
+  "settings.sessionSizeAria": "Cards per study session",
+  "settings.sessionHint": "0 means all available cards. Applies to regular deck study.",
+  "settings.sessionSizeAll": "all",
+  "deckSettings.session": "Session",
+  "deckSettings.useGlobalSession": "Use the global session size ({n})",
+  "deckSettings.sessionSizeLabel": "Cards per session for this deck",
+  "deckSettings.sessionSizeHint": "The session takes the next cards in the usual order. 0 means no limit."
 }

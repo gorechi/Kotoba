@@ -445,6 +445,36 @@ export function Settings({
         <section className="panel">
           <div className="panel-head">
             <div>
+              <h2>{t('settings.session')}</h2>
+              <p>{t('settings.sessionSub')}</p>
+            </div>
+          </div>
+
+          <div className="field">
+            <label htmlFor="settings-session-size">{t('settings.sessionSize')}</label>
+            <input
+              id="settings-session-size"
+              type="number"
+              min={0}
+              max={500}
+              value={data.settings.sessionSize}
+              onChange={(event) => {
+                const value = Number(event.target.value)
+                setSettings({
+                  sessionSize: Number.isFinite(value)
+                    ? Math.min(500, Math.max(0, Math.round(value)))
+                    : 0,
+                })
+              }}
+              aria-label={t('settings.sessionSizeAria')}
+            />
+          </div>
+          <p className="hint">{t('settings.sessionHint')}</p>
+        </section>
+
+        <section className="panel">
+          <div className="panel-head">
+            <div>
               <h2>{t('settings.transcription')}</h2>
               <p>{t('settings.transcriptionSub')}</p>
             </div>

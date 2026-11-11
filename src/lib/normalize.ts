@@ -86,6 +86,7 @@ function normalizeDeckSettings(raw: unknown): DeckStudySettings {
   const base: DeckStudySettings = {
     newPerDay: null,
     reviewLimit: null,
+    sessionSize: null,
     order: 'order',
     allowNew: true,
     studyMode: 'global',
@@ -101,6 +102,10 @@ function normalizeDeckSettings(raw: unknown): DeckStudySettings {
       raw.reviewLimit === null || raw.reviewLimit === undefined
         ? null
         : clamp(Math.round(num(raw.reviewLimit, 1)), 1, 2000),
+    sessionSize:
+      raw.sessionSize === null || raw.sessionSize === undefined
+        ? null
+        : clamp(Math.round(num(raw.sessionSize, 0)), 0, 500),
     order: DECK_ORDERS.includes(raw.order as DeckOrder)
       ? (raw.order as DeckOrder)
       : base.order,
@@ -306,6 +311,7 @@ function normalizeSettings(raw: unknown): Settings {
     goalReviews: 1000,
     goalCards: 100,
     goalStreak: 30,
+    sessionSize: 0,
     zenAuto: true,
     zenIdleMinutes: 5,
     language: DEFAULT_LOCALE,
@@ -342,6 +348,7 @@ function normalizeSettings(raw: unknown): Settings {
     goalReviews: clamp(Math.round(num(raw.goalReviews, base.goalReviews)), 10, 1_000_000),
     goalCards: clamp(Math.round(num(raw.goalCards, base.goalCards)), 1, 100_000),
     goalStreak: clamp(Math.round(num(raw.goalStreak, base.goalStreak)), 1, 10_000),
+    sessionSize: clamp(Math.round(num(raw.sessionSize, base.sessionSize)), 0, 500),
     zenAuto: raw.zenAuto !== false,
     zenIdleMinutes: clamp(
       Math.round(num(raw.zenIdleMinutes, base.zenIdleMinutes)),

@@ -1061,5 +1061,15 @@ export const messages: Record<string, string> = {
   "deckSettings.session": "Sesión",
   "deckSettings.useGlobalSession": "Usar el tamaño global ({n})",
   "deckSettings.sessionSizeLabel": "Tarjetas por sesión para este mazo",
-  "deckSettings.sessionSizeHint": "La sesión toma las siguientes tarjetas en el orden habitual. 0 significa sin límite."
+  "deckSettings.sessionSizeHint": "La sesión toma las siguientes tarjetas en el orden habitual. 0 significa sin límite.",
+  "settings.sessionOrder": "Orden de las tarjetas",
+  "sessionOrder.random": "Aleatorio",
+  "sessionOrder.deck": "Orden del mazo",
+  "sessionOrder.newFirst": "Primero nuevas, luego repasos",
+  "sessionOrder.reviewsFirst": "Primero repasos, luego nuevas",
+  "sessionOrder.randomDesc": "Las tarjetas se eligen de las disponibles completamente al azar.",
+  "sessionOrder.deckDesc": "Las tarjetas siguen el orden en que están guardadas en el mazo, sean nuevas o de repaso.",
+  "sessionOrder.newFirstDesc": "Primero aparecen las tarjetas nuevas y luego los repasos si queda espacio. Cada grupo sigue el orden del mazo.",
+  "sessionOrder.reviewsFirstDesc": "Primero aparecen los repasos y luego las tarjetas nuevas si queda espacio. Cada grupo sigue el orden del mazo.",
+  "deckSettings.useGlobalSessionOrder": "Usar el orden global ({n})"
 }

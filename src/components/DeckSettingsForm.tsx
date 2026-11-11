@@ -1,9 +1,14 @@
 import { useState, type FormEvent } from 'react'
-import type { Deck, DeckOrder, DeckStudyMode } from '../types'
+import type { Deck, DeckOrder, DeckStudyMode, SessionOrder } from '../types'
 import { useStore } from '../state/store'
 import { useI18n } from '../lib/i18n-react'
 import { deckTitle } from '../lib/content'
 import { getDeckSettings } from '../lib/deck-settings'
+import {
+  SESSION_ORDER_OPTIONS,
+  sessionOrderDescKey,
+  sessionOrderLabelKey,
+} from '../lib/session-order'
 import { Icon } from './Icon'
 import { Modal } from './Modal'
 import { Select } from './Select'
@@ -35,6 +40,10 @@ export function DeckSettingsForm({ deck, onClose }: { deck: Deck; onClose: () =>
   const [sessionSize, setSessionSize] = useState(
     initial.sessionSize ?? (data.settings.sessionSize || 20),
   )
+  const [useGlobalOrder, setUseGlobalOrder] = useState(initial.sessionOrder === null)
+  const [sessionOrder, setSessionOrder] = useState<SessionOrder>(
+    initial.sessionOrder ?? data.settings.sessionOrder,
+  )
   const [order, setOrder] = useState<DeckOrder>(initial.order)
   const [studyMode, setStudyMode] = useState<DeckStudyMode>(initial.studyMode)
 
@@ -46,6 +55,8 @@ export function DeckSettingsForm({ deck, onClose }: { deck: Deck; onClose: () =>
     setReviewLimit(100)
     setUseGlobalSession(true)
     setSessionSize(data.settings.sessionSize || 20)
+    setUseGlobalOrder(true)
+    setSessionOrder(data.settings.sessionOrder)
     setOrder('order')
     setStudyMode('global')
   }
@@ -72,6 +83,7 @@ export function DeckSettingsForm({ deck, onClose }: { deck: Deck; onClose: () =>
                 newPerDay: allowNew && !useGlobalNew ? safeNewPerDay : null,
                 reviewLimit: limitReviews ? safeReviewLimit : null,
                 sessionSize: useGlobalSession ? null : safeSessionSize,
+                sessionOrder: useGlobalOrder ? null : sessionOrder,
                 order,
                 allowNew,
                 studyMode,
@@ -203,6 +215,47 @@ export function DeckSettingsForm({ deck, onClose }: { deck: Deck; onClose: () =>
             </div>
           )}
           <p className="hint">{t('deckSettings.sessionSizeHint')}</p>
+        </section>
+
+        <section className="deck-settings-section">
+          <h3>{t('settings.sessionOrder')}</h3>
+
+          <label className="deck-settings-check">
+            <input
+              type="checkbox"
+              checked={useGlobalOrder}
+              onChange={(event) => setUseGlobalOrder(event.target.checked)}
+            />
+            <span>
+              {t('deckSettings.useGlobalSessionOrder', {
+                n: t(sessionOrderLabelKey(data.settings.sessionOrder)),
+              })}
+            </span>
+          </label>
+
+          {!useGlobalOrder && (
+            <div className="field">
+              <label htmlFor="deck-session-order">{t('settings.sessionOrder')}</label>
+              <Select
+                id="deck-session-order"
+                value={sessionOrder}
+                onChange={(event) => setSessionOrder(event.target.value as SessionOrder)}
+              >
+                {SESSION_ORDER_OPTIONS.map((item) => (
+                  <option key={item.value} value={item.value}>
+                    {t(item.labelKey)}
+                  </option>
+                ))}
+              </Select>
+            </div>
+          )}
+          <p className="hint">
+            {t(
+              sessionOrderDescKey(
+                useGlobalOrder ? data.settings.sessionOrder : sessionOrder,
+              ),
+            )}
+          </p>
         </section>
 
         <section className="deck-settings-section">

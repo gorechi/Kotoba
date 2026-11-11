@@ -5,6 +5,7 @@ import {
   remainingNewForDeck,
   remainingReviewForDeck,
 } from './deck-settings'
+import { sessionOrderForDeck } from './session-order'
 import { shuffle } from './utils'
 
 /**
@@ -22,8 +23,14 @@ export function buildStudyQueue(
   const targetDecks = deckId === 'all' ? decks : decks.filter((deck) => deck.id === deckId)
   if (!targetDecks.length) return []
 
+  const deckIndex = new Map(decks.map((deck, index) => [deck.id, index]))
+  const byDeckOrder = (a: Card, b: Card) =>
+    (deckIndex.get(a.deckId) ?? 0) - (deckIndex.get(b.deckId) ?? 0) ||
+    a.order - b.order ||
+    a.createdAt - b.createdAt
+
   const dueCards: Card[] = []
-  const freshByDeck = new Map<string, Card[]>()
+  const freshCards: Card[] = []
 
   for (const deck of targetDecks) {
     const pool = cards.filter((card) => card.deckId === deck.id && !card.suspended)
@@ -37,35 +44,47 @@ export function buildStudyQueue(
     )
 
     const deckSettings = getDeckSettings(deck)
-    if (deckSettings.allowNew) {
-      freshByDeck.set(
-        deck.id,
-        orderNewCards(
-          pool.filter((card) => !card.srs.introduced),
-          deckSettings.order,
-        ),
-      )
-    }
-  }
-
-  dueCards.sort((a, b) => a.srs.due - b.srs.due)
-  const dueItems = dueCards.map<QueueItem>((card) => ({ cardId: card.id, isNew: false }))
-  const freshItems: QueueItem[] = []
-
-  for (const deck of targetDecks) {
-    const deckSettings = getDeckSettings(deck)
     if (!deckSettings.allowNew) continue
     const remaining = remainingNewForDeck(history, deck, settings, now)
-    const fresh = freshByDeck.get(deck.id) ?? []
-    freshItems.push(
-      ...fresh.slice(0, remaining).map<QueueItem>((card) => ({
-        cardId: card.id,
-        isNew: true,
-      })),
+    if (remaining <= 0) continue
+    freshCards.push(
+      ...orderNewCards(
+        pool.filter((card) => !card.srs.introduced),
+        deckSettings.order,
+      ).slice(0, remaining),
     )
   }
 
-  return [...dueItems, ...freshItems]
+  const deck = deckId === 'all' ? undefined : targetDecks[0]
+  const order = sessionOrderForDeck(deck, settings)
+  let ordered: Card[]
+
+  switch (order) {
+    case 'random':
+      ordered = shuffle([...dueCards, ...freshCards])
+      break
+    case 'deck':
+      ordered = [...dueCards, ...freshCards].sort(byDeckOrder)
+      break
+    case 'new-first':
+      ordered = [
+        ...[...freshCards].sort(byDeckOrder),
+        ...[...dueCards].sort(byDeckOrder),
+      ]
+      break
+    case 'reviews-first':
+    default:
+      ordered = [
+        ...[...dueCards].sort(byDeckOrder),
+        ...[...freshCards].sort(byDeckOrder),
+      ]
+      break
+  }
+
+  return ordered.map<QueueItem>((card) => ({
+    cardId: card.id,
+    isNew: !card.srs.introduced,
+  }))
 }
 
 /** Ограничивает подход первыми карточками очереди. 0 — без ограничения. */

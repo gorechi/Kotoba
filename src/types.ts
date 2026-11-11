@@ -18,6 +18,8 @@ export type AutoBackupFrequency =
   | 'every-3-days'
 /** Порядок выдачи новых карточек в колоде. */
 export type DeckOrder = 'order' | 'random' | 'frequency' | 'jlpt'
+/** Порядок отображения карточек в сессии. */
+export type SessionOrder = 'random' | 'deck' | 'new-first' | 'reviews-first'
 /** Режим изучения колоды: общий из настроек или собственный. */
 export type DeckStudyMode = 'global' | StudyMode
 
@@ -28,6 +30,8 @@ export interface DeckStudySettings {
   reviewLimit: number | null
   /** null — использовать общий размер сессии; 0 — без ограничения. */
   sessionSize: number | null
+  /** null — использовать общий порядок отображения. */
+  sessionOrder: SessionOrder | null
   order: DeckOrder
   allowNew: boolean
   studyMode: DeckStudyMode
@@ -163,6 +167,8 @@ export interface Settings {
   goalStreak: number
   /** Сколько карточек проходить за одну сессию; 0 — без ограничения. */
   sessionSize: number
+  /** Порядок отображения карточек в сессии. */
+  sessionOrder: SessionOrder
   /** Автоматически включать режим Дзен при бездействии. */
   zenAuto: boolean
   /** Через сколько минут бездействия включать Дзен. */

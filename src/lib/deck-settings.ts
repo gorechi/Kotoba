@@ -13,6 +13,7 @@ export const DEFAULT_DECK_SETTINGS: DeckStudySettings = {
   newPerDay: null,
   reviewLimit: null,
   sessionSize: null,
+  sessionOrder: null,
   order: 'order',
   allowNew: true,
   studyMode: 'global',

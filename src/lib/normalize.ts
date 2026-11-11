@@ -15,6 +15,7 @@ import type {
   DeckOrder,
   DeckStudyMode,
   DeckStudySettings,
+  SessionOrder,
   Settings,
   SrsState,
   StudyMode,
@@ -36,6 +37,7 @@ const WRITING_DIFFICULTIES: WritingDifficulty[] = ['normal', 'hard']
 const DAILY_GOAL_TYPES: DailyGoalType[] = ['reviews', 'minutes']
 const DECK_ORDERS: DeckOrder[] = ['order', 'random', 'frequency', 'jlpt']
 const DECK_STUDY_MODES: DeckStudyMode[] = ['global', 'reading', 'writing']
+const SESSION_ORDERS: SessionOrder[] = ['random', 'deck', 'new-first', 'reviews-first']
 const CUSTOM_STUDY_STATUSES: CustomStudyStatus[] = ['all', 'overdue', 'new', 'mistakes']
 const CUSTOM_STUDY_KINDS: CustomStudyKind[] = ['all', 'kana', 'kanji']
 const AUTO_BACKUP_FREQUENCIES: AutoBackupFrequency[] = [
@@ -87,6 +89,7 @@ function normalizeDeckSettings(raw: unknown): DeckStudySettings {
     newPerDay: null,
     reviewLimit: null,
     sessionSize: null,
+    sessionOrder: null,
     order: 'order',
     allowNew: true,
     studyMode: 'global',
@@ -106,6 +109,9 @@ function normalizeDeckSettings(raw: unknown): DeckStudySettings {
       raw.sessionSize === null || raw.sessionSize === undefined
         ? null
         : clamp(Math.round(num(raw.sessionSize, 0)), 0, 500),
+    sessionOrder: SESSION_ORDERS.includes(raw.sessionOrder as SessionOrder)
+      ? (raw.sessionOrder as SessionOrder)
+      : null,
     order: DECK_ORDERS.includes(raw.order as DeckOrder)
       ? (raw.order as DeckOrder)
       : base.order,
@@ -312,6 +318,7 @@ function normalizeSettings(raw: unknown): Settings {
     goalCards: 100,
     goalStreak: 30,
     sessionSize: 0,
+    sessionOrder: 'reviews-first',
     zenAuto: true,
     zenIdleMinutes: 5,
     language: DEFAULT_LOCALE,
@@ -349,6 +356,9 @@ function normalizeSettings(raw: unknown): Settings {
     goalCards: clamp(Math.round(num(raw.goalCards, base.goalCards)), 1, 100_000),
     goalStreak: clamp(Math.round(num(raw.goalStreak, base.goalStreak)), 1, 10_000),
     sessionSize: clamp(Math.round(num(raw.sessionSize, base.sessionSize)), 0, 500),
+    sessionOrder: SESSION_ORDERS.includes(raw.sessionOrder as SessionOrder)
+      ? (raw.sessionOrder as SessionOrder)
+      : base.sessionOrder,
     zenAuto: raw.zenAuto !== false,
     zenIdleMinutes: clamp(
       Math.round(num(raw.zenIdleMinutes, base.zenIdleMinutes)),

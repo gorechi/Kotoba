@@ -1,8 +1,9 @@
-import type { Theme } from '../types'
+import type { SessionOrder, Theme } from '../types'
 import { useStore } from '../state/store'
 import { useI18n } from '../lib/i18n-react'
 import { APP_VERSION } from '../lib/version'
 import type { UpdateState } from '../lib/updates'
+import { SESSION_ORDER_OPTIONS, sessionOrderDescKey } from '../lib/session-order'
 import { Icon, type IconName } from '../components/Icon'
 import { Select } from '../components/Select'
 
@@ -449,6 +450,24 @@ export function Settings({
               <p>{t('settings.sessionSub')}</p>
             </div>
           </div>
+
+          <div className="field">
+            <label htmlFor="settings-session-order">{t('settings.sessionOrder')}</label>
+            <Select
+              id="settings-session-order"
+              value={data.settings.sessionOrder}
+              onChange={(event) =>
+                setSettings({ sessionOrder: event.target.value as SessionOrder })
+              }
+            >
+              {SESSION_ORDER_OPTIONS.map((item) => (
+                <option key={item.value} value={item.value}>
+                  {t(item.labelKey)}
+                </option>
+              ))}
+            </Select>
+          </div>
+          <p className="hint">{t(sessionOrderDescKey(data.settings.sessionOrder))}</p>
 
           <div className="field">
             <label htmlFor="settings-session-size">{t('settings.sessionSize')}</label>

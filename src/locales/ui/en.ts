@@ -1061,15 +1061,11 @@ export const messages: Record<string, string> = {
   "deckSettings.session": "Session",
   "deckSettings.useGlobalSession": "Use the global session size ({n})",
   "deckSettings.sessionSizeLabel": "Cards per session for this deck",
-  "deckSettings.sessionSizeHint": "The session takes the next cards in the usual order. 0 means no limit.",
+  "deckSettings.sessionSizeHint": "0 means no limit. Cards follow the display order selected below.",
   "settings.sessionOrder": "Card display order",
   "sessionOrder.random": "Random",
   "sessionOrder.deck": "Deck order",
   "sessionOrder.newFirst": "New first, then reviews",
   "sessionOrder.reviewsFirst": "Reviews first, then new",
-  "sessionOrder.randomDesc": "Cards are selected from the available cards completely at random.",
-  "sessionOrder.deckDesc": "Cards follow the order in which they are stored in the deck, whether new or due.",
-  "sessionOrder.newFirstDesc": "New cards come first, then reviews if there is room. Each group follows deck order.",
-  "sessionOrder.reviewsFirstDesc": "Reviews come first, then new cards if there is room. Each group follows deck order.",
   "deckSettings.useGlobalSessionOrder": "Use the global order ({n})"
 }

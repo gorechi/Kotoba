@@ -4,13 +4,10 @@ import { useStore } from '../state/store'
 import { useI18n } from '../lib/i18n-react'
 import { deckTitle } from '../lib/content'
 import { getDeckSettings } from '../lib/deck-settings'
-import {
-  SESSION_ORDER_OPTIONS,
-  sessionOrderDescKey,
-  sessionOrderLabelKey,
-} from '../lib/session-order'
+import { SESSION_ORDER_OPTIONS, sessionOrderLabelKey } from '../lib/session-order'
 import { Icon } from './Icon'
 import { Modal } from './Modal'
+import { NumberInput } from './NumberInput'
 import { Select } from './Select'
 
 const ORDERS: { value: DeckOrder; labelKey: string }[] = [
@@ -140,13 +137,12 @@ export function DeckSettingsForm({ deck, onClose }: { deck: Deck; onClose: () =>
               {!useGlobalNew && (
                 <div className="field">
                   <label htmlFor="deck-new-limit">{t('deckSettings.customNew')}</label>
-                  <input
+                  <NumberInput
                     id="deck-new-limit"
-                    type="number"
                     min={1}
                     max={500}
                     value={newPerDay}
-                    onChange={(event) => setNewPerDay(Number(event.target.value))}
+                    onChange={setNewPerDay}
                   />
                 </div>
               )}
@@ -169,13 +165,12 @@ export function DeckSettingsForm({ deck, onClose }: { deck: Deck; onClose: () =>
           {limitReviews && (
             <div className="field">
               <label htmlFor="deck-review-limit">{t('deckSettings.reviewLimitLabel')}</label>
-              <input
+              <NumberInput
                 id="deck-review-limit"
-                type="number"
                 min={1}
                 max={2000}
                 value={reviewLimit}
-                onChange={(event) => setReviewLimit(Number(event.target.value))}
+                onChange={setReviewLimit}
               />
             </div>
           )}
@@ -204,13 +199,12 @@ export function DeckSettingsForm({ deck, onClose }: { deck: Deck; onClose: () =>
           {!useGlobalSession && (
             <div className="field">
               <label htmlFor="deck-session-size">{t('deckSettings.sessionSizeLabel')}</label>
-              <input
+              <NumberInput
                 id="deck-session-size"
-                type="number"
                 min={0}
                 max={500}
                 value={sessionSize}
-                onChange={(event) => setSessionSize(Number(event.target.value))}
+                onChange={setSessionSize}
               />
             </div>
           )}
@@ -249,13 +243,6 @@ export function DeckSettingsForm({ deck, onClose }: { deck: Deck; onClose: () =>
               </Select>
             </div>
           )}
-          <p className="hint">
-            {t(
-              sessionOrderDescKey(
-                useGlobalOrder ? data.settings.sessionOrder : sessionOrder,
-              ),
-            )}
-          </p>
         </section>
 
         <section className="deck-settings-section">

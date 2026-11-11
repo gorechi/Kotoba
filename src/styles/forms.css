@@ -149,6 +149,61 @@
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent);
 }
 
+.number-control {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+
+.number-control input {
+  padding-right: 42px;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.number-control input::-webkit-outer-spin-button,
+.number-control input::-webkit-inner-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
+}
+
+.number-control-buttons {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  bottom: 1px;
+  width: 30px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-left: 1px solid var(--line);
+  border-radius: 0 9px 9px 0;
+}
+
+.number-control-buttons button {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.number-control-buttons button + button {
+  border-top: 1px solid var(--line);
+}
+
+.number-control-buttons button:hover {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.number-control-buttons button:active {
+  background: var(--line);
+}
+
 .field input::placeholder,
 .field textarea::placeholder {
   color: color-mix(in srgb, var(--muted) 75%, transparent);

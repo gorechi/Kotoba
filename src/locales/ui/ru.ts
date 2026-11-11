@@ -1067,15 +1067,11 @@ export const messages: Record<string, string> = {
   "deckSettings.session": "Сессия",
   "deckSettings.useGlobalSession": "Использовать общий размер ({n})",
   "deckSettings.sessionSizeLabel": "Карточек за сессию для этой колоды",
-  "deckSettings.sessionSizeHint": "В сессию попадают следующие карточки в обычном порядке. 0 — без ограничения.",
+  "deckSettings.sessionSizeHint": "0 — без ограничения. Карточки идут в порядке, выбранном ниже.",
   "settings.sessionOrder": "Порядок отображения карточек",
   "sessionOrder.random": "Случайно",
   "sessionOrder.deck": "В порядке колоды",
   "sessionOrder.newFirst": "Сначала новые, потом повторения",
   "sessionOrder.reviewsFirst": "Сначала повторения, потом новые",
-  "sessionOrder.randomDesc": "Карточки выбираются из доступных совершенно случайно.",
-  "sessionOrder.deckDesc": "Карточки выбираются в том порядке, в каком они расположены в колоде, вне зависимости от того, новые они или повторяемые.",
-  "sessionOrder.newFirstDesc": "Сначала отображаются новые карточки, потом, если ещё есть место, повторяемые. В каждой группе — порядок колоды.",
-  "sessionOrder.reviewsFirstDesc": "Сначала отображаются повторяемые карточки, потом, если ещё есть место, новые. В каждой группе — порядок колоды.",
   "deckSettings.useGlobalSessionOrder": "Использовать общий порядок ({n})"
 }

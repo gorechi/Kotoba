@@ -3,8 +3,9 @@ import { useStore } from '../state/store'
 import { useI18n } from '../lib/i18n-react'
 import { APP_VERSION } from '../lib/version'
 import type { UpdateState } from '../lib/updates'
-import { SESSION_ORDER_OPTIONS, sessionOrderDescKey } from '../lib/session-order'
+import { SESSION_ORDER_OPTIONS } from '../lib/session-order'
 import { Icon, type IconName } from '../components/Icon'
+import { NumberInput } from '../components/NumberInput'
 import { Select } from '../components/Select'
 
 const THEMES: { value: Theme; labelKey: string; icon: IconName }[] = [
@@ -467,24 +468,15 @@ export function Settings({
               ))}
             </Select>
           </div>
-          <p className="hint">{t(sessionOrderDescKey(data.settings.sessionOrder))}</p>
 
           <div className="field">
             <label htmlFor="settings-session-size">{t('settings.sessionSize')}</label>
-            <input
+            <NumberInput
               id="settings-session-size"
-              type="number"
               min={0}
               max={500}
               value={data.settings.sessionSize}
-              onChange={(event) => {
-                const value = Number(event.target.value)
-                setSettings({
-                  sessionSize: Number.isFinite(value)
-                    ? Math.min(500, Math.max(0, Math.round(value)))
-                    : 0,
-                })
-              }}
+              onChange={(sessionSize) => setSettings({ sessionSize })}
               aria-label={t('settings.sessionSizeAria')}
             />
           </div>

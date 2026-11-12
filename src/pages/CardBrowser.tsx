@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type DragEvent } from 'react'
-import type { Card, Deck, DeckKind } from '../types'
+import type { Card, DeckKind } from '../types'
 import { useStore } from '../state/store'
 import { useI18n } from '../lib/i18n-react'
 import { cardExampleTranslation, cardMeaning, deckTitle, isProtectedDeck } from '../lib/content'
@@ -17,7 +17,6 @@ import {
   STATUS_LABEL_KEY,
   cardStatus,
   type SortKey,
-  type StatusKey,
   type TypeFilter,
 } from '../lib/card-browser'
 import { useCardBrowserFilters } from './card-browser/useCardBrowserFilters'

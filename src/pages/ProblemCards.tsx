@@ -13,11 +13,11 @@ interface ProblemCardsProps {
 
 const PAUSE_OPTIONS = [0, 3, 5, 10, 15]
 
+/** Отдельный экран для карточек, в которых пользователь чаще всего ошибается. */
 export function ProblemCards({ onStudy, onOpenCard }: ProblemCardsProps) {
   const { data, update, setSettings } = useStore()
   const { t, locale } = useI18n()
-  const now = Date.now()
-  const problems = useMemo(() => problemCards(data.cards, now), [data.cards, now])
+  const problems = useMemo(() => problemCards(data.cards), [data.cards])
   const paused = problems.filter((card) => card.suspended).length
   const active = problems.length - paused
 
@@ -99,6 +99,7 @@ export function ProblemCards({ onStudy, onOpenCard }: ProblemCardsProps) {
           {problems.map((card) => {
             const deck = data.decks.find((item) => item.id === card.deckId)
             const lastMistake = card.srs.lastMistakeAt
+            const reading = card.reading || card.readings[0]?.kana || ''
             return (
               <article
                 className={`problem-row${card.suspended ? ' is-paused' : ''}`}
@@ -107,16 +108,14 @@ export function ProblemCards({ onStudy, onOpenCard }: ProblemCardsProps) {
                 <span className="problem-front">{card.front}</span>
                 <div className="problem-copy">
                   <div className="problem-title">
-                    <strong>{card.reading || cardMeaning(card, t) || card.front}</strong>
+                    <strong>{reading || cardMeaning(card, t) || card.front}</strong>
                     {card.suspended && (
                       <span className="badge badge-soft">{t('problemCards.pausedBadge')}</span>
                     )}
                   </div>
                   <span className="problem-meta">
                     {deck ? deckTitle(deck, t) : t('common.deck')}
-                    {card.reading && cardMeaning(card, t)
-                      ? ` · ${cardMeaning(card, t)}`
-                      : ''}
+                    {reading && cardMeaning(card, t) ? ` · ${cardMeaning(card, t)}` : ''}
                   </span>
                   {lastMistake && (
                     <span className="problem-meta">

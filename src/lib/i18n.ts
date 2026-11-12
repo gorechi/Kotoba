@@ -165,8 +165,3 @@ export function translateIn(locale: Locale, key: string, params?: TranslateParam
 export function translate(key: string, params?: TranslateParams): string {
   return translateIn(activeLocale, key, params)
 }
-
-/** Проверяет, есть ли перевод для ключа. */
-export function hasMessage(key: string, locale: Locale = activeLocale): boolean {
-  return lookup(locale, key) !== undefined
-}

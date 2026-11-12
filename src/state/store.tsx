@@ -322,6 +322,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const now = Date.now()
       const historyKey = dayKey(now, prev.settings.dayStartHour)
       const previousDay = prev.history[historyKey]
+      // Автопауза срабатывает ровно на той оценке, после которой достигнут порог.
       const threshold = prev.settings.leechThreshold
       const predicted = applyRating(card.srs, rating, now)
       const autoPaused =

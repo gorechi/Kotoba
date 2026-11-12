@@ -42,8 +42,6 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
   const [tagInput, setTagInput] = useState('')
   const [tagSuggestions, setTagSuggestions] = useState<string[]>([])
   const [frontMode, setFrontMode] = useState<KanaMode>(() => guessKanaMode(card?.front, 'hiragana'))
-  const [readingMode, setReadingMode] = useState<KanaMode>(() => guessKanaMode(card?.reading, 'abc'))
-  const [readingTouched, setReadingTouched] = useState(Boolean(card?.reading))
   const [error, setError] = useState('')
   const frontRef = useRef<HTMLInputElement>(null)
 
@@ -80,7 +78,6 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
 
   const changeReading = (value: string) => {
     setReading(value)
-    setReadingTouched(true)
   }
 
   const addTag = (tag: string) => {
@@ -170,7 +167,6 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
     setJlpt(0)
     setFrequency('')
     setError('')
-    setReadingTouched(false)
     window.requestAnimationFrame(() => frontRef.current?.focus())
   }
 

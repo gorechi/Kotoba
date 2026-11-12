@@ -1,6 +1,5 @@
 import type {
   Card,
-  CustomStudyKind,
   CustomStudyOptions,
   CustomStudyOrder,
   CustomStudyStatus,

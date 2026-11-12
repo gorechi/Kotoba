@@ -9,8 +9,9 @@ import { sessionOrderForDeck } from './session-order'
 import { shuffle } from './utils'
 
 /**
- * Собирает очередь с учётом настроек каждой колоды:
- * дневных лимитов новых карточек и повторений, порядка и разрешения новых.
+ * Собирает полную очередь сессии:
+ * дневные лимиты, разрешение новых карточек и выбранный порядок отображения.
+ * Ограничение размера сессии применяется отдельно через `limitStudySession`.
  */
 export function buildStudyQueue(
   cards: Card[],
@@ -98,12 +99,7 @@ export function limitStudySession(queue: QueueItem[], size: number): QueueItem[]
   return queue.slice(0, size)
 }
 
-export function practiceQueue(
-  cards: Card[],
-  deckId: string,
-  now = Date.now(),
-  size = 10,
-): QueueItem[] {
+export function practiceQueue(cards: Card[], deckId: string, size = 10): QueueItem[] {
   const pool = (deckId === 'all' ? cards : cards.filter((card) => card.deckId === deckId)).filter(
     (card) => !card.suspended && card.srs.introduced,
   )
@@ -111,10 +107,4 @@ export function practiceQueue(
   return shuffle(pool)
     .slice(0, size)
     .map((card) => ({ cardId: card.id, isNew: false }))
-}
-
-export function dueCount(cards: Card[], deckId: string, now = Date.now()): number {
-  return (deckId === 'all' ? cards : cards.filter((card) => card.deckId === deckId)).filter(
-    (card) => !card.suspended && card.srs.introduced && card.srs.due <= now,
-  ).length
 }

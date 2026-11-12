@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useStore } from '../state/store'
 import { useI18n } from '../lib/i18n-react'
 import { deckTitle } from '../lib/content'
@@ -12,6 +12,7 @@ import { Icon } from './Icon'
 import { Modal } from './Modal'
 import { Select } from './Select'
 
+/** Экспорт одной колоды в JSON и импорт её как новой колоды. */
 export function DeckTransferPanel() {
   const { data, update } = useStore()
   const { t } = useI18n()
@@ -22,8 +23,12 @@ export function DeckTransferPanel() {
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
-  const decks = [...data.decks].sort(
-    (a, b) => Number(b.builtin) - Number(a.builtin) || a.createdAt - b.createdAt,
+  const decks = useMemo(
+    () =>
+      [...data.decks].sort(
+        (a, b) => Number(b.builtin) - Number(a.builtin) || a.createdAt - b.createdAt,
+      ),
+    [data.decks],
   )
 
   useEffect(() => {

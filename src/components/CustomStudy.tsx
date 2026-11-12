@@ -186,6 +186,7 @@ export function CustomStudy({
     if (options.status === 'overdue') return t('customStudy.overdue')
     if (options.status === 'new') return t('customStudy.new')
     if (options.status === 'mistakes') return t('customStudy.mistakes')
+    if (options.status === 'problems') return t('customStudy.problems')
     if (options.kind === 'kanji') return t('customStudy.kanji')
     return t('customStudy.title')
   }

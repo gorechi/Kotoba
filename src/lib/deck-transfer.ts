@@ -1,3 +1,8 @@
+/**
+ * Перенос одной колоды между установками Kotoba.
+ * Формат намеренно не включает SRS-прогресс: колода предназначена для обмена,
+ * а полная резервная копия остаётся способом перенести прогресс.
+ */
 import type { AppData, Card, Deck } from '../types'
 import { normalizeImported } from './normalize'
 import { freshSrs } from './srs'
@@ -19,7 +24,7 @@ function isObj(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
-/** Экспорт одной колоды. Прогресс не включается — карточки импортируются как новые. */
+/** Сериализует колоду без прогресса и сбрасывает признак встроенной колоды. */
 export function createDeckTransfer(
   deck: Deck,
   cards: Card[],
@@ -37,7 +42,10 @@ export function createDeckTransfer(
   }
 }
 
-/** Читает как новый формат отдельной колоды, так и одну колоду из полной копии. */
+/**
+ * Читает формат отдельной колоды. Для удобства принимает и полную копию,
+ * если в ней ровно одна колода.
+ */
 export function parseDeckTransfer(raw: unknown): ParsedDeckTransfer | null {
   if (!isObj(raw)) return null
 

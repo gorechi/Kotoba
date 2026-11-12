@@ -593,8 +593,6 @@ export const messages: Record<string, string> = {
   "data.fieldExampleTranslation": "Traducción del ejemplo",
   "data.noDataRows": "El archivo no tiene filas de datos.",
   "data.importNoCards": "No se pudo crear ninguna tarjeta. Revisa las asignaciones y los datos del archivo.",
-  "data.importDone": "Tarjetas importadas: {n}",
-  "data.importDoneSkipped": "Tarjetas importadas: {n}, filas omitidas: {skipped}",
   "data.kanaMappingHint": "Cada fila se convierte en una tarjeta de kana. Si no se indica lectura, se generará a partir del kana.",
   "data.kanjiMappingHint": "Cada fila se convierte en una tarjeta de kanji con una lectura y un ejemplo. Añade filas aparte para varias lecturas o ejemplos.",
   "settings.export": "Exportar",

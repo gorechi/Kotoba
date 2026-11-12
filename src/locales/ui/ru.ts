@@ -593,8 +593,6 @@ export const messages: Record<string, string> = {
   "data.fieldExampleTranslation": "Перевод примера",
   "data.noDataRows": "В файле нет строк с данными.",
   "data.importNoCards": "Не удалось создать ни одной карточки. Проверьте соответствия и данные в файле.",
-  "data.importDone": "Импортировано карточек: {n}",
-  "data.importDoneSkipped": "Импортировано карточек: {n}, пропущено строк: {skipped}",
   "data.kanaMappingHint": "Одна строка — одна карточка каны. Если чтение не указано, оно будет сгенерировано из каны.",
   "data.kanjiMappingHint": "Одна строка — одна карточка кандзи, одно чтение и один пример. Для нескольких чтений или примеров добавьте отдельные строки.",
   "settings.export": "Экспорт",

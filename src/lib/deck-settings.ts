@@ -74,18 +74,6 @@ export function remainingNewForDeck(
   )
 }
 
-export function remainingNewTotal(
-  history: Record<string, DayStat>,
-  decks: Deck[],
-  settings: Settings,
-  now = Date.now(),
-): number {
-  return decks.reduce(
-    (total, deck) => total + remainingNewForDeck(history, deck, settings, now),
-    0,
-  )
-}
-
 export function remainingReviewForDeck(
   history: Record<string, DayStat>,
   deck: Deck,

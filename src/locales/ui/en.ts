@@ -593,8 +593,6 @@ export const messages: Record<string, string> = {
   "data.fieldExampleTranslation": "Example translation",
   "data.noDataRows": "The file has no data rows.",
   "data.importNoCards": "No cards could be created. Check the mappings and file data.",
-  "data.importDone": "Imported cards: {n}",
-  "data.importDoneSkipped": "Imported cards: {n}, skipped rows: {skipped}",
   "data.kanaMappingHint": "One row becomes one kana card. If no reading is provided, it will be generated from the kana.",
   "data.kanjiMappingHint": "One row becomes one kanji card with one reading and one example. Add separate rows for multiple readings or examples.",
   "settings.export": "Export",

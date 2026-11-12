@@ -253,6 +253,7 @@ export function CsvImport({ kind }: { kind: DeckKind }) {
     return index === undefined ? '' : (row[index] ?? '').trim()
   }
 
+  /** Превращает строку таблицы в карточку; null — строку нельзя импортировать. */
   const buildCard = (
     row: string[],
     deckId: string,
@@ -335,16 +336,23 @@ export function CsvImport({ kind }: { kind: DeckKind }) {
     }
   }
 
+  /** Все варианты чтения карточки для поиска возможных дублей. */
   const readingValues = (card: Card): string[] =>
     [card.reading, ...card.readings.flatMap((item) => [item.kana, item.transcription])]
       .map((value) => value.trim().toLowerCase())
       .filter(Boolean)
 
+  /** Карточки выбранной колоды, с которыми сравниваем импорт. */
   const existingCards = useMemo(() => {
     if (targetMode !== 'existing') return []
     return data.cards.filter((card) => card.deckId === targetDeckId)
   }, [data.cards, targetDeckId, targetMode])
 
+  /**
+   * Предпросмотр строк и поиск дублей.
+   * Совпадение по слову надёжнее, по чтению — возможный дубль (омофоны),
+   * поэтому пользователь всегда может выбрать «Добавить».
+   */
   const rowInfos = useMemo<PreviewRow[]>(() => {
     const stamp = Date.now()
     return table.rows.map((row, index) => {
@@ -392,6 +400,10 @@ export function CsvImport({ kind }: { kind: DeckKind }) {
           .filter(Boolean)
           .join('、')
 
+  /**
+   * Применяет предпросмотр: добавляет новые карточки, обновляет выбранные
+   * дубли и пропускает остальные. При обновлении сохраняются SRS и ID.
+   */
   const importCards = () => {
     if (!canContinue || !file) return
 

@@ -253,7 +253,7 @@ function Shell() {
       data.settings,
       now,
     )
-    if (!items.length) items = practiceQueue(data.cards, deckId, now)
+    if (!items.length) items = practiceQueue(data.cards, deckId)
     items = limitStudySession(items, sessionSizeForDeck(deck, data.settings))
     if (!items.length) return
     customChunkRef.current = null
@@ -384,7 +384,7 @@ function Shell() {
               data.settings,
               now,
             )
-            if (!items.length) items = practiceQueue(data.cards, session.deckId, now)
+            if (!items.length) items = practiceQueue(data.cards, session.deckId)
             return limitStudySession(items, sessionSizeForDeck(deck, data.settings))
           }}
           onRestart={

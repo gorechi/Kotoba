@@ -27,10 +27,6 @@ export function dayModeStat(day: DayStat | undefined, mode: StudyMode): StudyTot
   return splitDayStat(day)[mode]
 }
 
-export function totalModeReviews(history: Record<string, DayStat>, mode: StudyMode): number {
-  return Object.values(history).reduce((sum, day) => sum + dayModeStat(day, mode).reviews, 0)
-}
-
 export function totalModeStudyTime(history: Record<string, DayStat>, mode: StudyMode): number {
   return Object.values(history).reduce((sum, day) => sum + dayModeStat(day, mode).ms, 0)
 }
@@ -573,8 +569,4 @@ export function upcomingLoad(
   }
 
   return result
-}
-
-export function todayRange(now = Date.now()): number {
-  return now - DAY
 }

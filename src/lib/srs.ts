@@ -1,7 +1,6 @@
 import type { Rating, SrsState } from '../types'
 import { translate } from './i18n'
 
-export const MINUTE = 60_000
 export const DAY = 86_400_000
 
 export function freshSrs(): SrsState {

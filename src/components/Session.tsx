@@ -279,6 +279,7 @@ export function Session({
 
       let nextQueue = queue
       if (ratingUndo?.autoPaused) {
+        // Автопауза исключает карточку из текущего подхода, а не только из будущих.
         nextQueue = queue.filter((item) => item.cardId !== card.id)
         setQueue(nextQueue)
       } else if (rating === 'again') {

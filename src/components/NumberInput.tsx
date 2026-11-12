@@ -38,14 +38,17 @@ export function NumberInput({
     if (Number.isFinite(next)) onChange(clamp(next))
   }
 
+  const parsedDraft = draft.trim() ? Number(draft) : value
+  const current = Number.isFinite(parsedDraft) ? clamp(parsedDraft) : value
+
   const commit = () => {
-    const next = draft.trim() ? clamp(Number(draft)) : value
+    const next = Number.isFinite(parsedDraft) ? current : value
     setDraft(String(next))
     if (next !== value) onChange(next)
   }
 
   const step = (delta: number) => {
-    const next = clamp(value + delta)
+    const next = clamp(current + delta)
     setDraft(String(next))
     onChange(next)
   }

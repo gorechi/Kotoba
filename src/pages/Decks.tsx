@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties } from 'react'
+import { useState, type CSSProperties } from 'react'
 import type { Card, Route } from '../types'
 import { useStore } from '../state/store'
 import { useI18n } from '../lib/i18n-react'

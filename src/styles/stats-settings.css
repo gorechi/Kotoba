@@ -963,6 +963,10 @@
   grid-column: 1 / -1;
 }
 
+.settings-grid .field + .field {
+  margin-top: 16px;
+}
+
 .goal-type-row {
   display: flex;
   align-items: center;

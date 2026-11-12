@@ -1082,5 +1082,10 @@ export const messages: Record<string, string> = {
   "customStudy.sessionSizeSummary": "по {n} за сессию",
   "customStudy.order": "Порядок карточек",
   "customStudy.orderRandom": "Случайно",
-  "customStudy.orderDeck": "По порядку"
+  "customStudy.orderDeck": "По порядку",
+  "errorBoundary.title": "Что-то пошло не так",
+  "errorBoundary.text": "Приложение столкнулось с неожиданной ошибкой. Данные хранятся локально и должны быть в порядке. Перезагрузите приложение, чтобы продолжить.",
+  "errorBoundary.reload": "Перезагрузить приложение",
+  "errorBoundary.openFolder": "Открыть папку с данными",
+  "errorBoundary.details": "Подробности ошибки"
 }

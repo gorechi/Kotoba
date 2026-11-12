@@ -1076,5 +1076,10 @@ export const messages: Record<string, string> = {
   "customStudy.sessionSizeSummary": "{n} por sesión",
   "customStudy.order": "Orden de las tarjetas",
   "customStudy.orderRandom": "Aleatorio",
-  "customStudy.orderDeck": "En orden"
+  "customStudy.orderDeck": "En orden",
+  "errorBoundary.title": "Algo salió mal",
+  "errorBoundary.text": "La aplicación encontró un error inesperado. Tus datos se guardan localmente y deberían estar a salvo. Recarga la aplicación para continuar.",
+  "errorBoundary.reload": "Recargar aplicación",
+  "errorBoundary.openFolder": "Abrir carpeta de datos",
+  "errorBoundary.details": "Detalles del error"
 }

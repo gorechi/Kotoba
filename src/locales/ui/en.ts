@@ -1076,5 +1076,10 @@ export const messages: Record<string, string> = {
   "customStudy.sessionSizeSummary": "{n} per session",
   "customStudy.order": "Card order",
   "customStudy.orderRandom": "Random",
-  "customStudy.orderDeck": "In order"
+  "customStudy.orderDeck": "In order",
+  "errorBoundary.title": "Something went wrong",
+  "errorBoundary.text": "The app hit an unexpected error. Your data is stored locally and should be safe. Reload the app to continue.",
+  "errorBoundary.reload": "Reload app",
+  "errorBoundary.openFolder": "Open data folder",
+  "errorBoundary.details": "Error details"
 }

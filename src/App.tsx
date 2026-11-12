@@ -6,6 +6,7 @@ import { TitleBar } from './components/TitleBar'
 import { Sidebar } from './components/Sidebar'
 import { Session } from './components/Session'
 import { Icon } from './components/Icon'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import { Onboarding } from './components/Onboarding'
 import { CommandPalette } from './components/CommandPalette'
 import { ShortcutsDialog } from './components/ShortcutsDialog'
@@ -495,10 +496,12 @@ function Shell() {
 
 export default function App() {
   return (
-    <StoreProvider>
-      <I18nProvider>
-        <Shell />
-      </I18nProvider>
-    </StoreProvider>
+    <ErrorBoundary>
+      <StoreProvider>
+        <I18nProvider>
+          <Shell />
+        </I18nProvider>
+      </StoreProvider>
+    </ErrorBoundary>
   )
 }

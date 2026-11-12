@@ -1067,5 +1067,8 @@ export const messages: Record<string, string> = {
   "sessionOrder.deck": "Deck order",
   "sessionOrder.newFirst": "New first, then reviews",
   "sessionOrder.reviewsFirst": "Reviews first, then new",
-  "deckSettings.useGlobalSessionOrder": "Use the global order ({n})"
+  "deckSettings.useGlobalSessionOrder": "Use the global order ({n})",
+  "settings.dayStart": "Day starts at",
+  "settings.dayStartAria": "Study day start time",
+  "settings.dayStartHint": "Reviews before this hour count toward the previous day. This keeps your streak during late-night study."
 }

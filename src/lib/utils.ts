@@ -5,8 +5,11 @@ export function uid(prefix: string): string {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
 }
 
-export function dayKey(ts: number): string {
+export function dayKey(ts: number, dayStartHour = 0): string {
   const d = new Date(ts)
+  if (dayStartHour > 0) {
+    d.setTime(d.getTime() - dayStartHour * 60 * 60 * 1000)
+  }
   const month = String(d.getMonth() + 1).padStart(2, '0')
   const day = String(d.getDate()).padStart(2, '0')
   return `${d.getFullYear()}-${month}-${day}`
@@ -21,12 +24,16 @@ export function shuffle<T>(items: T[]): T[] {
   return copy
 }
 
-export function formatDate(ts: number): string {
+export function formatDate(ts: number, dayStartHour = 0): string {
+  const date = new Date(ts)
+  if (dayStartHour > 0) {
+    date.setTime(date.getTime() - dayStartHour * 60 * 60 * 1000)
+  }
   const text = new Intl.DateTimeFormat(getActiveLocale().intl, {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
-  }).format(new Date(ts))
+  }).format(date)
   return text.charAt(0).toUpperCase() + text.slice(1)
 }
 

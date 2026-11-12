@@ -32,7 +32,7 @@ export function Home({ onNavigate, onStudy, onCustomStudy }: HomeProps) {
   const today = todayStat(data, now)
   const goal = dailyGoalProgress(today, data.settings)
   const goalComplete = goal.goal > 0 && goal.done >= goal.goal
-  const days = streak(data.history, now)
+  const days = streak(data.history, now, data.settings.dayStartHour)
   const goalRadius = 40
   const goalCircumference = 2 * Math.PI * goalRadius
   const goalOffset = goalCircumference * (1 - goal.percent / 100)
@@ -60,7 +60,11 @@ export function Home({ onNavigate, onStudy, onCustomStudy }: HomeProps) {
     <div className="page">
       <section className="hero">
         <div className="hero-copy">
-          <div className="eyebrow">{t('home.dateToday', { date: formatDate(now) })}</div>
+          <div className="eyebrow">
+            {t('home.dateToday', {
+              date: formatDate(now, data.settings.dayStartHour),
+            })}
+          </div>
           <h1>{greeting(now)}</h1>
           <p className="hero-sub">{subline}</p>
 

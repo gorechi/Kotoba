@@ -320,7 +320,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (!prev || !card) return null
 
       const now = Date.now()
-      const historyKey = dayKey(now)
+      const historyKey = dayKey(now, prev.settings.dayStartHour)
       const previousDay = prev.history[historyKey]
       const snapshot: RatingUndo = {
         cardId,

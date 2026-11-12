@@ -34,7 +34,12 @@ export function buildStudyQueue(
 
   for (const deck of targetDecks) {
     const pool = cards.filter((card) => card.deckId === deck.id && !card.suspended)
-    const reviewRemaining = remainingReviewForDeck(history, deck, now)
+    const reviewRemaining = remainingReviewForDeck(
+      history,
+      deck,
+      now,
+      settings.dayStartHour,
+    )
 
     const due = pool
       .filter((card) => card.srs.introduced && card.srs.due <= now)

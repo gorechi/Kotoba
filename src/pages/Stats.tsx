@@ -37,12 +37,13 @@ export function Stats() {
   const { data } = useStore()
   const { t, locale } = useI18n()
   const now = Date.now()
-  const heatmap = buildHeatmap(data.history, now, locale.intl)
+  const dayStart = data.settings.dayStartHour
+  const heatmap = buildHeatmap(data.history, now, locale.intl, dayStart)
   const overall = overallStat(data.cards, now)
   const today = todayStat(data, now)
-  const days = streak(data.history, now)
-  const weekAccuracy = accuracy(data.history, 7, now)
-  const points = lastDays(data.history, 14, now)
+  const days = streak(data.history, now, dayStart)
+  const weekAccuracy = accuracy(data.history, 7, now, dayStart)
+  const points = lastDays(data.history, 14, now, dayStart)
   const max = Math.max(5, ...points.map((point) => point.reviews))
   const reviewsTotal = totalReviews(data.history)
   const timeTotal = totalStudyTime(data.history)
@@ -50,14 +51,21 @@ export function Stats() {
   const todayKey = points[points.length - 1]?.key
   const writingToday = dayModeStat(todayKey ? data.history[todayKey] : undefined, 'writing')
   const writing14 = points.reduce((sum, point) => sum + point.writingReviews, 0)
-  const writingAccuracy = modeAccuracy(data.history, 'writing', 7, now)
+  const writingAccuracy = modeAccuracy(data.history, 'writing', 7, now, dayStart)
   const writingTimeTotal = totalModeStudyTime(data.history, 'writing')
   const dailyGoal = dailyGoalProgress(today, data.settings)
   const milestone = nearestMilestone(reviewsTotal, overall.learned, days, data.settings)
   const strength = memoryStrength(data.cards)
   const records = personalRecords(data.history)
-  const forecast = paceForecast(data.cards, data.history, data.settings.newPerDay, now)
-  const upcoming = upcomingLoad(data.cards, now, locale.intl)
+  const forecast = paceForecast(
+    data.cards,
+    data.history,
+    data.settings.newPerDay,
+    now,
+    14,
+    dayStart,
+  )
+  const upcoming = upcomingLoad(data.cards, now, locale.intl, 7, dayStart)
   const weekPoints = points.slice(-7)
   const decks = [...data.decks].sort(
     (a, b) => Number(b.builtin) - Number(a.builtin) || a.createdAt - b.createdAt,

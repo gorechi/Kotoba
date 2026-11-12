@@ -45,16 +45,18 @@ export function usedNewForDeck(
   history: Record<string, DayStat>,
   deckId: string,
   now = Date.now(),
+  dayStartHour = 0,
 ): number {
-  return history[dayKey(now)]?.newByDeck?.[deckId] ?? 0
+  return history[dayKey(now, dayStartHour)]?.newByDeck?.[deckId] ?? 0
 }
 
 export function usedReviewsForDeck(
   history: Record<string, DayStat>,
   deckId: string,
   now = Date.now(),
+  dayStartHour = 0,
 ): number {
-  return history[dayKey(now)]?.reviewByDeck?.[deckId] ?? 0
+  return history[dayKey(now, dayStartHour)]?.reviewByDeck?.[deckId] ?? 0
 }
 
 export function remainingNewForDeck(
@@ -66,7 +68,10 @@ export function remainingNewForDeck(
   const deckSettings = getDeckSettings(deck)
   if (!deckSettings.allowNew) return 0
   const limit = deckSettings.newPerDay ?? settings.newPerDay
-  return Math.max(0, limit - usedNewForDeck(history, deck.id, now))
+  return Math.max(
+    0,
+    limit - usedNewForDeck(history, deck.id, now, settings.dayStartHour),
+  )
 }
 
 export function remainingNewTotal(
@@ -85,10 +90,11 @@ export function remainingReviewForDeck(
   history: Record<string, DayStat>,
   deck: Deck,
   now = Date.now(),
+  dayStartHour = 0,
 ): number {
   const limit = getDeckSettings(deck).reviewLimit
   if (limit === null) return Number.POSITIVE_INFINITY
-  return Math.max(0, limit - usedReviewsForDeck(history, deck.id, now))
+  return Math.max(0, limit - usedReviewsForDeck(history, deck.id, now, dayStartHour))
 }
 
 export function orderNewCards(cards: Card[], order: DeckOrder): Card[] {

@@ -967,6 +967,10 @@
   margin-top: 16px;
 }
 
+.settings-grid .goal-settings + .field {
+  margin-top: 16px;
+}
+
 .goal-type-row {
   display: flex;
   align-items: center;

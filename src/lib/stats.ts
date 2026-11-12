@@ -35,17 +35,23 @@ export function totalModeStudyTime(history: Record<string, DayStat>, mode: Study
   return Object.values(history).reduce((sum, day) => sum + dayModeStat(day, mode).ms, 0)
 }
 
+/** Полдень учебного дня, к которому относится момент now. */
+function businessDayNoon(now: number, dayStartHour: number): Date {
+  return new Date(`${dayKey(now, dayStartHour)}T12:00:00`)
+}
+
 export function modeAccuracy(
   history: Record<string, DayStat>,
   mode: StudyMode,
   days: number,
   now = Date.now(),
+  dayStartHour = 0,
 ): number | null {
   let reviews = 0
   let correct = 0
-  const cursor = new Date(now)
+  const cursor = businessDayNoon(now, dayStartHour)
   for (let i = 0; i < days; i += 1) {
-    const stat = dayModeStat(history[dayKey(cursor.getTime())], mode)
+    const stat = dayModeStat(history[dayKey(cursor.getTime(), dayStartHour)], mode)
     reviews += stat.reviews
     correct += stat.correct
     cursor.setDate(cursor.getDate() - 1)
@@ -94,28 +100,45 @@ export function overallStat(cards: Card[], now = Date.now()): DeckStat {
 }
 
 export function todayStat(data: AppData, now = Date.now()): DayStat {
-  return data.history[dayKey(now)] ?? { reviews: 0, correct: 0, newCards: 0, ms: 0 }
+  return (
+    data.history[dayKey(now, data.settings.dayStartHour)] ?? {
+      reviews: 0,
+      correct: 0,
+      newCards: 0,
+      ms: 0,
+    }
+  )
 }
 
-export function streak(history: Record<string, DayStat>, now = Date.now()): number {
-  const cursor = new Date(now)
-  if (!(history[dayKey(now)]?.reviews > 0)) {
+export function streak(
+  history: Record<string, DayStat>,
+  now = Date.now(),
+  dayStartHour = 0,
+): number {
+  const todayKey = dayKey(now, dayStartHour)
+  const cursor = new Date(`${todayKey}T12:00:00`)
+  if (!(history[todayKey]?.reviews > 0)) {
     cursor.setDate(cursor.getDate() - 1)
   }
   let count = 0
-  while (history[dayKey(cursor.getTime())]?.reviews > 0) {
+  while (history[dayKey(cursor.getTime(), dayStartHour)]?.reviews > 0) {
     count += 1
     cursor.setDate(cursor.getDate() - 1)
   }
   return count
 }
 
-export function accuracy(history: Record<string, DayStat>, days: number, now = Date.now()): number | null {
+export function accuracy(
+  history: Record<string, DayStat>,
+  days: number,
+  now = Date.now(),
+  dayStartHour = 0,
+): number | null {
   let reviews = 0
   let correct = 0
-  const cursor = new Date(now)
+  const cursor = businessDayNoon(now, dayStartHour)
   for (let i = 0; i < days; i += 1) {
-    const stat = history[dayKey(cursor.getTime())]
+    const stat = history[dayKey(cursor.getTime(), dayStartHour)]
     if (stat) {
       reviews += stat.reviews
       correct += stat.correct
@@ -139,14 +162,18 @@ export interface DayPoint {
   writingReviews: number
 }
 
-export function lastDays(history: Record<string, DayStat>, count: number, now = Date.now()): DayPoint[] {
+export function lastDays(
+  history: Record<string, DayStat>,
+  count: number,
+  now = Date.now(),
+  dayStartHour = 0,
+): DayPoint[] {
   const points: DayPoint[] = []
-  const cursor = new Date(now)
-  cursor.setHours(12, 0, 0, 0)
+  const cursor = businessDayNoon(now, dayStartHour)
   cursor.setDate(cursor.getDate() - (count - 1))
   for (let i = 0; i < count; i += 1) {
     const ts = cursor.getTime()
-    const key = dayKey(ts)
+    const key = dayKey(ts, dayStartHour)
     const stat = history[key]
     const split = splitDayStat(stat)
     points.push({
@@ -211,6 +238,7 @@ export function buildHeatmap(
   history: Record<string, DayStat>,
   now = Date.now(),
   intl = getActiveLocale().intl,
+  dayStartHour = 0,
 ): Heatmap {
   const dayFormatter = new Intl.DateTimeFormat(intl, {
     day: 'numeric',
@@ -220,8 +248,7 @@ export function buildHeatmap(
   const monthFormatter = new Intl.DateTimeFormat(intl, { month: 'short' })
   const weekdayFormatter = new Intl.DateTimeFormat(intl, { weekday: 'short' })
 
-  const end = new Date(now)
-  end.setHours(12, 0, 0, 0)
+  const end = businessDayNoon(now, dayStartHour)
   const todayTs = end.getTime()
   const dayOfWeek = (end.getDay() + 6) % 7 // понедельник = 0
 
@@ -244,7 +271,7 @@ export function buildHeatmap(
       date.setHours(12, 0, 0, 0)
 
       const ts = date.getTime()
-      const key = dayKey(ts)
+      const key = dayKey(ts, dayStartHour)
       const future = ts > todayTs
       const reviews = future ? 0 : (history[key]?.reviews ?? 0)
 
@@ -478,10 +505,11 @@ export function paceForecast(
   newPerDay: number,
   now = Date.now(),
   windowDays = 14,
+  dayStartHour = 0,
 ): PaceForecast {
   const active = cards.filter((card) => !card.suspended)
   const remaining = active.filter((card) => !card.srs.introduced).length
-  const points = lastDays(history, windowDays, now)
+  const points = lastDays(history, windowDays, now, dayStartHour)
   const newCards = points.reduce((sum, point) => sum + point.newCards, 0)
   const recentPace = newCards / windowDays
   // Не показываем пугающе долгий прогноз из-за одной медленной недели:
@@ -512,10 +540,11 @@ export function upcomingLoad(
   now = Date.now(),
   intl = getActiveLocale().intl,
   days = 7,
+  dayStartHour = 0,
 ): UpcomingDay[] {
   const formatter = new Intl.DateTimeFormat(intl, { weekday: 'short' })
-  const today = new Date(now)
-  today.setHours(0, 0, 0, 0)
+  const today = businessDayNoon(now, dayStartHour)
+  today.setHours(dayStartHour, 0, 0, 0)
   const result: UpcomingDay[] = []
 
   for (let index = 0; index < days; index += 1) {
@@ -535,7 +564,7 @@ export function upcomingLoad(
     }
 
     result.push({
-      key: dayKey(startTs),
+      key: dayKey(startTs, dayStartHour),
       ts: startTs,
       count,
       label: formatter.format(start),

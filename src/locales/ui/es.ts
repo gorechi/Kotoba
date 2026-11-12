@@ -1067,5 +1067,8 @@ export const messages: Record<string, string> = {
   "sessionOrder.deck": "Orden del mazo",
   "sessionOrder.newFirst": "Primero nuevas, luego repasos",
   "sessionOrder.reviewsFirst": "Primero repasos, luego nuevas",
-  "deckSettings.useGlobalSessionOrder": "Usar el orden global ({n})"
+  "deckSettings.useGlobalSessionOrder": "Usar el orden global ({n})",
+  "settings.dayStart": "El día empieza a las",
+  "settings.dayStartAria": "Hora de inicio del día de estudio",
+  "settings.dayStartHint": "Los repasos antes de esta hora cuentan para el día anterior. Así se mantiene la racha al estudiar de noche."
 }

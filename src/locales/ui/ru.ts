@@ -1073,5 +1073,8 @@ export const messages: Record<string, string> = {
   "sessionOrder.deck": "В порядке колоды",
   "sessionOrder.newFirst": "Сначала новые, потом повторения",
   "sessionOrder.reviewsFirst": "Сначала повторения, потом новые",
-  "deckSettings.useGlobalSessionOrder": "Использовать общий порядок ({n})"
+  "deckSettings.useGlobalSessionOrder": "Использовать общий порядок ({n})",
+  "settings.dayStart": "День начинается в",
+  "settings.dayStartAria": "Время начала учебного дня",
+  "settings.dayStartHint": "Повторения до этого часа относятся к предыдущему дню. Это сохраняет серию при занятиях ночью."
 }

@@ -169,6 +169,8 @@ export interface Settings {
   sessionSize: number
   /** Порядок отображения карточек в сессии. */
   sessionOrder: SessionOrder
+  /** Час, с которого начинается новый учебный день (0–12). */
+  dayStartHour: number
   /** Автоматически включать режим Дзен при бездействии. */
   zenAuto: boolean
   /** Через сколько минут бездействия включать Дзен. */

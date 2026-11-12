@@ -64,6 +64,7 @@ export function createBaseSeedData(now = Date.now()) {
       goalStreak: 30,
       sessionSize: 0,
       sessionOrder: 'reviews-first' as const,
+      dayStartHour: 0,
       zenAuto: true,
       zenIdleMinutes: 5,
       language: detectSystemLocale(),

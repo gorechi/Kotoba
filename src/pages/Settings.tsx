@@ -277,6 +277,24 @@ export function Settings({
             </div>
           </div>
 
+          <div className="field">
+            <label htmlFor="settings-day-start">{t('settings.dayStart')}</label>
+            <Select
+              id="settings-day-start"
+              value={String(data.settings.dayStartHour)}
+              onChange={(event) =>
+                setSettings({ dayStartHour: Number(event.target.value) })
+              }
+              aria-label={t('settings.dayStartAria')}
+            >
+              {Array.from({ length: 13 }, (_, hour) => (
+                <option key={hour} value={hour}>
+                  {`${String(hour).padStart(2, '0')}:00`}
+                </option>
+              ))}
+            </Select>
+          </div>
+          <p className="hint">{t('settings.dayStartHint')}</p>
           <p className="hint">{t('settings.goalsHint')}</p>
         </section>
 

@@ -54,7 +54,15 @@ export function KanjiDecks({ onNavigate, onStudy }: KanjiDecksProps) {
                 stat.fresh,
                 remainingNewForDeck(data.history, deck, data.settings, now),
               )}
-              dueCount={Math.min(stat.due, remainingReviewForDeck(data.history, deck, now))}
+              dueCount={Math.min(
+                stat.due,
+                remainingReviewForDeck(
+                  data.history,
+                  deck,
+                  now,
+                  data.settings.dayStartHour,
+                ),
+              )}
               onOpen={() => onNavigate({ name: 'deck', deckId: deck.id })}
               onStudy={() => onStudy(deck.id)}
             />

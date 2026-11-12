@@ -75,7 +75,15 @@ export function Decks({ onNavigate, onStudy }: DecksProps) {
                 stat.fresh,
                 remainingNewForDeck(data.history, deck, data.settings, now),
               )}
-              dueCount={Math.min(stat.due, remainingReviewForDeck(data.history, deck, now))}
+              dueCount={Math.min(
+                stat.due,
+                remainingReviewForDeck(
+                  data.history,
+                  deck,
+                  now,
+                  data.settings.dayStartHour,
+                ),
+              )}
               onOpen={() => onNavigate({ name: 'deck', deckId: deck.id })}
               onStudy={() => onStudy(deck.id)}
             />
@@ -154,7 +162,10 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
     stat.fresh,
     remainingNewForDeck(data.history, deck, data.settings, now),
   )
-  const dueCount = Math.min(stat.due, remainingReviewForDeck(data.history, deck, now))
+  const dueCount = Math.min(
+    stat.due,
+    remainingReviewForDeck(data.history, deck, now, data.settings.dayStartHour),
+  )
   const canStudy = dueCount + newCount > 0 || stat.learned > 0
   const studyLabel =
     dueCount + newCount > 0 ? t('deckDetail.study') : t('deckDetail.practice')

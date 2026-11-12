@@ -31,7 +31,7 @@ const SIDEBAR_STORAGE_KEY = 'kotoba.sidebarCollapsed'
 export function Sidebar({ route, onNavigate, onZen, onSearch }: SidebarProps) {
   const { data } = useStore()
   const { t } = useI18n()
-  const days = streak(data.history)
+  const days = streak(data.history, Date.now(), data.settings.dayStartHour)
   const [collapsed, setCollapsed] = useState(() => {
     try {
       return localStorage.getItem(SIDEBAR_STORAGE_KEY) === '1'

@@ -319,6 +319,7 @@ function normalizeSettings(raw: unknown): Settings {
     goalStreak: 30,
     sessionSize: 0,
     sessionOrder: 'reviews-first',
+    dayStartHour: 0,
     zenAuto: true,
     zenIdleMinutes: 5,
     language: DEFAULT_LOCALE,
@@ -359,6 +360,7 @@ function normalizeSettings(raw: unknown): Settings {
     sessionOrder: SESSION_ORDERS.includes(raw.sessionOrder as SessionOrder)
       ? (raw.sessionOrder as SessionOrder)
       : base.sessionOrder,
+    dayStartHour: clamp(Math.round(num(raw.dayStartHour, base.dayStartHour)), 0, 12),
     zenAuto: raw.zenAuto !== false,
     zenIdleMinutes: clamp(
       Math.round(num(raw.zenIdleMinutes, base.zenIdleMinutes)),

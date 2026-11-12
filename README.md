@@ -32,7 +32,7 @@
 
 Get the latest installer from [GitHub Releases](https://github.com/gorechi/Kotoba/releases/latest):
 
-- **Kotoba-Setup-1.10.0.exe** — Windows x64 installer (NSIS). You can choose the installation folder; a desktop shortcut is created.
+- **Kotoba-Setup-1.11.0.exe** — Windows x64 installer (NSIS). You can choose the installation folder; a desktop shortcut is created.
 - The installer is not code-signed, so Windows SmartScreen may show a warning on first launch.
 
 Kotoba also runs in the browser for development — see [Development](#development).
@@ -182,7 +182,7 @@ Then open `http://localhost:5173`.
 
 ```powershell
 npm run build   # web build in dist/
-npm run dist    # Windows installer in release/Kotoba-Setup-1.10.0.exe
+npm run dist    # Windows installer in release/Kotoba-Setup-1.11.0.exe
 ```
 
 The installer is an NSIS package: it lets the user choose the installation folder and creates a desktop shortcut. Code signing is not configured.

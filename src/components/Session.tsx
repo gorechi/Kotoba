@@ -11,6 +11,7 @@ import { FitText } from './FitText'
 import { Icon } from './Icon'
 import { CardForm } from './CardForm'
 import { KanjiCardForm } from './KanjiCardForm'
+import { ModeSwitch } from './ModeSwitch'
 import { useSessionShortcuts } from './session/useSessionShortcuts'
 
 const RATINGS: { rating: Rating; labelKey: string; key: string }[] = [
@@ -75,6 +76,7 @@ export function Session({
   const { t } = useI18n()
   const [queue, setQueue] = useState<QueueItem[]>(items)
   const [pos, setPos] = useState(0)
+  const [sessionMode, setSessionMode] = useState<StudyMode>(mode)
   const [revealed, setRevealed] = useState(false)
   const [finished, setFinished] = useState(false)
   const [stats, setStats] = useState<SessionStats>({
@@ -111,7 +113,7 @@ export function Session({
         : t('session.deckFallback')
   const total = Math.max(1, queue.length)
   const isKanji = cardDeck?.kind === 'kanji'
-  const isWriting = mode === 'writing'
+  const isWriting = sessionMode === 'writing'
   const writingDifficulty = data.settings.writingDifficulty
   const hasMeaning = Boolean(meaningText)
   const cardReading = card?.reading.trim() ?? ''
@@ -149,6 +151,12 @@ export function Session({
     setReadingRevealed(false)
     setEditingCard(false)
   }, [card?.id, pos])
+
+  useEffect(() => {
+    // При смене режима ответ не должен оставаться открытым с прошлой стороны.
+    setRevealed(false)
+    setReadingRevealed(false)
+  }, [sessionMode])
 
   useEffect(() => {
     if (!suspendedNotice) return
@@ -244,7 +252,7 @@ export function Session({
     (rating: Rating) => {
       if (finished || !current || !card) return
       const elapsed = Date.now() - shownAt.current
-      const ratingUndo = rateCard(card.id, rating, elapsed, mode)
+      const ratingUndo = rateCard(card.id, rating, elapsed, sessionMode)
       if (ratingUndo) {
         setLastRating({
           data: ratingUndo,
@@ -300,7 +308,7 @@ export function Session({
         shownAt.current = Date.now()
       }
     },
-    [card, current, finished, mistakes, mode, pos, queue, rateCard, revealed, stats],
+    [card, current, finished, mistakes, sessionMode, pos, queue, rateCard, revealed, stats],
   )
 
   const undoLastRating = useCallback(() => {
@@ -398,13 +406,13 @@ export function Session({
         </button>
         <div className="session-title">
           <span>{deckName}</span>
-          <span className={`mode-badge ${mode}`}>
-            {isWriting ? t('session.modeWriting') : t('session.modeReading')}
-          </span>
           <span className="session-count">
             {finished ? queue.length : `${pos + 1} / ${queue.length}`}
           </span>
         </div>
+        {!finished && card && (
+          <ModeSwitch value={sessionMode} onChange={setSessionMode} />
+        )}
         {!finished && card && (
           <div className="session-tools">
             <button

@@ -37,6 +37,10 @@
   font-variant-numeric: tabular-nums;
 }
 
+.session-head .mode-switch {
+  flex: none;
+}
+
 .session-tools {
   display: flex;
   gap: 2px;

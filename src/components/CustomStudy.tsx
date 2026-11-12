@@ -33,7 +33,7 @@ const PRESETS: {
   { id: 'tag', labelKey: 'customStudy.tag', descKey: 'customStudy.tagDesc', icon: 'layers' },
   { id: 'marathon', labelKey: 'customStudy.marathon', descKey: 'customStudy.marathonDesc', icon: 'flame' },
   { id: 'mistakes', labelKey: 'customStudy.mistakes', descKey: 'customStudy.mistakesDesc', icon: 'bulb' },
-  { id: 'problems', labelKey: 'customStudy.problems', descKey: 'customStudy.problemsDesc', icon: 'think' },
+  { id: 'problems', labelKey: 'customStudy.problems', descKey: 'customStudy.problemsDesc', icon: 'query' },
 ]
 
 const DEFAULT_OPTIONS: CustomStudyOptions = {

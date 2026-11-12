@@ -21,7 +21,7 @@ const NAV: {
   { id: 'decks', labelKey: 'nav.kana', icon: 'kana' },
   { id: 'kanji', labelKey: 'nav.kanji', icon: 'kanji' },
   { id: 'cards', labelKey: 'nav.cards', icon: 'layers' },
-  { id: 'problems', labelKey: 'nav.problems', icon: 'think' },
+  { id: 'problems', labelKey: 'nav.problems', icon: 'query' },
   { id: 'kanamap', labelKey: 'nav.kanamap', icon: 'grid' },
   { id: 'stats', labelKey: 'nav.stats', icon: 'chart' },
   { id: 'data', labelKey: 'nav.data', icon: 'database' },

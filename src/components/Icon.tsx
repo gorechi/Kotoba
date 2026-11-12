@@ -41,7 +41,7 @@ export type IconName =
   | 'help'
   | 'alert'
   | 'pause'
-  | 'think'
+  | 'query'
 
 const paths: Record<IconName, ReactNode> = {
   book: (
@@ -281,13 +281,10 @@ const paths: Record<IconName, ReactNode> = {
       <path d="M15 5v14" />
     </>
   ),
-  think: (
+  query: (
     <>
-      <path d="M7 15.5C4.8 15.5 3 13.7 3 11.5C3 9.5 4.5 7.9 6.4 7.6C7 5.5 8.9 4 11.1 4C13.6 4 15.7 5.9 16 8.3C18.3 8.6 20 10.5 20 12.7C20 15.2 18 17.2 15.5 17.2Z" />
-      <path d="M10.6 10a2.2 2.2 0 0 1 4.2.8c0 1.6-2.1 1.8-2.1 3.1" />
-      <path d="M12.7 16h.01" />
-      <circle cx="6" cy="19.5" r="1.2" />
-      <circle cx="3.2" cy="22" r=".8" />
+      <path d="M8.5 8.2C8.8 5.7 10.9 4.1 13.3 4.5C15.5 4.9 16.9 6.9 16.2 9C15.6 10.8 13.8 11.1 13.1 12.4C12.8 12.9 12.8 13.5 12.8 14" />
+      <path d="M12.8 17.3h.01" />
     </>
   ),
 }

@@ -7,6 +7,7 @@ import type {
   Deck,
   QueueItem,
 } from '../types'
+import { isProblemCard } from './problems'
 import { DAY } from './srs'
 import { shuffle } from './utils'
 
@@ -25,6 +26,7 @@ export type CustomStudyPreset =
   | 'kanji'
   | 'marathon'
   | 'mistakes'
+  | 'problems'
 
 /** Готовые подборки с главного экрана. */
 export function presetOptions(preset: CustomStudyPreset, tag?: string): CustomStudyOptions {
@@ -43,6 +45,8 @@ export function presetOptions(preset: CustomStudyPreset, tag?: string): CustomSt
       return { deckId: 'all', status: 'all', kind: 'all', limit: 50 }
     case 'mistakes':
       return { deckId: 'all', status: 'mistakes', kind: 'all', limit: 50 }
+    case 'problems':
+      return { deckId: 'all', status: 'problems', kind: 'all', limit: 0 }
     default:
       return {
         deckId: 'all',
@@ -65,6 +69,13 @@ function sortPool(cards: Card[], status: CustomStudyStatus): Card[] {
   if (status === 'mistakes') {
     return pool.sort(
       (a, b) => (b.srs.lastMistakeAt ?? 0) - (a.srs.lastMistakeAt ?? 0),
+    )
+  }
+  if (status === 'problems') {
+    return pool.sort(
+      (a, b) =>
+        b.srs.lapses - a.srs.lapses ||
+        (b.srs.lastMistakeAt ?? 0) - (a.srs.lastMistakeAt ?? 0),
     )
   }
   return shuffle(pool)
@@ -117,6 +128,9 @@ export function buildCustomStudyQueue(
         typeof card.srs.lastMistakeAt === 'number' &&
         card.srs.lastMistakeAt >= weekAgo
       )
+    }
+    if (options.status === 'problems') {
+      return card.srs.introduced && isProblemCard(card, now)
     }
     return true
   })

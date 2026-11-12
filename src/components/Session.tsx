@@ -269,6 +269,7 @@ export function Session({
           return [...prev, { cardId: card.id, count: 1 }]
         })
       }
+      if (ratingUndo?.autoPaused) setSuspendedNotice(card.id)
       setStats((prev) => ({
         ...prev,
         reviews: prev.reviews + 1,
@@ -277,7 +278,10 @@ export function Session({
       }))
 
       let nextQueue = queue
-      if (rating === 'again') {
+      if (ratingUndo?.autoPaused) {
+        nextQueue = queue.filter((item) => item.cardId !== card.id)
+        setQueue(nextQueue)
+      } else if (rating === 'again') {
         const at = Math.min(queue.length, pos + 4)
         nextQueue = [
           ...queue.slice(0, at),

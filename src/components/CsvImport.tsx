@@ -66,6 +66,17 @@ const ACCENTS: Record<DeckKind, string> = {
   kanji: '#4A5FC1',
 }
 
+type DuplicateAction = 'skip' | 'update' | 'add'
+
+interface PreviewRow {
+  index: number
+  card: Card | null
+  duplicate?: Card
+  duplicateBy?: 'front' | 'reading'
+}
+
+const PREVIEW_ROWS = 8
+
 function parseTags(value: string): string[] {
   return [...new Set(value.split(/[,;|]/).map((item) => item.trim()).filter(Boolean))]
 }
@@ -101,6 +112,8 @@ export function CsvImport({ kind }: { kind: DeckKind }) {
   const [notice, setNotice] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [duplicateMode, setDuplicateMode] = useState<DuplicateAction>('skip')
+  const [rowActions, setRowActions] = useState<Record<number, DuplicateAction>>({})
 
   const fields = kind === 'kana' ? KANA_FIELDS : KANJI_FIELDS
   const existingDecks = useMemo(
@@ -154,6 +167,11 @@ export function CsvImport({ kind }: { kind: DeckKind }) {
     const timer = window.setTimeout(() => setNotice(null), 4500)
     return () => window.clearTimeout(timer)
   }, [notice])
+
+  useEffect(() => {
+    setDuplicateMode('skip')
+    setRowActions({})
+  }, [file, delimiterMode, hasHeader, mapping, targetMode, targetDeckId])
 
   const title = kind === 'kana' ? t('data.kanaTitle') : t('data.kanjiTitle')
   const subtitle = kind === 'kana' ? t('data.kanaSub') : t('data.kanjiSub')
@@ -235,6 +253,145 @@ export function CsvImport({ kind }: { kind: DeckKind }) {
     return index === undefined ? '' : (row[index] ?? '').trim()
   }
 
+  const buildCard = (
+    row: string[],
+    deckId: string,
+    order: number,
+    createdAt: number,
+  ): Card | null => {
+    const front = cell(row, 'front')
+    if (!front) return null
+
+    if (kind === 'kana') {
+      return {
+        id: uid('card'),
+        deckId,
+        front,
+        reading: cell(row, 'reading') || suggestReading(front),
+        meaning: cell(row, 'meaning'),
+        note: cell(row, 'note'),
+        mnemonic: '',
+        tags: parseTags(cell(row, 'tags')),
+        jlpt: parseJlpt(cell(row, 'jlpt')),
+        frequency: parseFrequency(cell(row, 'frequency')),
+        readings: [],
+        examples: [],
+        group: 'custom',
+        order,
+        srs: freshSrs(),
+        createdAt,
+      }
+    }
+
+    const readingKana = cell(row, 'readingKana')
+    const transcriptionCell = cell(row, 'readingTranscription')
+    const transcription =
+      transcriptionCell ||
+      (readingKana
+        ? data.settings.defaultTranscription === 'cyrillic'
+          ? toCyrillic(readingKana)
+          : toRomaji(readingKana).toLowerCase()
+        : '')
+    const readings: CardReading[] =
+      readingKana || transcription
+        ? [{ id: uid('reading'), kana: readingKana, transcription }]
+        : []
+
+    const exampleText = cell(row, 'exampleText')
+    const exampleTranscription = cell(row, 'exampleTranscription')
+    const exampleTranslation = cell(row, 'exampleTranslation')
+    const examples: CardExample[] =
+      exampleText || exampleTranscription || exampleTranslation
+        ? [
+            {
+              id: uid('example'),
+              text: exampleText,
+              transcription: exampleTranscription,
+              translation: exampleTranslation,
+            },
+          ]
+        : []
+
+    const meaning = cell(row, 'meaning')
+    if (!meaning && !readings.length) return null
+
+    return {
+      id: uid('card'),
+      deckId,
+      front,
+      reading: '',
+      meaning,
+      note: cell(row, 'note'),
+      mnemonic: '',
+      tags: parseTags(cell(row, 'tags')),
+      jlpt: parseJlpt(cell(row, 'jlpt')),
+      frequency: parseFrequency(cell(row, 'frequency')),
+      readings,
+      examples,
+      group: 'custom',
+      order,
+      srs: freshSrs(),
+      createdAt,
+    }
+  }
+
+  const readingValues = (card: Card): string[] =>
+    [card.reading, ...card.readings.flatMap((item) => [item.kana, item.transcription])]
+      .map((value) => value.trim().toLowerCase())
+      .filter(Boolean)
+
+  const existingCards = useMemo(() => {
+    if (targetMode !== 'existing') return []
+    return data.cards.filter((card) => card.deckId === targetDeckId)
+  }, [data.cards, targetDeckId, targetMode])
+
+  const rowInfos = useMemo<PreviewRow[]>(() => {
+    const stamp = Date.now()
+    return table.rows.map((row, index) => {
+      const card = buildCard(row, 'preview', index + 1, stamp + index)
+      if (!card) return { index, card: null }
+
+      let duplicate: Card | undefined
+      let duplicateBy: 'front' | 'reading' | undefined
+      const front = card.front.trim().toLowerCase()
+      for (const existing of existingCards) {
+        if (existing.front.trim().toLowerCase() === front) {
+          duplicate = existing
+          duplicateBy = 'front'
+          break
+        }
+      }
+      if (!duplicate) {
+        const values = new Set(readingValues(card))
+        if (values.size) {
+          duplicate = existingCards.find((existing) =>
+            readingValues(existing).some((value) => values.has(value)),
+          )
+          if (duplicate) duplicateBy = 'reading'
+        }
+      }
+
+      return { index, card, duplicate, duplicateBy }
+    })
+    // buildCard uses the current mapping and settings; keep them in the deps.
+  }, [existingCards, mapping, kind, table.rows, data.settings.defaultTranscription])
+
+  const actionFor = (info: PreviewRow): DuplicateAction => {
+    if (!info.card) return 'skip'
+    if (!info.duplicate) return 'add'
+    return rowActions[info.index] ?? duplicateMode
+  }
+
+  const previewRows = rowInfos.slice(0, PREVIEW_ROWS)
+  const duplicateCount = rowInfos.filter((info) => info.duplicate).length
+  const previewReading = (card: Card) =>
+    kind === 'kana'
+      ? card.reading
+      : card.readings
+          .map((item) => item.kana)
+          .filter(Boolean)
+          .join('、')
+
   const importCards = () => {
     if (!canContinue || !file) return
 
@@ -270,94 +427,80 @@ export function CsvImport({ kind }: { kind: DeckKind }) {
       ) + 1
     let order = startOrder
     let skipped = 0
-    const cards: Card[] = []
+    const added: Card[] = []
+    const updates = new Map<string, Card>()
+    const mapped = (key: ImportField) => mapping[key] !== undefined
 
-    table.rows.forEach((row, index) => {
-      const front = cell(row, 'front')
-      if (!front) {
+    rowInfos.forEach((info) => {
+      if (!info.card) {
+        skipped += 1
+        return
+      }
+      const action = actionFor(info)
+      if (action === 'skip') {
         skipped += 1
         return
       }
 
-      if (kind === 'kana') {
-        const reading = cell(row, 'reading') || suggestReading(front)
-        cards.push({
-          id: uid('card'),
-          deckId,
-          front,
-          reading,
-          meaning: cell(row, 'meaning'),
-          note: cell(row, 'note'),
-          mnemonic: '',
-          tags: parseTags(cell(row, 'tags')),
-          jlpt: parseJlpt(cell(row, 'jlpt')),
-          frequency: parseFrequency(cell(row, 'frequency')),
-          readings: [],
-          examples: [],
-          group: 'custom',
-          order: order++,
-          srs: freshSrs(),
-          createdAt: now + index,
-        })
-        return
-      }
-
-      const readingKana = cell(row, 'readingKana')
-      const transcriptionCell = cell(row, 'readingTranscription')
-      const transcription =
-        transcriptionCell ||
-        (readingKana
-          ? data.settings.defaultTranscription === 'cyrillic'
-            ? toCyrillic(readingKana)
-            : toRomaji(readingKana).toLowerCase()
-          : '')
-      const readings: CardReading[] =
-        readingKana || transcription
-          ? [{ id: uid('reading'), kana: readingKana, transcription }]
-          : []
-
-      const exampleText = cell(row, 'exampleText')
-      const exampleTranscription = cell(row, 'exampleTranscription')
-      const exampleTranslation = cell(row, 'exampleTranslation')
-      const examples: CardExample[] =
-        exampleText || exampleTranscription || exampleTranslation
-          ? [
-              {
-                id: uid('example'),
-                text: exampleText,
-                transcription: exampleTranscription,
-                translation: exampleTranslation,
-              },
-            ]
-          : []
-
-      const meaning = cell(row, 'meaning')
-      if (!meaning && !readings.length) {
+      const draft = buildCard(
+        table.rows[info.index],
+        deckId,
+        order,
+        now + info.index,
+      )
+      if (!draft) {
         skipped += 1
         return
       }
 
-      cards.push({
+      if (action === 'update' && info.duplicate) {
+        const existing = info.duplicate
+        const next: Card = {
+          ...existing,
+          front: draft.front,
+          meaning: draft.meaning,
+          id: existing.id,
+          deckId: existing.deckId,
+          order: existing.order,
+          createdAt: existing.createdAt,
+          srs: existing.srs,
+          suspended: existing.suspended,
+          group: existing.group,
+          mnemonic: existing.mnemonic,
+        }
+        if (kind === 'kana') {
+          if (mapped('reading')) next.reading = draft.reading
+        } else {
+          if (mapped('readingKana') || mapped('readingTranscription')) {
+            next.readings = draft.readings
+          }
+          if (
+            mapped('exampleText') ||
+            mapped('exampleTranscription') ||
+            mapped('exampleTranslation')
+          ) {
+            next.examples = draft.examples
+          }
+        }
+        if (mapped('note')) next.note = draft.note
+        if (mapped('tags')) next.tags = draft.tags
+        if (mapped('jlpt')) next.jlpt = draft.jlpt
+        if (mapped('frequency')) next.frequency = draft.frequency
+        updates.set(existing.id, next)
+        return
+      }
+
+      added.push({
+        ...draft,
         id: uid('card'),
         deckId,
-        front,
-        reading: '',
-        meaning,
-        note: cell(row, 'note'),
-        mnemonic: '',
-        tags: parseTags(cell(row, 'tags')),
-        jlpt: parseJlpt(cell(row, 'jlpt')),
-        frequency: parseFrequency(cell(row, 'frequency')),
-        readings,
-        examples,
-        group: 'custom',
         order: order++,
+        createdAt: now + info.index,
         srs: freshSrs(),
-        createdAt: now + index,
       })
     })
 
-    if (!cards.length) {
+    if (!added.length && updates.size === 0) {
       setError(t('data.importNoCards'))
       setBusy(false)
       return
@@ -365,17 +508,24 @@ export function CsvImport({ kind }: { kind: DeckKind }) {
 
     update((current) => ({
       ...current,
-      decks: newDeck ? [...current.decks, newDeck] : current.decks,
-      cards: [...current.cards, ...cards],
+      decks:
+        newDeck && added.length ? [...current.decks, newDeck] : current.decks,
+      cards: [
+        ...current.cards.map((card) => updates.get(card.id) ?? card),
+        ...added,
+      ],
     }))
 
     setNotice(
-      skipped
-        ? t('data.importDoneSkipped', { n: cards.length, skipped })
-        : t('data.importDone', { n: cards.length }),
+      t('data.importResult', {
+        added: added.length,
+        updated: updates.size,
+        skipped,
+      }),
     )
     setFile(null)
     setMapping({})
+    setRowActions({})
     setBusy(false)
   }
 
@@ -555,6 +705,104 @@ export function CsvImport({ kind }: { kind: DeckKind }) {
             </div>
           ))}
         </div>
+
+        {table.rows.length > 0 && (
+          <section className="import-preview">
+            <div className="import-preview-head">
+              <div>
+                <strong>{t('data.previewTitle')}</strong>
+                <span>
+                  {t('data.previewCount', {
+                    shown: previewRows.length,
+                    total: rowInfos.length,
+                  })}
+                </span>
+              </div>
+              {duplicateCount > 0 ? (
+                <div className="import-preview-default">
+                  <span>{t('data.duplicateAction')}</span>
+                  <Select
+                    value={duplicateMode}
+                    aria-label={t('data.duplicateAction')}
+                    onChange={(event) =>
+                      setDuplicateMode(event.target.value as DuplicateAction)
+                    }
+                  >
+                    <option value="skip">{t('data.duplicateSkip')}</option>
+                    <option value="update">{t('data.duplicateUpdate')}</option>
+                    <option value="add">{t('data.duplicateAdd')}</option>
+                  </Select>
+                </div>
+              ) : (
+                <span className="import-preview-clean">{t('data.noDuplicates')}</span>
+              )}
+            </div>
+
+            <div className="import-preview-table">
+              <div className="import-preview-row import-preview-row--head">
+                <span>{t('data.previewRow')}</span>
+                <span>{t('data.previewCard')}</span>
+                <span>{t('data.previewStatus')}</span>
+              </div>
+              {previewRows.map((info) => {
+                const action = actionFor(info)
+                return (
+                  <div className="import-preview-row" key={info.index}>
+                    <span className="import-preview-index">{info.index + 1}</span>
+                    {info.card ? (
+                      <div className="import-preview-card">
+                        <strong>{info.card.front}</strong>
+                        <span>
+                          {[previewReading(info.card), info.card.meaning]
+                            .filter(Boolean)
+                            .join(' · ')}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="import-preview-invalid">
+                        {t('data.previewInvalid')}
+                      </span>
+                    )}
+                    {info.duplicate ? (
+                      <div className="import-preview-duplicate">
+                        <span>
+                          {info.duplicateBy === 'reading'
+                            ? t('data.duplicateByReading')
+                            : t('data.duplicateOf', {
+                                front: info.duplicate.front,
+                              })}
+                        </span>
+                        <Select
+                          value={action}
+                          aria-label={t('data.duplicateAction')}
+                          onChange={(event) =>
+                            setRowActions((current) => ({
+                              ...current,
+                              [info.index]: event.target.value as DuplicateAction,
+                            }))
+                          }
+                        >
+                          <option value="skip">{t('data.duplicateSkip')}</option>
+                          <option value="update">{t('data.duplicateUpdate')}</option>
+                          <option value="add">{t('data.duplicateAdd')}</option>
+                        </Select>
+                      </div>
+                    ) : (
+                      <span className="import-preview-clean">
+                        {info.card ? t('data.duplicateNew') : t('data.previewInvalid')}
+                      </span>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+            {rowInfos.length > previewRows.length && (
+              <p className="hint">
+                {t('data.previewMore', { n: rowInfos.length - previewRows.length })}
+              </p>
+            )}
+          </section>
+        )}
 
         {table.rows.length === 0 && <p className="form-error">{t('data.noDataRows')}</p>}
         {error && <p className="form-error">{error}</p>}

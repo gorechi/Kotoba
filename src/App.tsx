@@ -37,6 +37,9 @@ const HelpGuidePage = lazy(() =>
 const TtsHelp = lazy(() =>
   import('./pages/TtsHelp').then((module) => ({ default: module.TtsHelp })),
 )
+const ProblemCards = lazy(() =>
+  import('./pages/ProblemCards').then((module) => ({ default: module.ProblemCards })),
+)
 import { ZenMode } from './components/ZenMode'
 import { effectiveStudyMode, sessionSizeForDeck } from './lib/deck-settings'
 import { practiceQueue, buildStudyQueue, limitStudySession } from './lib/study'
@@ -415,6 +418,23 @@ function Shell() {
             {route.name === 'kanji' && <KanjiDecks onNavigate={navigate} onStudy={startStudy} />}
             {route.name === 'cards' && (
               <CardBrowser focusCardId={route.cardId} initialQuery={route.query} />
+            )}
+            {route.name === 'problems' && (
+              <ProblemCards
+                onStudy={() =>
+                  startCustomStudy(
+                    {
+                      deckId: 'all',
+                      status: 'problems',
+                      kind: 'all',
+                      limit: 0,
+                      sessionSize: data.settings.sessionSize,
+                    },
+                    t('problemCards.studyTitle'),
+                  )
+                }
+                onOpenCard={(cardId) => navigate({ name: 'cards', cardId })}
+              />
             )}
             {route.name === 'deck' && (
               <DeckDetail deckId={route.deckId} onNavigate={navigate} onStudy={startStudy} />

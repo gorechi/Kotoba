@@ -322,9 +322,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const now = Date.now()
       const historyKey = dayKey(now, prev.settings.dayStartHour)
       const previousDay = prev.history[historyKey]
+      const threshold = prev.settings.leechThreshold
+      const predicted = applyRating(card.srs, rating, now)
+      const autoPaused =
+        rating === 'again' &&
+        threshold > 0 &&
+        predicted.lapses >= threshold &&
+        !card.suspended
       const snapshot: RatingUndo = {
         cardId,
         srs: { ...card.srs },
+        suspended: Boolean(card.suspended),
+        autoPaused,
         historyKey,
         day: previousDay ? { ...previousDay } : null,
       }
@@ -346,6 +355,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         cards[index] = {
           ...target,
           srs: nextSrs,
+          suspended: autoPaused && !target.suspended ? true : target.suspended,
         }
 
         const elapsed = Math.min(Math.max(0, elapsedMs), 120_000)
@@ -408,6 +418,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         cards[index] = {
           ...cards[index],
           srs: { ...snapshot.srs },
+          suspended: snapshot.suspended,
         }
       }
 

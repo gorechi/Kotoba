@@ -258,11 +258,15 @@ ipcMain.on('data:save-parts-sync', (event, parts) => {
   }
 })
 
-ipcMain.handle('data:export', async (_event, data, title) => {
+ipcMain.handle('data:export', async (_event, data, title, filename) => {
   const stamp = new Date().toISOString().slice(0, 10)
+  const requested =
+    typeof filename === 'string' && filename.trim()
+      ? path.basename(filename.trim())
+      : `kotoba-backup-${stamp}.json`
   const result = await dialog.showSaveDialog(mainWindow, {
     title: typeof title === 'string' && title ? title : undefined,
-    defaultPath: path.join(app.getPath('documents'), `kotoba-backup-${stamp}.json`),
+    defaultPath: path.join(app.getPath('documents'), requested),
     filters: [{ name: 'JSON', extensions: ['json'] }],
   })
   if (result.canceled || !result.filePath) return null

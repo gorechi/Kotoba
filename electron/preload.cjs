@@ -4,7 +4,8 @@ contextBridge.exposeInMainWorld('kotoba', {
   load: () => ipcRenderer.invoke('data:load'),
   saveParts: (parts) => ipcRenderer.invoke('data:save-parts', parts),
   savePartsSync: (parts) => ipcRenderer.sendSync('data:save-parts-sync', parts),
-  exportData: (data, title) => ipcRenderer.invoke('data:export', data, title),
+  exportData: (data, title, filename) =>
+    ipcRenderer.invoke('data:export', data, title, filename),
   importData: (title) => ipcRenderer.invoke('data:import', title),
   openDataFolder: () => ipcRenderer.invoke('data:openFolder'),
   backupBeforeImport: (data) => ipcRenderer.invoke('data:backup-before-import', data),

@@ -1009,3 +1009,376 @@
   text-align: center;
   font-size: 13px;
 }
+
+/* ---------- Экспорт и импорт одной колоды ---------- */
+.deck-transfer-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.deck-transfer-block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+
+.deck-transfer-block > strong {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.deck-transfer-block .hint {
+  margin: 0;
+}
+
+.deck-transfer-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.deck-transfer-controls .select {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 760px) {
+  .deck-transfer-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .deck-transfer-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+/* ---------- Проблемные карточки ---------- */
+.problems-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px 28px;
+}
+
+.problems-stats {
+  display: flex;
+  gap: 28px;
+}
+
+.problems-stats > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.problems-stats strong {
+  font-size: 26px;
+  font-weight: 650;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.problems-stats span {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.problems-pause-setting {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  min-width: min(100%, 360px);
+}
+
+.problems-pause-setting > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.problems-pause-setting strong {
+  display: block;
+  font-size: 12.5px;
+}
+
+.problems-pause-setting .hint {
+  margin-top: 3px;
+}
+
+.problems-pause-setting .select {
+  flex: none;
+  width: 160px;
+}
+
+.problems-pause-setting .select select {
+  width: 100%;
+  height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  padding: 0 34px 0 11px;
+  font: inherit;
+  font-size: 12.5px;
+  outline: none;
+  cursor: pointer;
+}
+
+.problems-pause-setting .select select:focus {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.problems-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.problem-row {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.problem-row.is-paused {
+  opacity: 0.72;
+}
+
+.problem-front {
+  font-family: var(--font-kana);
+  font-size: 34px;
+  line-height: 1;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.problem-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.problem-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.problem-title strong {
+  font-size: 14px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.problem-meta {
+  color: var(--muted);
+  font-size: 11.5px;
+  overflow-wrap: anywhere;
+}
+
+.problem-lapses {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--red);
+  font-size: 11.5px;
+  white-space: nowrap;
+}
+
+.problem-actions {
+  display: flex;
+  gap: 6px;
+}
+
+@media (max-width: 900px) {
+  .problem-row {
+    grid-template-columns: 56px minmax(0, 1fr) auto;
+  }
+
+  .problem-lapses {
+    grid-column: 2;
+  }
+
+  .problem-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 640px) {
+  .problems-pause-setting {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .problems-pause-setting .select {
+    width: 100%;
+  }
+}
+
+/* ---------- Предпросмотр импорта ---------- */
+.import-preview {
+  margin-top: 18px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.import-preview-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 18px;
+  padding: 11px 14px;
+  background: var(--surface-2);
+}
+
+.import-preview-head > div:first-child {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.import-preview-head strong {
+  font-size: 12.5px;
+}
+
+.import-preview-head span,
+.import-preview-clean {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.import-preview-default {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.import-preview-default > span {
+  white-space: nowrap;
+}
+
+.import-preview-default .select {
+  width: 130px;
+}
+
+.import-preview-table {
+  display: flex;
+  flex-direction: column;
+}
+
+.import-preview-row {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1.2fr) minmax(180px, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 9px 14px;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+}
+
+.import-preview-row--head {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.import-preview-index {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.import-preview-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.import-preview-card strong,
+.import-preview-card span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.import-preview-card strong {
+  font-size: 13px;
+}
+
+.import-preview-card span {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.import-preview-invalid {
+  color: var(--red);
+  font-size: 11.5px;
+}
+
+.import-preview-duplicate {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+
+.import-preview-duplicate > span {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.import-preview-duplicate .select {
+  flex: none;
+  width: 122px;
+}
+
+@media (max-width: 760px) {
+  .import-preview-row {
+    grid-template-columns: 30px minmax(0, 1fr);
+  }
+
+  .import-preview-row > :last-child {
+    grid-column: 2;
+  }
+
+  .import-preview-row--head {
+    display: none;
+  }
+
+  .import-preview-duplicate {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .import-preview-duplicate .select {
+    width: 100%;
+  }
+}

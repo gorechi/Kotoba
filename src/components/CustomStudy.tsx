@@ -33,6 +33,7 @@ const PRESETS: {
   { id: 'tag', labelKey: 'customStudy.tag', descKey: 'customStudy.tagDesc', icon: 'layers' },
   { id: 'marathon', labelKey: 'customStudy.marathon', descKey: 'customStudy.marathonDesc', icon: 'flame' },
   { id: 'mistakes', labelKey: 'customStudy.mistakes', descKey: 'customStudy.mistakesDesc', icon: 'bulb' },
+  { id: 'problems', labelKey: 'customStudy.problems', descKey: 'customStudy.problemsDesc', icon: 'alert' },
 ]
 
 const DEFAULT_OPTIONS: CustomStudyOptions = {
@@ -51,6 +52,7 @@ const STATUS_LABEL_KEYS: Record<Exclude<CustomStudyStatus, 'all'>, string> = {
   overdue: 'customStudy.statusOverdue',
   new: 'customStudy.statusNew',
   mistakes: 'customStudy.statusMistakes',
+  problems: 'customStudy.statusProblems',
 }
 
 const KIND_LABEL_KEYS: Record<Exclude<CustomStudyKind, 'all'>, string> = {
@@ -415,6 +417,7 @@ export function CustomStudy({
                   <option value="overdue">{t('customStudy.statusOverdue')}</option>
                   <option value="new">{t('customStudy.statusNew')}</option>
                   <option value="mistakes">{t('customStudy.statusMistakes')}</option>
+                  <option value="problems">{t('customStudy.statusProblems')}</option>
                 </Select>
               </div>
             </div>

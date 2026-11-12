@@ -39,7 +39,13 @@ const DAILY_GOAL_TYPES: DailyGoalType[] = ['reviews', 'minutes']
 const DECK_ORDERS: DeckOrder[] = ['order', 'random', 'frequency', 'jlpt']
 const DECK_STUDY_MODES: DeckStudyMode[] = ['global', 'reading', 'writing']
 const SESSION_ORDERS: SessionOrder[] = ['random', 'deck', 'new-first', 'reviews-first']
-const CUSTOM_STUDY_STATUSES: CustomStudyStatus[] = ['all', 'overdue', 'new', 'mistakes']
+const CUSTOM_STUDY_STATUSES: CustomStudyStatus[] = [
+  'all',
+  'overdue',
+  'new',
+  'mistakes',
+  'problems',
+]
 const CUSTOM_STUDY_KINDS: CustomStudyKind[] = ['all', 'kana', 'kanji']
 const AUTO_BACKUP_FREQUENCIES: AutoBackupFrequency[] = [
   'never',
@@ -331,6 +337,7 @@ function normalizeSettings(raw: unknown): Settings {
     sessionSize: 0,
     sessionOrder: 'reviews-first',
     dayStartHour: 0,
+    leechThreshold: 0,
     zenAuto: true,
     zenIdleMinutes: 5,
     language: DEFAULT_LOCALE,
@@ -372,6 +379,7 @@ function normalizeSettings(raw: unknown): Settings {
       ? (raw.sessionOrder as SessionOrder)
       : base.sessionOrder,
     dayStartHour: clamp(Math.round(num(raw.dayStartHour, base.dayStartHour)), 0, 12),
+    leechThreshold: clamp(Math.round(num(raw.leechThreshold, base.leechThreshold)), 0, 50),
     zenAuto: raw.zenAuto !== false,
     zenIdleMinutes: clamp(
       Math.round(num(raw.zenIdleMinutes, base.zenIdleMinutes)),

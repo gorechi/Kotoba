@@ -43,6 +43,7 @@ export type Route =
   | { name: 'kanji' }
   | { name: 'deck'; deckId: string }
   | { name: 'cards'; cardId?: string; query?: string }
+  | { name: 'problems' }
   | { name: 'kanamap' }
   | { name: 'stats' }
   | { name: 'data' }
@@ -171,6 +172,8 @@ export interface Settings {
   sessionOrder: SessionOrder
   /** Час, с которого начинается новый учебный день (0–12). */
   dayStartHour: number
+  /** Автопауза карточки после стольких ошибок; 0 — выключено. */
+  leechThreshold: number
   /** Автоматически включать режим Дзен при бездействии. */
   zenAuto: boolean
   /** Через сколько минут бездействия включать Дзен. */
@@ -202,7 +205,7 @@ export interface QueueItem {
   isNew: boolean
 }
 
-export type CustomStudyStatus = 'all' | 'overdue' | 'new' | 'mistakes'
+export type CustomStudyStatus = 'all' | 'overdue' | 'new' | 'mistakes' | 'problems'
 export type CustomStudyKind = 'all' | 'kana' | 'kanji'
 export type CustomStudyOrder = 'random' | 'deck'
 
@@ -235,6 +238,8 @@ export interface StudySet {
 export interface RatingUndo {
   cardId: string
   srs: SrsState
+  suspended: boolean
+  autoPaused: boolean
   historyKey: string
   day: DayStat | null
 }
@@ -277,7 +282,11 @@ export interface KotobaApi {
   load: () => Promise<unknown>
   saveParts: (parts: unknown) => Promise<boolean>
   savePartsSync: (parts: unknown) => boolean
-  exportData: (data: AppData, title?: string) => Promise<string | null>
+  exportData: (
+    data: unknown,
+    title?: string,
+    filename?: string,
+  ) => Promise<string | null>
   importData: (title?: string) => Promise<ImportResult | null>
   openDataFolder: () => Promise<string>
   backupBeforeImport: (data: AppData) => Promise<string>

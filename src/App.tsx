@@ -98,6 +98,11 @@ function Shell() {
   const [updateChecking, setUpdateChecking] = useState(false)
   const updateCheckedRef = useRef(false)
   const mainRef = useRef<HTMLElement>(null)
+  const customChunkRef = useRef<{
+    pool: QueueItem[]
+    size: number
+    offset: number
+  } | null>(null)
 
   const checkUpdates = useCallback(async (force = false) => {
     setUpdateChecking(true)
@@ -247,6 +252,7 @@ function Shell() {
     if (!items.length) items = practiceQueue(data.cards, deckId, now)
     items = limitStudySession(items, sessionSizeForDeck(deck, data.settings))
     if (!items.length) return
+    customChunkRef.current = null
     setSession({
       deckId,
       items,
@@ -255,8 +261,12 @@ function Shell() {
   }
 
   const startCustomStudy = (options: CustomStudyOptions, title: string): boolean => {
-    const items = buildCustomStudyQueue(data.cards, data.decks, options, Date.now())
-    if (!items.length) return false
+    const pool = buildCustomStudyQueue(data.cards, data.decks, options, Date.now())
+    if (!pool.length) return false
+    const size = options.sessionSize ?? 0
+    const chunked = size > 0 && pool.length > size
+    const items = chunked ? pool.slice(0, size) : pool
+    customChunkRef.current = chunked ? { pool, size, offset: size } : null
     const deck =
       options.deckId === 'all'
         ? undefined
@@ -346,6 +356,10 @@ function Shell() {
           title={session.title}
           restartItems={() => {
             if (session.custom) {
+              const chunk = customChunkRef.current
+              if (chunk) {
+                return chunk.pool.slice(chunk.offset, chunk.offset + chunk.size)
+              }
               return buildCustomStudyQueue(
                 data.cards,
                 data.decks,
@@ -369,6 +383,14 @@ function Shell() {
             if (!items.length) items = practiceQueue(data.cards, session.deckId, now)
             return limitStudySession(items, sessionSizeForDeck(deck, data.settings))
           }}
+          onRestart={
+            session.custom
+              ? () => {
+                  const chunk = customChunkRef.current
+                  if (chunk) chunk.offset += chunk.size
+                }
+              : undefined
+          }
           onClose={() => void closeSession()}
         />
       ) : (

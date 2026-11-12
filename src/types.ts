@@ -204,6 +204,7 @@ export interface QueueItem {
 
 export type CustomStudyStatus = 'all' | 'overdue' | 'new' | 'mistakes'
 export type CustomStudyKind = 'all' | 'kana' | 'kanji'
+export type CustomStudyOrder = 'random' | 'deck'
 
 export interface CustomStudyOptions {
   /** 'all' или id конкретной колоды. */
@@ -215,6 +216,10 @@ export interface CustomStudyOptions {
   tag?: string
   /** 0 — без ограничения. */
   limit: number
+  /** Сколько карточек показывать за одну сессию; 0 — весь набор. */
+  sessionSize?: number
+  /** Порядок карточек в наборе. */
+  order?: CustomStudyOrder
 }
 
 /** Сохранённая пользовательская подборка. */

@@ -7,6 +7,7 @@ import type {
   CardReading,
   CustomStudyKind,
   CustomStudyOptions,
+  CustomStudyOrder,
   CustomStudyStatus,
   DailyGoalType,
   DayStat,
@@ -226,6 +227,14 @@ function normalizeStudySetOptions(raw: unknown): CustomStudyOptions {
   const tag = typeof value.tag === 'string' && value.tag.trim()
     ? value.tag.trim()
     : undefined
+  const sessionSize =
+    value.sessionSize === undefined
+      ? undefined
+      : clamp(Math.round(num(value.sessionSize, 0)), 0, 500)
+  const order =
+    value.order === 'random' || value.order === 'deck'
+      ? (value.order as CustomStudyOrder)
+      : undefined
   return {
     deckId,
     status,
@@ -233,6 +242,8 @@ function normalizeStudySetOptions(raw: unknown): CustomStudyOptions {
     jlpt: jlpt >= 1 && jlpt <= 5 ? jlpt : undefined,
     tag,
     limit,
+    sessionSize,
+    order,
   }
 }
 

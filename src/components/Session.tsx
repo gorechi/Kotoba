@@ -26,6 +26,8 @@ interface SessionProps {
   mode: StudyMode
   title?: string
   restartItems?: () => QueueItem[]
+  /** Вызывается после запуска следующего подхода. */
+  onRestart?: () => void
   onClose: () => void
 }
 
@@ -60,7 +62,15 @@ const RATING_LABEL_KEY: Record<Rating, string> = {
   easy: 'session.ratings.easy',
 }
 
-export function Session({ deckId, items, mode, title, restartItems, onClose }: SessionProps) {
+export function Session({
+  deckId,
+  items,
+  mode,
+  title,
+  restartItems,
+  onRestart,
+  onClose,
+}: SessionProps) {
   const { data, rateCard, undoRating, update } = useStore()
   const { t } = useI18n()
   const [queue, setQueue] = useState<QueueItem[]>(items)
@@ -345,6 +355,7 @@ export function Session({ deckId, items, mode, title, restartItems, onClose }: S
     setMistakes([])
     setReadingRevealed(false)
     shownAt.current = Date.now()
+    onRestart?.()
   }
 
   const mistakeRows = mistakes.flatMap((entry) => {

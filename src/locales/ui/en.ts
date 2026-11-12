@@ -1070,5 +1070,11 @@ export const messages: Record<string, string> = {
   "deckSettings.useGlobalSessionOrder": "Use the global order ({n})",
   "settings.dayStart": "Day starts at",
   "settings.dayStartAria": "Study day start time",
-  "settings.dayStartHint": "Reviews before this hour count toward the previous day. This keeps your streak during late-night study."
+  "settings.dayStartHint": "Reviews before this hour count toward the previous day. This keeps your streak during late-night study.",
+  "customStudy.sessionSize": "Cards per session",
+  "customStudy.sessionSizeAll": "whole set",
+  "customStudy.sessionSizeSummary": "{n} per session",
+  "customStudy.order": "Card order",
+  "customStudy.orderRandom": "Random",
+  "customStudy.orderDeck": "In order"
 }

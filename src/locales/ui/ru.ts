@@ -1076,5 +1076,11 @@ export const messages: Record<string, string> = {
   "deckSettings.useGlobalSessionOrder": "Использовать общий порядок ({n})",
   "settings.dayStart": "День начинается в",
   "settings.dayStartAria": "Время начала учебного дня",
-  "settings.dayStartHint": "Повторения до этого часа относятся к предыдущему дню. Это сохраняет серию при занятиях ночью."
+  "settings.dayStartHint": "Повторения до этого часа относятся к предыдущему дню. Это сохраняет серию при занятиях ночью.",
+  "customStudy.sessionSize": "Карточек за сессию",
+  "customStudy.sessionSizeAll": "весь набор",
+  "customStudy.sessionSizeSummary": "по {n} за сессию",
+  "customStudy.order": "Порядок карточек",
+  "customStudy.orderRandom": "Рандомно",
+  "customStudy.orderDeck": "По порядку"
 }

@@ -2,6 +2,7 @@ import type {
   Card,
   CustomStudyKind,
   CustomStudyOptions,
+  CustomStudyOrder,
   CustomStudyStatus,
   Deck,
   QueueItem,
@@ -12,6 +13,7 @@ import { shuffle } from './utils'
 export type {
   CustomStudyKind,
   CustomStudyOptions,
+  CustomStudyOrder,
   CustomStudyStatus,
 } from '../types'
 
@@ -68,6 +70,21 @@ function sortPool(cards: Card[], status: CustomStudyStatus): Card[] {
   return shuffle(pool)
 }
 
+function sortPoolByOrder(
+  cards: Card[],
+  order: CustomStudyOrder,
+  decks: Deck[],
+): Card[] {
+  if (order === 'random') return shuffle(cards)
+  const deckIndex = new Map(decks.map((deck, index) => [deck.id, index]))
+  return [...cards].sort(
+    (a, b) =>
+      (deckIndex.get(a.deckId) ?? 0) - (deckIndex.get(b.deckId) ?? 0) ||
+      a.order - b.order ||
+      a.createdAt - b.createdAt,
+  )
+}
+
 /**
  * Собирает очередь для пользовательской подборки.
  * Не учитывает дневные лимиты колод — это осознанный режим «своя подборка».
@@ -104,7 +121,9 @@ export function buildCustomStudyQueue(
     return true
   })
 
-  const sorted = sortPool(pool, options.status)
+  const sorted = options.order
+    ? sortPoolByOrder(pool, options.order, decks)
+    : sortPool(pool, options.status)
   const limited = options.limit > 0 ? sorted.slice(0, options.limit) : sorted
   return limited.map((card) => ({ cardId: card.id, isNew: !card.srs.introduced }))
 }

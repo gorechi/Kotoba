@@ -1070,5 +1070,11 @@ export const messages: Record<string, string> = {
   "deckSettings.useGlobalSessionOrder": "Usar el orden global ({n})",
   "settings.dayStart": "El día empieza a las",
   "settings.dayStartAria": "Hora de inicio del día de estudio",
-  "settings.dayStartHint": "Los repasos antes de esta hora cuentan para el día anterior. Así se mantiene la racha al estudiar de noche."
+  "settings.dayStartHint": "Los repasos antes de esta hora cuentan para el día anterior. Así se mantiene la racha al estudiar de noche.",
+  "customStudy.sessionSize": "Tarjetas por sesión",
+  "customStudy.sessionSizeAll": "todo el conjunto",
+  "customStudy.sessionSizeSummary": "{n} por sesión",
+  "customStudy.order": "Orden de las tarjetas",
+  "customStudy.orderRandom": "Aleatorio",
+  "customStudy.orderDeck": "En orden"
 }

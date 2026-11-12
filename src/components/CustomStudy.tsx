@@ -4,6 +4,7 @@ import type { StudySet } from '../types'
 import type {
   CustomStudyKind,
   CustomStudyOptions,
+  CustomStudyOrder,
   CustomStudyPreset,
   CustomStudyStatus,
 } from '../lib/custom-study'
@@ -39,9 +40,12 @@ const DEFAULT_OPTIONS: CustomStudyOptions = {
   status: 'all',
   kind: 'all',
   limit: 50,
+  sessionSize: 0,
+  order: 'random',
 }
 
 const LIMITS = [10, 20, 30, 50, 100, 200, 0]
+const SESSION_SIZES = [0, 10, 20, 30, 50, 100]
 
 const STATUS_LABEL_KEYS: Record<Exclude<CustomStudyStatus, 'all'>, string> = {
   overdue: 'customStudy.statusOverdue',
@@ -109,7 +113,15 @@ export function CustomStudy({
   const openBuilder = (set?: StudySet) => {
     setNotice(null)
     setEditingSet(set ?? null)
-    setForm(set ? { ...set.options } : DEFAULT_OPTIONS)
+    setForm(
+      set
+        ? {
+            ...set.options,
+            sessionSize: set.options.sessionSize ?? 0,
+            order: set.options.order ?? 'random',
+          }
+        : DEFAULT_OPTIONS,
+    )
     setSetName(set?.name ?? '')
     setBuilderOpen(true)
   }
@@ -187,6 +199,9 @@ export function CustomStudy({
     if (options.kind !== 'all') parts.push(t(KIND_LABEL_KEYS[options.kind]))
     if (options.tag) parts.push(t('customStudy.tagTitle', { tag: options.tag }))
     if (options.limit > 0) parts.push(t('customStudy.limitN', { n: options.limit }))
+    if (options.sessionSize && options.sessionSize > 0) {
+      parts.push(t('customStudy.sessionSizeSummary', { n: options.sessionSize }))
+    }
     return parts.length ? parts.join(' · ') : t('customStudy.allCardsSummary')
   }
 
@@ -476,6 +491,39 @@ export function CustomStudy({
                       {limit === 0 ? t('customStudy.limitAll') : limit}
                     </option>
                   ))}
+                </Select>
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="field">
+                <label htmlFor="custom-session-size">{t('customStudy.sessionSize')}</label>
+                <Select
+                  id="custom-session-size"
+                  value={String(form.sessionSize ?? 0)}
+                  onChange={(event) =>
+                    setForm({ ...form, sessionSize: Number(event.target.value) })
+                  }
+                >
+                  {SESSION_SIZES.map((size) => (
+                    <option key={size} value={size}>
+                      {size === 0 ? t('customStudy.sessionSizeAll') : size}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+
+              <div className="field">
+                <label htmlFor="custom-order">{t('customStudy.order')}</label>
+                <Select
+                  id="custom-order"
+                  value={form.order ?? 'random'}
+                  onChange={(event) =>
+                    setForm({ ...form, order: event.target.value as CustomStudyOrder })
+                  }
+                >
+                  <option value="random">{t('customStudy.orderRandom')}</option>
+                  <option value="deck">{t('customStudy.orderDeck')}</option>
                 </Select>
               </div>
             </div>

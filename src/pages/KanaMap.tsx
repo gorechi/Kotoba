@@ -3,6 +3,7 @@ import type { Card } from '../types'
 import { useStore } from '../state/store'
 import { useI18n } from '../lib/i18n-react'
 import { Icon } from '../components/Icon'
+import { ModeSwitch } from '../components/ModeSwitch'
 import {
   HIRAGANA_BASIC,
   HIRAGANA_VOICED,
@@ -153,6 +154,9 @@ export function KanaMap({ onStudyCard }: { onStudyCard: (cardId: string, deckId:
           <div className="eyebrow">{t('kanaMap.eyebrow')}</div>
           <h1>{t('kanaMap.title')}</h1>
           <p className="page-sub">{t('kanaMap.subtitle')}</p>
+        </div>
+        <div className="page-head-actions">
+          <ModeSwitch />
         </div>
       </header>
 

@@ -475,11 +475,11 @@ function Shell() {
                   const card = data.cards.find((c) => c.id === cardId)
                   const items = [{ cardId, isNew: !card?.srs.introduced }]
                   if (!items.length) return
-                  const deck = data.decks.find((item) => item.id === deckId)
+                  // Мини-сессия использует режим, выбранный на самой «Карте каны».
                   setSession({
                     deckId,
                     items,
-                    mode: effectiveStudyMode(deck, data.settings.studyMode),
+                    mode: data.settings.studyMode,
                   })
                 }}
               />

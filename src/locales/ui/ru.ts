@@ -1081,6 +1081,6 @@ export const messages: Record<string, string> = {
   "customStudy.sessionSizeAll": "весь набор",
   "customStudy.sessionSizeSummary": "по {n} за сессию",
   "customStudy.order": "Порядок карточек",
-  "customStudy.orderRandom": "Рандомно",
+  "customStudy.orderRandom": "Случайно",
   "customStudy.orderDeck": "По порядку"
 }

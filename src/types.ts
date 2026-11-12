@@ -42,7 +42,7 @@ export type Route =
   | { name: 'decks' }
   | { name: 'kanji' }
   | { name: 'deck'; deckId: string }
-  | { name: 'cards'; cardId?: string; query?: string }
+  | { name: 'cards'; cardId?: string; query?: string; returnTo?: Route }
   | { name: 'problems' }
   | { name: 'kanamap' }
   | { name: 'stats' }

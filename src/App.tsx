@@ -417,7 +417,11 @@ function Shell() {
             {route.name === 'decks' && <Decks onNavigate={navigate} onStudy={startStudy} />}
             {route.name === 'kanji' && <KanjiDecks onNavigate={navigate} onStudy={startStudy} />}
             {route.name === 'cards' && (
-              <CardBrowser focusCardId={route.cardId} initialQuery={route.query} />
+              <CardBrowser
+                focusCardId={route.cardId}
+                initialQuery={route.query}
+                onCloseFocus={route.returnTo ? () => navigate(route.returnTo!) : undefined}
+              />
             )}
             {route.name === 'problems' && (
               <ProblemCards
@@ -433,7 +437,9 @@ function Shell() {
                     t('problemCards.studyTitle'),
                   )
                 }
-                onOpenCard={(cardId) => navigate({ name: 'cards', cardId })}
+                onOpenCard={(cardId) =>
+                  navigate({ name: 'cards', cardId, returnTo: { name: 'problems' } })
+                }
               />
             )}
             {route.name === 'deck' && (

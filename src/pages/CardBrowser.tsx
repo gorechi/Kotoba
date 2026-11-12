@@ -24,9 +24,11 @@ import { useCardBrowserFilters } from './card-browser/useCardBrowserFilters'
 interface CardBrowserProps {
   focusCardId?: string
   initialQuery?: string
+  /** Вызывается при закрытии превью, открытого по focusCardId (например, возврат на «Проблемные»). */
+  onCloseFocus?: () => void
 }
 
-export function CardBrowser({ focusCardId, initialQuery }: CardBrowserProps) {
+export function CardBrowser({ focusCardId, initialQuery, onCloseFocus }: CardBrowserProps) {
   const { data, update } = useStore()
   const { t, locale } = useI18n()
   const now = Date.now()
@@ -77,6 +79,12 @@ export function CardBrowser({ focusCardId, initialQuery }: CardBrowserProps) {
     openedFocusRef.current = focusCardId
     setPreview(target)
   }, [data.cards, focusCardId])
+
+  const closePreview = () => {
+    const closesFocusedCard = focusCardId !== undefined && preview?.id === focusCardId
+    setPreview(null)
+    if (closesFocusedCard) onCloseFocus?.()
+  }
 
   useEffect(() => {
     if (!notice) return
@@ -779,9 +787,9 @@ export function CardBrowser({ focusCardId, initialQuery }: CardBrowserProps) {
               ? deckTitle(deckMap.get(preview.deckId)!, t)
               : undefined
           }
-          onClose={() => setPreview(null)}
+          onClose={closePreview}
           footer={
-            <button className="btn btn-ghost" onClick={() => setPreview(null)}>
+            <button className="btn btn-ghost" onClick={closePreview}>
               {t('common.close')}
             </button>
           }

@@ -764,7 +764,7 @@ export const messages: Record<string, string> = {
   "ttsHelp.eyebrow": "Озвучка",
   "ttsHelp.title": "Как включить озвучку",
   "ttsHelp.subtitle": "Котоба произносит слова голосом, который установлен в Windows. Без японского голоса кнопка с динамиком молчит. Это исправляется один раз — по шагам ниже.",
-  "ttsHelp.back": "К помощи",
+  "ttsHelp.back": "Назад",
   "ttsHelp.statusChecking": "Проверяем, есть ли японский голос…",
   "ttsHelp.statusFound": "Японский голос установлен: {name}",
   "ttsHelp.statusMissing": "Японский голос пока не установлен",
@@ -1148,5 +1148,15 @@ export const messages: Record<string, string> = {
   "data.noDuplicates": "Совпадений нет",
   "data.duplicateOf": "Совпадает с «{front}»",
   "data.duplicateByReading": "Совпадает по чтению",
-  "data.importResult": "Добавлено: {added} · обновлено: {updated} · пропущено: {skipped}"
+  "data.importResult": "Добавлено: {added} · обновлено: {updated} · пропущено: {skipped}",
+  "settings.speech": "Озвучка",
+  "settings.speechSub": "Голос и скорость произношения карточек",
+  "settings.speechVoice": "Голос",
+  "settings.speechVoiceAuto": "Автоматически",
+  "settings.speechNoVoices": "Японские голоса не найдены. Установите голос в настройках системы.",
+  "settings.speechRate": "Скорость",
+  "settings.speechRateAria": "Скорость озвучки",
+  "settings.speechTest": "Проверить голос",
+  "settings.speechHelp": "Как включить озвучку",
+  "settings.speechHint": "Голоса предоставляет операционная система. Выбранный голос используется для всех карточек и примеров."
 }

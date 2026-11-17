@@ -758,7 +758,7 @@ export const messages: Record<string, string> = {
   "ttsHelp.eyebrow": "Speech",
   "ttsHelp.title": "How to enable speech",
   "ttsHelp.subtitle": "Kotoba speaks with a voice installed in Windows. Without a Japanese voice, the speaker button stays silent. You only need to set it up once — follow the steps below.",
-  "ttsHelp.back": "Back to help",
+  "ttsHelp.back": "Back",
   "help.eyebrow": "Help",
   "help.title": "Help",
   "help.subtitle": "Short step-by-step guides for setting up and using the app.",
@@ -1140,5 +1140,15 @@ export const messages: Record<string, string> = {
   "data.noDuplicates": "No duplicates found",
   "data.duplicateOf": "Matches “{front}”",
   "data.duplicateByReading": "Same reading",
-  "data.importResult": "{added} added · {updated} updated · {skipped} skipped"
+  "data.importResult": "{added} added · {updated} updated · {skipped} skipped",
+  "settings.speech": "Speech",
+  "settings.speechSub": "Voice and speed for card pronunciation",
+  "settings.speechVoice": "Voice",
+  "settings.speechVoiceAuto": "Automatic",
+  "settings.speechNoVoices": "No Japanese voices found. Install one in your system settings.",
+  "settings.speechRate": "Speed",
+  "settings.speechRateAria": "Speech speed",
+  "settings.speechTest": "Test voice",
+  "settings.speechHelp": "How to enable speech",
+  "settings.speechHint": "Voices are provided by the operating system. The selected voice is used for all cards and examples."
 }

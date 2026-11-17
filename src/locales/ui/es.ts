@@ -758,7 +758,7 @@ export const messages: Record<string, string> = {
   "ttsHelp.eyebrow": "Voz",
   "ttsHelp.title": "Cómo activar la voz",
   "ttsHelp.subtitle": "Kotoba habla con una voz instalada en Windows. Sin una voz en japonés, el botón del altavoz no suena. Solo hay que configurarlo una vez: sigue los pasos de abajo.",
-  "ttsHelp.back": "Volver a la ayuda",
+  "ttsHelp.back": "Volver",
   "help.eyebrow": "Ayuda",
   "help.title": "Ayuda",
   "help.subtitle": "Guías breves paso a paso para configurar y usar la app.",
@@ -1140,5 +1140,15 @@ export const messages: Record<string, string> = {
   "data.noDuplicates": "No se encontraron duplicados",
   "data.duplicateOf": "Coincide con «{front}»",
   "data.duplicateByReading": "Misma lectura",
-  "data.importResult": "Añadidas: {added} · actualizadas: {updated} · omitidas: {skipped}"
+  "data.importResult": "Añadidas: {added} · actualizadas: {updated} · omitidas: {skipped}",
+  "settings.speech": "Voz",
+  "settings.speechSub": "Voz y velocidad de pronunciación de las tarjetas",
+  "settings.speechVoice": "Voz",
+  "settings.speechVoiceAuto": "Automática",
+  "settings.speechNoVoices": "No se encontraron voces japonesas. Instala una en los ajustes del sistema.",
+  "settings.speechRate": "Velocidad",
+  "settings.speechRateAria": "Velocidad de voz",
+  "settings.speechTest": "Probar voz",
+  "settings.speechHelp": "Cómo activar la voz",
+  "settings.speechHint": "Las voces las proporciona el sistema operativo. La voz seleccionada se usa en todas las tarjetas y ejemplos."
 }

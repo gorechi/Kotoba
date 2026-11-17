@@ -48,6 +48,7 @@ import {
   type CustomStudyOptions,
 } from './lib/custom-study'
 import {
+  setTtsPreferences,
   TTS_ERROR_EVENT,
   warmUpTts,
   type TtsErrorDetail,
@@ -125,6 +126,13 @@ function Shell() {
   useEffect(() => {
     warmUpTts()
   }, [])
+
+  useEffect(() => {
+    setTtsPreferences({
+      voiceURI: data.settings.ttsVoiceURI,
+      rate: data.settings.ttsRate,
+    })
+  }, [data.settings.ttsRate, data.settings.ttsVoiceURI])
 
   useEffect(() => {
     const onTtsError = (event: Event) => {
@@ -450,6 +458,9 @@ function Shell() {
             {route.name === 'settings' && (
               <Settings
                 onZen={() => setZen(true)}
+                onOpenTtsHelp={() =>
+                  navigate({ name: 'ttsHelp', returnTo: { name: 'settings' } })
+                }
                 update={updateState}
                 updateChecking={updateChecking}
                 onCheckUpdates={() => void checkUpdates(true)}
@@ -468,7 +479,9 @@ function Shell() {
                 onNavigate={navigate}
               />
             )}
-            {route.name === 'ttsHelp' && <TtsHelp onBack={() => navigate({ name: 'help' })} />}
+            {route.name === 'ttsHelp' && (
+              <TtsHelp onBack={() => navigate(route.returnTo ?? { name: 'help' })} />
+            )}
             {route.name === 'kanamap' && (
               <KanaMap
                 onStudyCard={(cardId, deckId) => {

@@ -8,7 +8,24 @@ export interface TtsErrorDetail {
 
 export const TTS_ERROR_EVENT = 'kotoba:tts-error'
 
+export interface TtsPreferences {
+  /** voiceURI выбранного голоса; null — автоматический выбор. */
+  voiceURI: string | null
+  rate: number
+}
+
+const DEFAULT_PREFERENCES: TtsPreferences = { voiceURI: null, rate: 0.85 }
+let preferences: TtsPreferences = { ...DEFAULT_PREFERENCES }
 let pendingVoices: Promise<SpeechSynthesisVoice[]> | null = null
+
+/** Настройки применяются глобально: озвучка вызывается из разных экранов. */
+export function setTtsPreferences(next: Partial<TtsPreferences>): void {
+  preferences = { ...preferences, ...next }
+}
+
+export function getTtsPreferences(): TtsPreferences {
+  return preferences
+}
 
 function getSynth(): SpeechSynthesis | null {
   if (typeof window === 'undefined' || !('speechSynthesis' in window)) return null
@@ -25,13 +42,36 @@ function readVoices(): SpeechSynthesisVoice[] {
   }
 }
 
-function pickJapaneseVoice(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice | null {
-  const japanese = voices.filter((voice) => voice.lang.toLowerCase().startsWith('ja'))
-  return japanese.find((voice) => voice.localService) ?? japanese[0] ?? null
+function voiceId(voice: SpeechSynthesisVoice): string {
+  return voice.voiceURI || voice.name
 }
 
+function japaneseVoices(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice[] {
+  return voices
+    .filter((voice) => voice.lang.toLowerCase().startsWith('ja'))
+    .sort((a, b) => Number(b.localService) - Number(a.localService))
+}
+
+function pickJapaneseVoice(
+  voices: SpeechSynthesisVoice[],
+  preferredVoiceURI: string | null,
+): SpeechSynthesisVoice | null {
+  const japanese = japaneseVoices(voices)
+  if (preferredVoiceURI) {
+    const preferred = japanese.find((voice) => voiceId(voice) === preferredVoiceURI)
+    if (preferred) return preferred
+  }
+  return japanese[0] ?? null
+}
+
+/** Все установленные японские голоса — для выбора в настройках. */
+export async function getJapaneseVoices(): Promise<SpeechSynthesisVoice[]> {
+  return japaneseVoices(await loadVoices())
+}
+
+/** Эффективный голос с учётом выбранного в настройках. */
 export async function getJapaneseVoice(): Promise<SpeechSynthesisVoice | null> {
-  return pickJapaneseVoice(await loadVoices())
+  return pickJapaneseVoice(await loadVoices(), preferences.voiceURI)
 }
 
 /**
@@ -108,7 +148,7 @@ export async function speakJa(text: string): Promise<TtsResult> {
     const utterance = new SpeechSynthesisUtterance(value)
     utterance.lang = voice.lang || 'ja-JP'
     utterance.voice = voice
-    utterance.rate = 0.85
+    utterance.rate = Math.min(1.5, Math.max(0.5, preferences.rate))
     utterance.onerror = (event) => {
       if (event.error === 'interrupted' || event.error === 'canceled') return
       report('error')

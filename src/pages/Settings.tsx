@@ -1,9 +1,11 @@
+import { useEffect, useState } from 'react'
 import type { SessionOrder, Theme } from '../types'
 import { useStore } from '../state/store'
 import { useI18n } from '../lib/i18n-react'
 import { APP_VERSION } from '../lib/version'
 import type { UpdateState } from '../lib/updates'
 import { SESSION_ORDER_OPTIONS } from '../lib/session-order'
+import { getJapaneseVoices, speakJa } from '../lib/tts'
 import { Icon, type IconName } from '../components/Icon'
 import { NumberInput } from '../components/NumberInput'
 import { Select } from '../components/Select'
@@ -16,6 +18,7 @@ const THEMES: { value: Theme; labelKey: string; icon: IconName }[] = [
 
 interface SettingsProps {
   onZen: () => void
+  onOpenTtsHelp: () => void
   update: UpdateState
   updateChecking: boolean
   onCheckUpdates: () => void
@@ -23,12 +26,47 @@ interface SettingsProps {
 
 export function Settings({
   onZen,
+  onOpenTtsHelp,
   update,
   updateChecking,
   onCheckUpdates,
 }: SettingsProps) {
   const { data, setSettings } = useStore()
-  const { t, locales, language, setLanguage } = useI18n()
+  const { t, locale, locales, language, setLanguage } = useI18n()
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([])
+  const [voicesLoaded, setVoicesLoaded] = useState(false)
+
+  useEffect(() => {
+    let active = true
+    const refresh = () => {
+      void getJapaneseVoices()
+        .then((next) => {
+          if (active) setVoices(next)
+        })
+        .finally(() => {
+          if (active) setVoicesLoaded(true)
+        })
+    }
+    refresh()
+    // Windows иногда отдаёт голоса уже после открытия настроек.
+    const synth = window.speechSynthesis
+    synth?.addEventListener('voiceschanged', refresh)
+    return () => {
+      active = false
+      synth?.removeEventListener('voiceschanged', refresh)
+    }
+  }, [])
+
+  const voiceId = (voice: SpeechSynthesisVoice) => voice.voiceURI || voice.name
+  const selectedVoice =
+    data.settings.ttsVoiceURI &&
+    voices.some((voice) => voiceId(voice) === data.settings.ttsVoiceURI)
+      ? data.settings.ttsVoiceURI
+      : ''
+  const rateLabel = new Intl.NumberFormat(locale.intl, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(data.settings.ttsRate)
 
   const changeNewPerDay = (delta: number) => {
     setSettings({ newPerDay: Math.min(50, Math.max(1, data.settings.newPerDay + delta)) })
@@ -547,6 +585,81 @@ export function Settings({
             </button>
           </div>
           <p className="hint">{t('settings.writingModeHint')}</p>
+        </section>
+
+        <section className="panel">
+          <div className="panel-head">
+            <div>
+              <h2>{t('settings.speech')}</h2>
+              <p>{t('settings.speechSub')}</p>
+            </div>
+          </div>
+
+          <div className="field">
+            <label htmlFor="settings-tts-voice">{t('settings.speechVoice')}</label>
+            <Select
+              id="settings-tts-voice"
+              value={selectedVoice}
+              onChange={(event) =>
+                setSettings({ ttsVoiceURI: event.target.value || null })
+              }
+              disabled={!voices.length}
+            >
+              <option value="">{t('settings.speechVoiceAuto')}</option>
+              {voices.map((voice) => (
+                <option key={voiceId(voice)} value={voiceId(voice)}>
+                  {voice.name} ({voice.lang})
+                </option>
+              ))}
+            </Select>
+          </div>
+
+          {voicesLoaded && voices.length === 0 && (
+            <p className="hint">{t('settings.speechNoVoices')}</p>
+          )}
+
+          <div className="goal-row">
+            <div className="goal-value">
+              <strong>{rateLabel}×</strong>
+              <span>{t('settings.speechRate')}</span>
+            </div>
+          </div>
+          <input
+            className="range"
+            type="range"
+            min={0.5}
+            max={1.5}
+            step={0.05}
+            value={data.settings.ttsRate}
+            onChange={(event) =>
+              setSettings({ ttsRate: Number(event.target.value) })
+            }
+            aria-label={t('settings.speechRateAria')}
+          />
+          <div className="range-scale">
+            <span>0.5×</span>
+            <span>1.5×</span>
+          </div>
+
+          <div className="settings-actions">
+            <button
+              type="button"
+              className="btn btn-ghost btn-small"
+              onClick={() => void speakJa('こんにちは')}
+            >
+              <Icon name="speaker" size={15} />
+              {t('settings.speechTest')}
+            </button>
+            <button
+              type="button"
+              className="btn btn-ghost btn-small"
+              onClick={onOpenTtsHelp}
+            >
+              <Icon name="help" size={15} />
+              {t('settings.speechHelp')}
+            </button>
+          </div>
+          <p className="hint">{t('settings.speechHint')}</p>
         </section>
 
         <section className="panel">

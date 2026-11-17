@@ -50,7 +50,7 @@ export type Route =
   | { name: 'settings' }
   | { name: 'help' }
   | { name: 'helpGuide'; guideId: string }
-  | { name: 'ttsHelp' }
+  | { name: 'ttsHelp'; returnTo?: Route }
 
 export interface SrsState {
   /** Когда карточку нужно повторить (timestamp, мс). 0 — ещё не изучена. */
@@ -174,6 +174,10 @@ export interface Settings {
   dayStartHour: number
   /** Автопауза карточки после стольких ошибок; 0 — выключено. */
   leechThreshold: number
+  /** URI выбранного голоса озвучки; null — автоматический выбор. */
+  ttsVoiceURI: string | null
+  /** Скорость озвучки: 0.5–1.5. */
+  ttsRate: number
   /** Автоматически включать режим Дзен при бездействии. */
   zenAuto: boolean
   /** Через сколько минут бездействия включать Дзен. */

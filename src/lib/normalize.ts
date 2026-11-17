@@ -338,6 +338,8 @@ function normalizeSettings(raw: unknown): Settings {
     sessionOrder: 'reviews-first',
     dayStartHour: 0,
     leechThreshold: 0,
+    ttsVoiceURI: null,
+    ttsRate: 0.85,
     zenAuto: true,
     zenIdleMinutes: 5,
     language: DEFAULT_LOCALE,
@@ -380,6 +382,11 @@ function normalizeSettings(raw: unknown): Settings {
       : base.sessionOrder,
     dayStartHour: clamp(Math.round(num(raw.dayStartHour, base.dayStartHour)), 0, 12),
     leechThreshold: clamp(Math.round(num(raw.leechThreshold, base.leechThreshold)), 0, 50),
+    ttsVoiceURI:
+      typeof raw.ttsVoiceURI === 'string' && raw.ttsVoiceURI.trim()
+        ? raw.ttsVoiceURI.trim()
+        : null,
+    ttsRate: clamp(num(raw.ttsRate, base.ttsRate), 0.5, 1.5),
     zenAuto: raw.zenAuto !== false,
     zenIdleMinutes: clamp(
       Math.round(num(raw.zenIdleMinutes, base.zenIdleMinutes)),

@@ -865,6 +865,10 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
+  /* Шесть колод видны без прокрутки, остальные листаются. */
+  max-height: 240px;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
 .deck-row {

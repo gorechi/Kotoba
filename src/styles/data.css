@@ -2,8 +2,15 @@
    Данные: импорт CSV/TSV
    ============================================================ */
 .data-tabs {
-  width: min(560px, 100%);
+  width: min(640px, 100%);
   margin-bottom: 16px;
+}
+
+.data-tabs button {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .data-content,

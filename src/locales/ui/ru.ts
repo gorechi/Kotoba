@@ -1183,5 +1183,15 @@ export const messages: Record<string, string> = {
   "settings.speechRateAria": "Скорость озвучки",
   "settings.speechTest": "Проверить голос",
   "settings.speechHelp": "Как включить озвучку",
-  "settings.speechHint": "Голоса предоставляет операционная система. Выбранный голос используется для всех карточек и примеров."
+  "settings.speechHint": "Голоса предоставляет операционная система. Выбранный голос используется для всех карточек и примеров.",
+  "settings.trash": "Корзина",
+  "settings.trashSub": "Сколько хранить удалённые карточки и колоды",
+  "settings.trashRetention": "Хранить удалённое",
+  "settings.trashDays.one": "{n} день",
+  "settings.trashDays.few": "{n} дня",
+  "settings.trashDays.many": "{n} дней",
+  "settings.trashDays.other": "{n} дня",
+  "settings.trashNever": "Не удалять",
+  "settings.trashHint": "По истечении срока записи удаляются автоматически. Очистить корзину или восстановить записи можно в разделе «Данные → Корзина».",
+  "trash.hintNever": "Записи хранятся, пока ты не удалишь их вручную."
 }

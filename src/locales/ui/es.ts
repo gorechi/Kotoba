@@ -1174,5 +1174,14 @@ export const messages: Record<string, string> = {
   "settings.speechRateAria": "Velocidad de voz",
   "settings.speechTest": "Probar voz",
   "settings.speechHelp": "Cómo activar la voz",
-  "settings.speechHint": "Las voces las proporciona el sistema operativo. La voz seleccionada se usa en todas las tarjetas y ejemplos."
+  "settings.speechHint": "Las voces las proporciona el sistema operativo. La voz seleccionada se usa en todas las tarjetas y ejemplos.",
+  "settings.trash": "Papelera",
+  "settings.trashSub": "Cuánto tiempo se conservan las tarjetas y los mazos eliminados",
+  "settings.trashRetention": "Conservar eliminados",
+  "settings.trashDays.one": "{n} día",
+  "settings.trashDays.many": "{n} días",
+  "settings.trashDays.other": "{n} días",
+  "settings.trashNever": "No eliminar nunca",
+  "settings.trashHint": "Cuando pasa el tiempo, los elementos se eliminan automáticamente. Puedes vaciar la papelera o restaurar elementos en Datos → Papelera.",
+  "trash.hintNever": "Los elementos se conservan hasta que los elimines manualmente."
 }

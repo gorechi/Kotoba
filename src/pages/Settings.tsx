@@ -6,6 +6,7 @@ import { APP_VERSION } from '../lib/version'
 import type { UpdateState } from '../lib/updates'
 import { SESSION_ORDER_OPTIONS } from '../lib/session-order'
 import { getJapaneseVoices, speakJa } from '../lib/tts'
+import { MAX_TRASH_RETENTION_DAYS, pruneTrash } from '../lib/trash'
 import { Icon, type IconName } from '../components/Icon'
 import { NumberInput } from '../components/NumberInput'
 import { Select } from '../components/Select'
@@ -31,7 +32,7 @@ export function Settings({
   updateChecking,
   onCheckUpdates,
 }: SettingsProps) {
-  const { data, setSettings } = useStore()
+  const { data, setSettings, update: updateData } = useStore()
   const { t, locale, locales, language, setLanguage } = useI18n()
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([])
   const [voicesLoaded, setVoicesLoaded] = useState(false)
@@ -660,6 +661,45 @@ export function Settings({
             </button>
           </div>
           <p className="hint">{t('settings.speechHint')}</p>
+        </section>
+
+        <section className="panel">
+          <div className="panel-head">
+            <div>
+              <h2>{t('settings.trash')}</h2>
+              <p>{t('settings.trashSub')}</p>
+            </div>
+          </div>
+
+          <div className="field">
+            <label htmlFor="settings-trash-retention">
+              {t('settings.trashRetention')}
+            </label>
+            <Select
+              id="settings-trash-retention"
+              value={String(data.settings.trashRetentionDays)}
+              onChange={(event) => {
+                const days = Number(event.target.value)
+                setSettings({ trashRetentionDays: days })
+                // Сразу убираем записи, которые не проходят по новому сроку.
+                updateData((current) => ({
+                  ...current,
+                  trash: pruneTrash(current.trash, Date.now(), days),
+                }))
+              }}
+            >
+              {Array.from({ length: MAX_TRASH_RETENTION_DAYS }, (_, index) => index + 1).map(
+                (days) => (
+                  <option key={days} value={days}>
+                    {t('settings.trashDays', { n: days })}
+                  </option>
+                ),
+              )}
+              <option value={0}>{t('settings.trashNever')}</option>
+            </Select>
+          </div>
+
+          <p className="hint">{t('settings.trashHint')}</p>
         </section>
 
         <section className="panel">

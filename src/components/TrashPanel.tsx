@@ -4,7 +4,6 @@ import { useStore } from '../state/store'
 import { useI18n } from '../lib/i18n-react'
 import { deckTitle } from '../lib/content'
 import {
-  TRASH_RETENTION_DAYS,
   emptyTrash,
   removeTrashEntry,
   restoreTrashEntry,
@@ -28,6 +27,7 @@ export function TrashPanel() {
   }, [notice])
 
   const entries = [...data.trash].sort((a, b) => b.deletedAt - a.deletedAt)
+  const retentionDays = data.settings.trashRetentionDays
   const deckMap = new Map(data.decks.map((deck) => [deck.id, deck]))
   const dateFormat = new Intl.DateTimeFormat(locale.intl, { dateStyle: 'medium' })
 
@@ -154,7 +154,11 @@ export function TrashPanel() {
           </ul>
         )}
 
-        <p className="hint">{t('trash.hint', { n: TRASH_RETENTION_DAYS })}</p>
+        <p className="hint">
+          {retentionDays > 0
+            ? t('trash.hint', { n: retentionDays })
+            : t('trash.hintNever')}
+        </p>
       </section>
 
       {confirm?.kind === 'all' && (

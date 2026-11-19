@@ -28,7 +28,7 @@ import type {
 } from '../types'
 import { freshSrs } from './srs'
 import { uid } from './utils'
-import { pruneTrash } from './trash'
+import { DEFAULT_TRASH_RETENTION_DAYS, MAX_TRASH_RETENTION_DAYS, pruneTrash } from './trash'
 import { createBaseSeedData, createSeedData } from '../data/seed'
 import { LEGACY_N5_EXAMPLES, LEGACY_N5_MEANINGS } from '../data/legacy-n5'
 import { DEFAULT_LOCALE, isLocaleCode } from './i18n'
@@ -220,7 +220,7 @@ function normalizeCard(raw: unknown): Card | null {
 }
 
 /** Читает корзину: удалённые карточки и колоды со снимками прогресса. */
-function normalizeTrash(raw: unknown): TrashEntry[] {
+function normalizeTrash(raw: unknown, retentionDays: number): TrashEntry[] {
   if (!Array.isArray(raw)) return []
   const entries: TrashEntry[] = []
 
@@ -252,7 +252,7 @@ function normalizeTrash(raw: unknown): TrashEntry[] {
     }
   }
 
-  return pruneTrash(entries)
+  return pruneTrash(entries, Date.now(), retentionDays)
 }
 
 function normalizeStudySetOptions(raw: unknown): CustomStudyOptions {  const value = isObj(raw) ? raw : {}
@@ -384,6 +384,7 @@ function normalizeSettings(raw: unknown): Settings {
     onboardingDone: true,
     autoBackup: 'daily',
     backupFolder: null,
+    trashRetentionDays: DEFAULT_TRASH_RETENTION_DAYS,
   }
   if (!isObj(raw)) return base
   return {
@@ -439,6 +440,11 @@ function normalizeSettings(raw: unknown): Settings {
       typeof raw.backupFolder === 'string' && raw.backupFolder.trim()
         ? raw.backupFolder.trim()
         : null,
+    trashRetentionDays: (() => {
+      const value = Math.round(num(raw.trashRetentionDays, base.trashRetentionDays))
+      if (value === 0) return 0
+      return clamp(value, 1, MAX_TRASH_RETENTION_DAYS)
+    })(),
   }
 }
 
@@ -538,15 +544,17 @@ export function normalizeData(raw: unknown): AppData {
 
   stripLegacyN5Text(mergedCards)
 
+  const settings = normalizeSettings(raw.settings)
+
   return {
     version: 2,
     decks: mergedDecks,
     cards: mergedCards,
     studySets: normalizeStudySets(raw.studySets),
     installedPacks: [...new Set(strArray(raw.installedPacks))],
-    trash: normalizeTrash(raw.trash),
+    trash: normalizeTrash(raw.trash, settings.trashRetentionDays),
     history: normalizeHistory(raw.history),
-    settings: normalizeSettings(raw.settings),
+    settings,
     createdAt: num(raw.createdAt, Date.now()),
   }
 }

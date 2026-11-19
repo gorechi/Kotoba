@@ -1,18 +1,22 @@
 import type { AppData, Card, TrashDeckEntry, TrashEntry } from '../types'
 
-/** Сколько дней удалённые карточки и колоды остаются в корзине. */
-export const TRASH_RETENTION_DAYS = 30
-
-const RETENTION_MS = TRASH_RETENTION_DAYS * 24 * 60 * 60 * 1000
-/** Верхняя граница, чтобы корзина не раздувала файл контента бесконечно. */
-const MAX_ENTRIES = 500
+/** Сколько дней корзина хранится по умолчанию. */
+export const DEFAULT_TRASH_RETENTION_DAYS = 10
+/** Больше десяти дней в настройках выбрать нельзя. */
+export const MAX_TRASH_RETENTION_DAYS = 10
 
 /**
- * Оставляет только свежие записи, убирает повторы и ограничивает размер.
+ * Оставляет только свежие записи и убирает повторы.
+ * `retentionDays = 0` — не удалять автоматически ничего.
  * Записи идут от новых к старым, поэтому при повторе сохраняется свежая.
  */
-export function pruneTrash(entries: TrashEntry[], now = Date.now()): TrashEntry[] {
-  const cutoff = now - RETENTION_MS
+export function pruneTrash(
+  entries: TrashEntry[],
+  now = Date.now(),
+  retentionDays = DEFAULT_TRASH_RETENTION_DAYS,
+): TrashEntry[] {
+  const cutoff =
+    retentionDays > 0 ? now - retentionDays * 24 * 60 * 60 * 1000 : Number.NEGATIVE_INFINITY
   const seen = new Set<string>()
   const result: TrashEntry[] = []
   for (const entry of entries) {
@@ -21,7 +25,6 @@ export function pruneTrash(entries: TrashEntry[], now = Date.now()): TrashEntry[
     if (seen.has(key)) continue
     seen.add(key)
     result.push(entry)
-    if (result.length >= MAX_ENTRIES) break
   }
   return result
 }
@@ -48,7 +51,7 @@ export function trashCards(current: AppData, ids: Iterable<string>): AppData {
   return {
     ...current,
     cards: current.cards.filter((card) => !idSet.has(card.id)),
-    trash: pruneTrash([...entries, ...kept], now),
+    trash: pruneTrash([...entries, ...kept], now, current.settings.trashRetentionDays),
   }
 }
 
@@ -94,7 +97,7 @@ export function trashDeck(current: AppData, deckId: string): AppData {
     ...current,
     decks: current.decks.filter((item) => item.id !== deckId),
     cards: current.cards.filter((card) => card.deckId !== deckId),
-    trash: pruneTrash([entry, ...kept], now),
+    trash: pruneTrash([entry, ...kept], now, current.settings.trashRetentionDays),
   }
 }
 

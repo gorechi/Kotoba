@@ -1175,5 +1175,15 @@ export const messages: Record<string, string> = {
   "settings.speechRateAria": "Speech speed",
   "settings.speechTest": "Test voice",
   "settings.speechHelp": "How to enable speech",
-  "settings.speechHint": "Voices are provided by the operating system. The selected voice is used for all cards and examples."
+  "settings.speechHint": "Voices are provided by the operating system. The selected voice is used for all cards and examples.",
+  "settings.trash": "Trash",
+  "settings.trashSub": "How long deleted cards and decks are kept",
+  "settings.trashRetention": "Keep deleted items",
+  "settings.trashDays.one": "{n} day",
+  "settings.trashDays.few": "{n} days",
+  "settings.trashDays.many": "{n} days",
+  "settings.trashDays.other": "{n} days",
+  "settings.trashNever": "Never delete",
+  "settings.trashHint": "After the time is up, items are deleted automatically. You can still empty the trash or restore items in Data → Trash.",
+  "trash.hintNever": "Items are kept until you delete them manually."
 }

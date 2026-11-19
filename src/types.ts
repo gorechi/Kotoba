@@ -190,6 +190,8 @@ export interface Settings {
   autoBackup: AutoBackupFrequency
   /** Своя папка для автоматических копий; null — стандартная папка приложения. */
   backupFolder: string | null
+  /** Сколько дней хранить корзину; 0 — не удалять автоматически. */
+  trashRetentionDays: number
 }
 
 /** Удалённая карточка, которую можно восстановить. */

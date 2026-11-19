@@ -75,6 +75,7 @@ export function createBaseSeedData(now = Date.now()) {
       onboardingDone: false,
       autoBackup: 'daily' as const,
       backupFolder: null,
+      trashRetentionDays: 10,
     },
     createdAt: now,
   }

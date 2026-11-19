@@ -3,8 +3,9 @@ import { useI18n } from '../lib/i18n-react'
 import { BackupPanel } from '../components/BackupPanel'
 import { CsvImport } from '../components/CsvImport'
 import { DeckTransferPanel } from '../components/DeckTransferPanel'
+import { TrashPanel } from '../components/TrashPanel'
 
-type DataTab = 'kana' | 'kanji' | 'backup'
+type DataTab = 'kana' | 'kanji' | 'backup' | 'trash'
 
 export function Data() {
   const { t } = useI18n()
@@ -42,6 +43,13 @@ export function Data() {
         >
           {t('data.tabBackup')}
         </button>
+        <button
+          type="button"
+          className={tab === 'trash' ? 'active' : ''}
+          onClick={() => setTab('trash')}
+        >
+          {t('data.tabTrash')}
+        </button>
       </div>
 
       <div className="data-content">
@@ -53,6 +61,7 @@ export function Data() {
             <BackupPanel />
           </div>
         )}
+        {tab === 'trash' && <TrashPanel />}
       </div>
     </div>
   )

@@ -192,6 +192,27 @@ export interface Settings {
   backupFolder: string | null
 }
 
+/** Удалённая карточка, которую можно восстановить. */
+export interface TrashCardEntry {
+  /** Совпадает с id карточки: одна запись на карточку. */
+  id: string
+  kind: 'card'
+  deletedAt: number
+  card: Card
+}
+
+/** Удалённая колода вместе со всеми её карточками. */
+export interface TrashDeckEntry {
+  /** Совпадает с id колоды: одна запись на колоду. */
+  id: string
+  kind: 'deck'
+  deletedAt: number
+  deck: Deck
+  cards: Card[]
+}
+
+export type TrashEntry = TrashCardEntry | TrashDeckEntry
+
 export interface AppData {
   version: 2
   decks: Deck[]
@@ -199,6 +220,8 @@ export interface AppData {
   studySets: StudySet[]
   /** Идентификаторы готовых наборов, которые уже установлены один раз. */
   installedPacks: string[]
+  /** Удалённые карточки и колоды, доступные для восстановления. */
+  trash: TrashEntry[]
   history: Record<string, DayStat>
   settings: Settings
   createdAt: number

@@ -1401,3 +1401,81 @@
     width: 100%;
   }
 }
+
+/* Корзина */
+.trash-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 4px 0 14px;
+  padding: 0;
+  list-style: none;
+}
+
+.trash-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm, 12px);
+  background: var(--surface-2);
+}
+
+.trash-item-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.trash-item-title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.trash-item-kind {
+  align-self: center;
+  color: var(--muted);
+}
+
+.trash-item-title strong {
+  overflow: hidden;
+  font-size: 15px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trash-item-reading {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.trash-item-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  color: var(--muted);
+  font-size: 11.5px;
+}
+
+.trash-item-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+}
+
+@media (max-width: 620px) {
+  .trash-item {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .trash-item-actions {
+    width: 100%;
+  }
+}

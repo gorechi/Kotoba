@@ -1,4 +1,4 @@
-import type { Card, Deck, StudySet } from '../types'
+import type { Card, Deck, StudySet, TrashEntry } from '../types'
 import { freshSrs } from '../lib/srs'
 import { detectSystemLocale } from '../lib/i18n'
 import {
@@ -49,6 +49,7 @@ export function createBaseSeedData(now = Date.now()) {
     cards,
     studySets: [] as StudySet[],
     installedPacks: [] as string[],
+    trash: [] as TrashEntry[],
     history: {} as Record<string, { reviews: number; correct: number; newCards: number; ms: number }>,
     settings: {
       theme: 'system' as const,

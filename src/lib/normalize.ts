@@ -23,10 +23,12 @@ import type {
   StudySet,
   StudyTotals,
   Theme,
+  TrashEntry,
   WritingDifficulty,
 } from '../types'
 import { freshSrs } from './srs'
 import { uid } from './utils'
+import { pruneTrash } from './trash'
 import { createBaseSeedData, createSeedData } from '../data/seed'
 import { LEGACY_N5_EXAMPLES, LEGACY_N5_MEANINGS } from '../data/legacy-n5'
 import { DEFAULT_LOCALE, isLocaleCode } from './i18n'
@@ -217,8 +219,43 @@ function normalizeCard(raw: unknown): Card | null {
   }
 }
 
-function normalizeStudySetOptions(raw: unknown): CustomStudyOptions {
-  const value = isObj(raw) ? raw : {}
+/** Читает корзину: удалённые карточки и колоды со снимками прогресса. */
+function normalizeTrash(raw: unknown): TrashEntry[] {
+  if (!Array.isArray(raw)) return []
+  const entries: TrashEntry[] = []
+
+  for (const item of raw) {
+    if (!isObj(item)) continue
+    const deletedAt = num(item.deletedAt, 0)
+    if (deletedAt <= 0) continue
+
+    if (item.kind === 'card') {
+      const card = normalizeCard(item.card)
+      if (!card) continue
+      entries.push({ id: card.id, kind: 'card', deletedAt, card })
+      continue
+    }
+
+    if (item.kind === 'deck') {
+      const deck = normalizeDeck(item.deck)
+      if (!deck) continue
+      const seen = new Set<string>()
+      const cards = (Array.isArray(item.cards) ? item.cards : [])
+        .map(normalizeCard)
+        .filter((card): card is Card => card !== null)
+        .filter((card) => {
+          if (card.deckId !== deck.id || seen.has(card.id)) return false
+          seen.add(card.id)
+          return true
+        })
+      entries.push({ id: deck.id, kind: 'deck', deletedAt, deck, cards })
+    }
+  }
+
+  return pruneTrash(entries)
+}
+
+function normalizeStudySetOptions(raw: unknown): CustomStudyOptions {  const value = isObj(raw) ? raw : {}
   const jlpt = Math.round(num(value.jlpt, 0))
   const limit = Math.max(0, Math.round(num(value.limit, 50)))
   const deckId = typeof value.deckId === 'string' && value.deckId.trim()
@@ -507,6 +544,7 @@ export function normalizeData(raw: unknown): AppData {
     cards: mergedCards,
     studySets: normalizeStudySets(raw.studySets),
     installedPacks: [...new Set(strArray(raw.installedPacks))],
+    trash: normalizeTrash(raw.trash),
     history: normalizeHistory(raw.history),
     settings: normalizeSettings(raw.settings),
     createdAt: num(raw.createdAt, Date.now()),

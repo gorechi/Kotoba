@@ -10,6 +10,7 @@ export interface StoredContent {
   cards: StoredCard[]
   studySets: AppData['studySets']
   installedPacks: AppData['installedPacks']
+  trash: AppData['trash']
   createdAt: number
 }
 
@@ -95,6 +96,7 @@ export function splitAppData(data: AppData): Required<StorageParts> {
       cards,
       studySets: data.studySets ?? [],
       installedPacks: data.installedPacks ?? [],
+      trash: data.trash ?? [],
       createdAt: data.createdAt,
     },
     settings: data.settings,

@@ -31,6 +31,7 @@ import {
   remainingReviewForDeck,
 } from '../lib/deck-settings'
 import { dueLabel } from '../lib/utils'
+import { trashCards, trashDeck } from '../lib/trash'
 
 interface DecksProps {
   onNavigate: (route: Route) => void
@@ -172,11 +173,7 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
   const watermark = (deck.nameJp || deck.name || '言').slice(0, 1)
 
   const deleteDeck = () => {
-    update((current) => ({
-      ...current,
-      decks: current.decks.filter((item) => item.id !== deckId),
-      cards: current.cards.filter((card) => card.deckId !== deckId),
-    }))
+    update((current) => trashDeck(current, deckId))
     onNavigate(listRoute)
   }
 
@@ -537,10 +534,7 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
           danger
           onClose={() => setDeletingCard(null)}
           onConfirm={() => {
-            update((current) => ({
-              ...current,
-              cards: current.cards.filter((item) => item.id !== deletingCard.id),
-            }))
+            update((current) => trashCards(current, [deletingCard.id]))
           }}
         />
       )}

@@ -439,6 +439,12 @@ export const HELP_GUIDES: HelpGuide[] = [
         'Отдельная кнопка сбрасывает SRS и статистику, но оставляет колоды, карточки и подборки. Это удобно, чтобы начать курс заново.',
         'A separate button resets SRS and statistics while keeping decks, cards, and sets. Use it to start the course over.',
       ),
+      step(
+        'Корзина',
+        'Trash',
+        'Удалённые карточки и колоды попадают во вкладку «Корзина». Их можно восстановить с прогрессом в течение 30 дней, пока они не удалились автоматически.',
+        'Deleted cards and decks go to the Trash tab. You can restore them with their progress for 30 days before they are removed automatically.',
+      ),
     ],
     note: {
       title: L('Совет', 'Tip'),

@@ -106,6 +106,8 @@ export const HELP_ES: Record<string, string> = {
   "In the installed app, the Data folder button opens the content, settings, progress, and history files.": "En la aplicación instalada, el botón Carpeta de datos abre los archivos de contenido, ajustes, progreso e historial.",
   "Reset progress": "Restablecer progreso",
   "A separate button resets SRS and statistics while keeping decks, cards, and sets. Use it to start the course over.": "Un botón aparte restablece el SRS y las estadísticas, y conserva los mazos, las tarjetas y los conjuntos. Úsalo para empezar el curso de nuevo.",
+  "Trash": "Papelera",
+  "Deleted cards and decks go to the Trash tab. You can restore them with their progress for 30 days before they are removed automatically.": "Las tarjetas y los mazos eliminados van a la pestaña Papelera. Puedes restaurarlos con su progreso durante 30 días antes de que se eliminen automáticamente.",
   "Importing data from CSV": "Importar datos desde CSV",
   "How to add many cards quickly from a CSV or TSV spreadsheet.": "Cómo añadir muchas tarjetas rápidamente desde una hoja de cálculo CSV o TSV.",
   "CSV/TSV import adds cards to a selected or new deck. It does not replace existing data and does not import progress: imported cards start as new.": "La importación CSV/TSV añade tarjetas a un mazo seleccionado o nuevo. No sustituye los datos existentes ni importa el progreso: las tarjetas importadas empiezan como nuevas.",

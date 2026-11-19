@@ -6,6 +6,7 @@ import { cardExampleTranslation, cardMeaning, deckTitle, isProtectedDeck } from 
 import { freshSrs, knownSrs } from '../lib/srs'
 import { dueLabel, formatDate } from '../lib/utils'
 import { speakJa } from '../lib/tts'
+import { trashCards } from '../lib/trash'
 import { Icon } from '../components/Icon'
 import { ConfirmDialog, Modal } from '../components/Modal'
 import { Select } from '../components/Select'
@@ -275,10 +276,7 @@ export function CardBrowser({ focusCardId, initialQuery, onCloseFocus }: CardBro
     if (selectionHasProtected) return
     const count = selected.size
     if (count === 0) return
-    update((current) => ({
-      ...current,
-      cards: current.cards.filter((card) => !selected.has(card.id)),
-    }))
+    update((current) => trashCards(current, selected))
     setSelected(new Set())
     setPendingDelete(false)
     setNotice(t('browser.noticeDeleted', { n: count }))

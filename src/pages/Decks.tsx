@@ -13,6 +13,7 @@ import {
 import { DeckCard } from '../components/DeckCard'
 import { DeckForm } from '../components/DeckForm'
 import { DeckSettingsForm } from '../components/DeckSettingsForm'
+import { MergeDecksDialog } from '../components/MergeDecksDialog'
 import { CardForm } from '../components/CardForm'
 import { KanjiCardForm } from '../components/KanjiCardForm'
 import { ConfirmDialog } from '../components/Modal'
@@ -119,6 +120,7 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
   const [editingCard, setEditingCard] = useState<Card | null>(null)
   const [deletingCard, setDeletingCard] = useState<Card | null>(null)
   const [deletingDeck, setDeletingDeck] = useState(false)
+  const [mergingDeck, setMergingDeck] = useState(false)
   const [resetting, setResetting] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
 
@@ -268,6 +270,16 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
             >
               <Icon name="sliders" size={17} />
             </button>
+            {!protectedDeck && (
+              <button
+                className="icon-btn bordered"
+                onClick={() => setMergingDeck(true)}
+                title={t('deckMerge.title')}
+                aria-label={t('deckMerge.title')}
+              >
+                <Icon name="layers" size={17} />
+              </button>
+            )}
             <button
               className="icon-btn bordered"
               onClick={() => setResetting(true)}
@@ -547,6 +559,14 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
           danger
           onClose={() => setDeletingDeck(false)}
           onConfirm={deleteDeck}
+        />
+      )}
+
+      {mergingDeck && (
+        <MergeDecksDialog
+          source={deck}
+          onClose={() => setMergingDeck(false)}
+          onMerged={(targetId) => onNavigate({ name: 'deck', deckId: targetId })}
         />
       )}
 

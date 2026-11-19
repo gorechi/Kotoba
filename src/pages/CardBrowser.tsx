@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type DragEvent } from 'react'
-import type { Card, DeckKind } from '../types'
+import type { Card, Deck, DeckKind } from '../types'
 import { useStore } from '../state/store'
 import { useI18n } from '../lib/i18n-react'
 import { cardExampleTranslation, cardMeaning, deckTitle, isProtectedDeck } from '../lib/content'
@@ -9,6 +9,7 @@ import { speakJa } from '../lib/tts'
 import { trashCards } from '../lib/trash'
 import { Icon } from '../components/Icon'
 import { ConfirmDialog, Modal } from '../components/Modal'
+import { DeckForm } from '../components/DeckForm'
 import { Select } from '../components/Select'
 import {
   MAX_TAGS_COLLAPSED,
@@ -69,6 +70,7 @@ export function CardBrowser({ focusCardId, initialQuery, onCloseFocus }: CardBro
   const [pendingDelete, setPendingDelete] = useState(false)
   const [tagDraft, setTagDraft] = useState('')
   const [notice, setNotice] = useState<string | null>(null)
+  const [creatingDeck, setCreatingDeck] = useState<DeckKind | null>(null)
   const [draggingIds, setDraggingIds] = useState<string[]>([])
   const [dragOverDeck, setDragOverDeck] = useState<string | null>(null)
   const openedFocusRef = useRef<string | null>(null)
@@ -204,6 +206,34 @@ export function CardBrowser({ focusCardId, initialQuery, onCloseFocus }: CardBro
 
     setSelected(new Set())
     setNotice(t('browser.noticeMoved', { n: moved }))
+  }
+
+  /** Выносит выбранные карточки в только что созданную колоду. */
+  const moveSelectedToNewDeck = (deck: Deck) => {
+    const ids = [...selected]
+    if (ids.length === 0) return
+    const idSet = new Set(ids)
+
+    update((current) => {
+      // Колода создана предыдущим update, поэтому она уже есть в current.
+      if (!current.decks.some((item) => item.id === deck.id)) return current
+      let nextOrder =
+        current.cards
+          .filter((card) => card.deckId === deck.id)
+          .reduce((max, card) => Math.max(max, card.order), 0) + 1
+      return {
+        ...current,
+        cards: current.cards.map((card) => {
+          if (!idSet.has(card.id)) return card
+          const movedCard = { ...card, deckId: deck.id, order: nextOrder }
+          nextOrder += 1
+          return movedCard
+        }),
+      }
+    })
+
+    setSelected(new Set())
+    setNotice(t('browser.noticeMoved', { n: ids.length }))
   }
 
   const setSuspended = (suspended: boolean) => {
@@ -550,7 +580,7 @@ export function CardBrowser({ focusCardId, initialQuery, onCloseFocus }: CardBro
                     <Select
                       aria-label={t('browser.moveTo')}
                       value=""
-                      disabled={selectionHasProtected || moveTargetDecks.length === 0}
+                      disabled={selectionHasProtected || selectedKind === null}
                       title={
                         !selectionHasProtected &&
                         selectedKind === null &&
@@ -559,12 +589,20 @@ export function CardBrowser({ focusCardId, initialQuery, onCloseFocus }: CardBro
                           : undefined
                       }
                       onChange={(event) => {
-                        if (event.target.value) moveCards([...selected], event.target.value)
+                        const value = event.target.value
+                        if (value === '__new__') {
+                          if (selectedKind) setCreatingDeck(selectedKind)
+                          return
+                        }
+                        if (value) moveCards([...selected], value)
                       }}
                     >
                       <option value="" disabled>
                         {t('browser.moveTo')}
                       </option>
+                      {selectedKind && (
+                        <option value="__new__">{t('browser.moveToNew')}</option>
+                      )}
                       {moveTargetDecks.map((deck) => (
                         <option key={deck.id} value={deck.id}>
                           {deckTitle(deck, t)}
@@ -915,6 +953,14 @@ export function CardBrowser({ focusCardId, initialQuery, onCloseFocus }: CardBro
           danger
           onClose={() => setPendingDelete(false)}
           onConfirm={deleteSelected}
+        />
+      )}
+
+      {creatingDeck && (
+        <DeckForm
+          kind={creatingDeck}
+          onClose={() => setCreatingDeck(null)}
+          onCreated={moveSelectedToNewDeck}
         />
       )}
     </div>

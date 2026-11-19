@@ -15,9 +15,11 @@ interface DeckFormProps {
   /** Тип создаваемой колоды. При редактировании берётся из deck. */
   kind?: DeckKind
   onClose: () => void
+  /** Вызывается после создания новой колоды. */
+  onCreated?: (deck: Deck) => void
 }
 
-export function DeckForm({ deck, kind = 'kana', onClose }: DeckFormProps) {
+export function DeckForm({ deck, kind = 'kana', onClose, onCreated }: DeckFormProps) {
   const { update } = useStore()
   const { t } = useI18n()
   const deckKind: DeckKind = deck?.kind ?? kind
@@ -39,8 +41,23 @@ export function DeckForm({ deck, kind = 'kana', onClose }: DeckFormProps) {
       return
     }
     const cleanNameJp = finalizeRomajiTail(nameJp, nameJpMode).trim()
+    const trimmedDescription = description.trim()
+    // Новую колоду создаём до update: React может вызвать updater позже
+    // и не один раз, а id должен остаться стабильным.
+    const created: Deck | null = deck
+      ? null
+      : {
+          id: uid('deck'),
+          name: cleanName,
+          nameJp: cleanNameJp,
+          description: trimmedDescription,
+          accent,
+          builtin: false,
+          kind: deckKind,
+          createdAt: Date.now(),
+        }
+
     update((current) => {
-      const trimmedDescription = description.trim()
       if (deck) {
         return {
           ...current,
@@ -57,23 +74,13 @@ export function DeckForm({ deck, kind = 'kana', onClose }: DeckFormProps) {
           ),
         }
       }
+      if (!created) return current
       return {
         ...current,
-        decks: [
-          ...current.decks,
-          {
-            id: uid('deck'),
-            name: cleanName,
-            nameJp: cleanNameJp,
-            description: trimmedDescription,
-            accent,
-            builtin: false,
-            kind: deckKind,
-            createdAt: Date.now(),
-          },
-        ],
+        decks: [...current.decks, created],
       }
     })
+    if (created) onCreated?.(created)
     onClose()
   }
 

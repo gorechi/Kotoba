@@ -174,8 +174,8 @@ export const HELP_GUIDES: HelpGuide[] = [
       step(
         'Что можно сделать',
         'Use bulk actions',
-        'Перенести в колоду, добавить тег, приостановить или вернуть в учёбу, пометить выученными, сбросить прогресс или удалить. Кана и кандзи переносятся только в колоды своего типа.',
-        'Move to a deck, add a tag, suspend or resume, mark as known, reset progress, or delete. Kana and kanji can only move to decks of the same type.',
+        'Перенести в колоду, вынести в новую колоду, добавить тег, приостановить или вернуть в учёбу, пометить выученными, сбросить прогресс или удалить. Кана и кандзи переносятся только в колоды своего типа.',
+        'Move to a deck, move to a new deck, add a tag, suspend or resume, mark as known, reset progress, or delete. Kana and kanji can only move to decks of the same type.',
       ),
       step(
         'Перетаскивание',
@@ -183,12 +183,18 @@ export const HELP_GUIDES: HelpGuide[] = [
         'Карточку можно перетащить в колоду того же типа. Защищённые карточки встроенной каны не перемещаются, не тегируются и не удаляются.',
         'You can drag a card into a deck of the same type. Protected built-in kana cards cannot be moved, tagged, or deleted.',
       ),
+      step(
+        'Объединение колод',
+        'Merge decks',
+        'На странице колоды кнопка со слоями объединяет её с другой колодой того же типа. Карточки, прогресс и порядок переезжают, исходная колода исчезает.',
+        'On a deck page, the layers button merges it into another deck of the same type. Cards, progress, and order move over, and the source deck disappears.',
+      ),
     ],
     note: {
       title: L('Полезно знать', 'Good to know'),
       text: L(
-        'Изменения сохраняются автоматически. «Сбросить прогресс» не удаляет карточку, а делает её новой. Удаление карточки необратимо.',
-        'Changes save automatically. Reset progress does not delete a card; it makes it new again. Deleting a card is permanent.',
+        'Изменения сохраняются автоматически. «Сбросить прогресс» не удаляет карточку, а делает её новой. Удалённые карточки и колоды попадают в корзину и восстанавливаются в течение 30 дней.',
+        'Changes save automatically. Reset progress does not delete a card; it makes it new again. Deleted cards and decks go to the trash and can be restored for 30 days.',
       ),
     },
     target: {

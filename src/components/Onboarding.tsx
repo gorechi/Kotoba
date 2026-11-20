@@ -1,8 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import type { DailyGoalType } from '../types'
 import { useStore } from '../state/store'
 import { useI18n } from '../lib/i18n-react'
-import { detectSystemLocale } from '../lib/i18n'
 import { Icon, type IconName } from './Icon'
 
 interface OnboardingProps {
@@ -34,10 +33,9 @@ const DECK_META: Record<string, { titleKey: string; textKey: string; icon: IconN
 
 export function Onboarding({ onFinish }: OnboardingProps) {
   const { data, setSettings } = useStore()
-  const { t, locales, language, setLanguage } = useI18n()
+  const { t } = useI18n()
   const [step, setStep] = useState(0)
   const [deckId, setDeckId] = useState('hiragana')
-  const systemLocale = useMemo(() => detectSystemLocale(), [])
 
   const goalType = data.settings.dailyGoalType
   const goalValue =
@@ -56,7 +54,10 @@ export function Onboarding({ onFinish }: OnboardingProps) {
     else setSettings({ dailyReviewGoal: value })
   }
 
-  const steps = [t('onboarding.languageTitle'), t('onboarding.goalTitle'), t('onboarding.deckTitle')]
+  const steps = [
+    { title: t('onboarding.goalTitle'), text: t('onboarding.goalText') },
+    { title: t('onboarding.deckTitle'), text: t('onboarding.deckText') },
+  ]
   const last = step === steps.length - 1
 
   return (
@@ -73,9 +74,9 @@ export function Onboarding({ onFinish }: OnboardingProps) {
         </header>
 
         <div className="onboarding-progress" aria-hidden="true">
-          {steps.map((label, index) => (
+          {steps.map((item, index) => (
             <span
-              key={label}
+              key={item.title}
               className={`onboarding-dot${index === step ? ' active' : ''}${
                 index < step ? ' done' : ''
               }`}
@@ -85,34 +86,12 @@ export function Onboarding({ onFinish }: OnboardingProps) {
 
         <div className="onboarding-copy">
           <div className="eyebrow">{t('onboarding.eyebrow')}</div>
-          <h1>{steps[step]}</h1>
-          <p>{t(`onboarding.${['language', 'goal', 'deck'][step]}Text`)}</p>
+          <h1>{steps[step].title}</h1>
+          <p>{steps[step].text}</p>
         </div>
 
         <div className="onboarding-body">
           {step === 0 && (
-            <div className="onboarding-languages">
-              {locales.map((item) => (
-                <button
-                  key={item.code}
-                  type="button"
-                  className={`onboarding-choice${language === item.code ? ' active' : ''}`}
-                  onClick={() => setLanguage(item.code)}
-                  aria-pressed={language === item.code}
-                >
-                  <span className="onboarding-choice-label">{item.name}</span>
-                  {systemLocale === item.code && (
-                    <span className="onboarding-choice-note">
-                      {t('onboarding.systemLanguage')}
-                    </span>
-                  )}
-                  {language === item.code && <Icon name="check" size={17} />}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {step === 1 && (
             <div className="onboarding-goal">
               <div className="segmented">
                 <button
@@ -154,7 +133,7 @@ export function Onboarding({ onFinish }: OnboardingProps) {
             </div>
           )}
 
-          {step === 2 && (
+          {step === 1 && (
             <div className="onboarding-decks">
               {decks.map((id) => {
                 const meta = DECK_META[id]

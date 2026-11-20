@@ -16,6 +16,7 @@ contextBridge.exposeInMainWorld('kotoba', {
   openBackupFolder: (settings) => ipcRenderer.invoke('data:open-backup-folder', settings),
   openSpeechSettings: () => ipcRenderer.invoke('system:open-speech-settings'),
   checkUpdates: () => ipcRenderer.invoke('app:check-updates'),
+  getInstallerLanguage: () => ipcRenderer.invoke('app:installer-language'),
   minimize: () => ipcRenderer.invoke('window:minimize'),
   toggleMaximize: () => ipcRenderer.invoke('window:toggleMaximize'),
   close: () => ipcRenderer.invoke('window:close'),

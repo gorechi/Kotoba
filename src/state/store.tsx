@@ -21,6 +21,7 @@ import {
   type StorageLoadResult,
 } from '../lib/storage'
 import { normalizeData } from '../lib/normalize'
+import { isLocaleCode } from '../lib/i18n'
 import { applyRating, freshSrs } from '../lib/srs'
 import { dayKey } from '../lib/utils'
 import { RecoveryScreen } from '../components/RecoveryScreen'
@@ -140,16 +141,26 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [],
   )
 
-  const applyLoaded = useCallback((result: StorageLoadResult) => {
-    blockedRef.current = result.blocked
-    setLoadState(result)
-    setLoadIssues(result.issues)
-    if (result.blocked) {
-      setData(null)
-      return
-    }
-    setData(normalizeData(result.parts ? combineLoadedParts(result.parts) : null))
-  }, [])
+  const applyLoaded = useCallback(
+    (result: StorageLoadResult, installerLanguage: string | null = null) => {
+      blockedRef.current = result.blocked
+      setLoadState(result)
+      setLoadIssues(result.issues)
+      if (result.blocked) {
+        setData(null)
+        return
+      }
+      const data = normalizeData(result.parts ? combineLoadedParts(result.parts) : null)
+      // Язык из установщика применяется только к чистой установке: если
+      // настройки уже есть, приложение живёт со своим выбранным языком.
+      const hasSettings = Boolean(result.parts?.settings)
+      if (!hasSettings && installerLanguage && isLocaleCode(installerLanguage)) {
+        data.settings = { ...data.settings, language: installerLanguage }
+      }
+      setData(data)
+    },
+    [],
+  )
 
   useEffect(() => {
     // StrictMode в разработке запускает эффект дважды. Чтение с диска — это
@@ -157,7 +168,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     // выполняем его один раз; повторный результат мог бы скрыть восстановление.
     if (loadStartedRef.current) return
     loadStartedRef.current = true
-    void readStored().then(applyLoaded)
+    void (async () => {
+      const installerLanguage = window.kotoba?.getInstallerLanguage
+        ? await window.kotoba.getInstallerLanguage().catch(() => null)
+        : null
+      applyLoaded(await readStored(), installerLanguage)
+    })()
   }, [applyLoaded])
 
   const persistDirty = useCallback(async (force = false): Promise<boolean> => {

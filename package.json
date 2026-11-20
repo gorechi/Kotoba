@@ -42,7 +42,14 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "shortcutName": "Котоба",
-      "artifactName": "Kotoba-Setup-${version}.${ext}"
+      "artifactName": "Kotoba-Setup-${version}.${ext}",
+      "include": "build/installer.nsh",
+      "installerLanguages": [
+        "en_US",
+        "ru_RU",
+        "es_ES"
+      ],
+      "displayLanguageSelector": false
     }
   },
   "dependencies": {

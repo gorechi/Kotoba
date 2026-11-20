@@ -16,6 +16,8 @@ const storage = require('./storage.cjs')
 const isDev = !app.isPackaged
 const AUTO_BACKUP_CHECK_MS = 60 * 60 * 1000
 const WINDOW_STATE_FILE = 'window-state.json'
+const INSTALLER_LANGUAGE_FILE = 'installer-language.txt'
+const SUPPORTED_LANGUAGES = new Set(['en', 'ru', 'es'])
 const DEFAULT_WINDOW = { width: 1200, height: 820 }
 const MIN_WINDOW = { width: 960, height: 660 }
 let mainWindow = null
@@ -247,6 +249,20 @@ function createWindow() {
 }
 
 ipcMain.handle('data:load', () => storage.readParts(app.getPath('userData')))
+
+/**
+ * Язык, выбранный в установщике. Читается только при первом запуске:
+ * если настройки уже существуют, приложение использует свой язык.
+ */
+ipcMain.handle('app:installer-language', () => {
+  try {
+    const file = path.join(app.getPath('userData'), INSTALLER_LANGUAGE_FILE)
+    const value = fs.readFileSync(file, 'utf8').trim().toLowerCase()
+    return SUPPORTED_LANGUAGES.has(value) ? value : null
+  } catch {
+    return null
+  }
+})
 ipcMain.handle('data:save-parts', (_event, parts) =>
   storage.writeParts(app.getPath('userData'), parts),
 )

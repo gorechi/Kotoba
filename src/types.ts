@@ -321,6 +321,8 @@ export interface KotobaApi {
   backupBeforeImport: (data: AppData) => Promise<string>
   openSpeechSettings: () => Promise<boolean>
   checkUpdates: () => Promise<UpdateCheckResult>
+  /** Язык, выбранный в установщике; null — не выбран или это не установка. */
+  getInstallerLanguage: () => Promise<string | null>
   getAutoBackupInfo: (settings?: Settings) => Promise<AutoBackupInfo>
   createAutoBackup: (settings?: Settings) => Promise<AutoBackupResult>
   checkAutoBackup: (settings?: Settings) => Promise<AutoBackupInfo>

@@ -14,7 +14,7 @@ import { Select } from './Select'
 
 /** Экспорт одной колоды в JSON и импорт её как новой колоды. */
 export function DeckTransferPanel() {
-  const { data, update } = useStore()
+  const { data, update, trackWork } = useStore()
   const { t } = useI18n()
   const fileRef = useRef<HTMLInputElement>(null)
   const [selectedDeckId, setSelectedDeckId] = useState('')
@@ -123,6 +123,7 @@ export function DeckTransferPanel() {
         data.decks.map((deck) => deckTitle(deck, t)),
       )
       update(() => result.data)
+      trackWork()
       setNotice(t('deckTransfer.noticeImported', { name: pending.deck.name }))
       setPending(null)
     } catch {

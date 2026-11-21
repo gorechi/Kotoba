@@ -14,7 +14,7 @@ import { Icon } from './Icon'
 type PendingConfirm = { kind: 'all' } | { kind: 'entry'; entry: TrashEntry }
 
 export function TrashPanel() {
-  const { data, update } = useStore()
+  const { data, update, trackWork } = useStore()
   const { t, locale } = useI18n()
   const [confirm, setConfirm] = useState<PendingConfirm | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
@@ -39,6 +39,7 @@ export function TrashPanel() {
       return
     }
     update(() => result.data)
+    trackWork()
     setNotice(
       entry.kind === 'deck' ? t('trash.restoredDeck') : t('trash.restoredCard'),
     )

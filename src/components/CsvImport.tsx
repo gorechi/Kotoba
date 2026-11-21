@@ -99,7 +99,7 @@ function truncate(value: string, max: number): string {
 }
 
 export function CsvImport({ kind }: { kind: DeckKind }) {
-  const { data, update } = useStore()
+  const { data, update, trackWork } = useStore()
   const { t } = useI18n()
   const fileRef = useRef<HTMLInputElement>(null)
 
@@ -531,6 +531,7 @@ export function CsvImport({ kind }: { kind: DeckKind }) {
         ...added,
       ],
     }))
+    trackWork()
 
     setNotice(
       t('data.importResult', {

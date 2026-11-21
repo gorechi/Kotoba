@@ -22,6 +22,7 @@ import {
   totalReviews,
   totalStudyTime,
   upcomingLoad,
+  type HeatmapDay,
 } from '../lib/stats'
 import { formatDuration } from '../lib/utils'
 import {
@@ -57,6 +58,17 @@ export function Stats() {
   const milestone = nearestMilestone(reviewsTotal, overall.learned, days, data.settings)
   const strength = memoryStrength(data.cards)
   const records = personalRecords(data.history)
+
+  /** Подсказка клетки календаря: повторения и действия с карточками. */
+  const heatmapLabel = (day: HeatmapDay) => {
+    if (day.future) return undefined
+    const parts: string[] = []
+    if (day.reviews > 0) parts.push(t('stats.heatmapReviews', { n: day.reviews }))
+    if (day.work > 0) parts.push(t('stats.heatmapWork', { n: day.work }))
+    return parts.length
+      ? t('stats.heatmapDayParts', { date: day.label, parts: parts.join(' · ') })
+      : t('stats.heatmapDayEmpty', { date: day.label })
+  }
   const forecast = paceForecast(
     data.cards,
     data.history,
@@ -125,7 +137,12 @@ export function Stats() {
             <h2>{t('stats.heatmapTitle')}</h2>
             <p>{t('stats.heatmapSub')}</p>
           </div>
-          <span className="chart-total">{t('stats.heatmapTotal', { n: heatmap.total })}</span>
+          <span className="chart-total">
+            {t('stats.heatmapTotal', { n: heatmap.total })}
+            {heatmap.work > 0 && (
+              <> · {t('stats.heatmapWork', { n: heatmap.work })}</>
+            )}
+          </span>
         </div>
 
         <div className="heatmap-scroll">
@@ -161,9 +178,7 @@ export function Stats() {
             ))}
             {heatmap.weeks.map((days, weekIndex) =>
               days.map((day, dayIndex) => {
-                const label = day.future
-                  ? undefined
-                  : t('stats.heatmapDay', { date: day.label, n: day.reviews })
+                const label = heatmapLabel(day)
                 return (
                   <span
                     key={day.key}
@@ -197,7 +212,7 @@ export function Stats() {
           </div>
         </div>
 
-        {heatmap.total === 0 && (
+        {heatmap.total === 0 && heatmap.work === 0 && (
           <p className="empty-note chart-empty">{t('stats.heatmapEmpty')}</p>
         )}
       </section>

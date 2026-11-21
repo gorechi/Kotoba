@@ -352,6 +352,8 @@ function normalizeHistory(raw: unknown): Record<string, DayStat> {
   for (const [key, value] of Object.entries(raw)) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(key) || !isObj(value)) continue
     const day: DayStat = normalizeTotals(value) ?? { reviews: 0, correct: 0, newCards: 0, ms: 0 }
+    const work = Math.max(0, Math.round(num(value.work, 0)))
+    if (work > 0) day.work = work
     const writing = normalizeTotals(value.writing)
     if (writing && (writing.reviews || writing.correct || writing.newCards || writing.ms)) {
       // Письмо — подмножество общего счётчика дня.

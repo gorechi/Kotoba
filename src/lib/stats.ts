@@ -113,11 +113,15 @@ export function streak(
 ): number {
   const todayKey = dayKey(now, dayStartHour)
   const cursor = new Date(`${todayKey}T12:00:00`)
-  if (!(history[todayKey]?.reviews > 0)) {
+  const active = (key: string) => {
+    const stat = history[key]
+    return (stat?.reviews ?? 0) > 0 || (stat?.work ?? 0) > 0
+  }
+  if (!active(todayKey)) {
     cursor.setDate(cursor.getDate() - 1)
   }
   let count = 0
-  while (history[dayKey(cursor.getTime(), dayStartHour)]?.reviews > 0) {
+  while (active(dayKey(cursor.getTime(), dayStartHour))) {
     count += 1
     cursor.setDate(cursor.getDate() - 1)
   }
@@ -200,6 +204,8 @@ export interface HeatmapDay {
   /** Локализованная дата для подсказки. */
   label: string
   reviews: number
+  /** Действия с карточками и колодами за день. */
+  work: number
   level: HeatmapLevel
   future: boolean
 }
@@ -215,14 +221,16 @@ export interface Heatmap {
   months: HeatmapMonth[]
   weekdays: { row: number; label: string }[]
   total: number
+  /** Всего действий с карточками за период. */
+  work: number
   activeDays: number
 }
 
-function heatmapLevel(reviews: number): HeatmapLevel {
-  if (reviews <= 0) return 0
-  if (reviews < 5) return 1
-  if (reviews < 10) return 2
-  if (reviews < 20) return 3
+function heatmapLevel(activity: number): HeatmapLevel {
+  if (activity <= 0) return 0
+  if (activity < 5) return 1
+  if (activity < 10) return 2
+  if (activity < 20) return 3
   return 4
 }
 
@@ -255,6 +263,7 @@ export function buildHeatmap(
   const weeks: HeatmapDay[][] = []
   const months: HeatmapMonth[] = []
   let total = 0
+  let workTotal = 0
   let activeDays = 0
   let lastMonth = -1
 
@@ -270,10 +279,12 @@ export function buildHeatmap(
       const key = dayKey(ts, dayStartHour)
       const future = ts > todayTs
       const reviews = future ? 0 : (history[key]?.reviews ?? 0)
+      const work = future ? 0 : (history[key]?.work ?? 0)
 
       if (!future) {
         total += reviews
-        if (reviews > 0) activeDays += 1
+        workTotal += work
+        if (reviews > 0 || work > 0) activeDays += 1
       }
 
       // Метка месяца ставится на неделю, в которой начинается новый месяц.
@@ -296,7 +307,8 @@ export function buildHeatmap(
         ts,
         label: dayFormatter.format(date),
         reviews,
-        level: heatmapLevel(reviews),
+        work,
+        level: heatmapLevel(reviews + work),
         future,
       })
     }
@@ -316,7 +328,7 @@ export function buildHeatmap(
     return { row, label: weekdayFormatter.format(date) }
   })
 
-  return { weeks, months, weekdays, total, activeDays }
+  return { weeks, months, weekdays, total, work: workTotal, activeDays }
 }
 
 export function totalReviews(history: Record<string, DayStat>): number {

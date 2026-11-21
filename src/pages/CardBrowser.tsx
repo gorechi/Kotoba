@@ -31,7 +31,7 @@ interface CardBrowserProps {
 }
 
 export function CardBrowser({ focusCardId, initialQuery, onCloseFocus }: CardBrowserProps) {
-  const { data, update } = useStore()
+  const { data, update, trackWork } = useStore()
   const { t, locale } = useI18n()
   const now = Date.now()
 
@@ -204,6 +204,7 @@ export function CardBrowser({ focusCardId, initialQuery, onCloseFocus }: CardBro
       }
     })
 
+    trackWork()
     setSelected(new Set())
     setNotice(t('browser.noticeMoved', { n: moved }))
   }
@@ -232,6 +233,7 @@ export function CardBrowser({ focusCardId, initialQuery, onCloseFocus }: CardBro
       }
     })
 
+    trackWork()
     setSelected(new Set())
     setNotice(t('browser.noticeMoved', { n: ids.length }))
   }
@@ -298,6 +300,7 @@ export function CardBrowser({ focusCardId, initialQuery, onCloseFocus }: CardBro
       ),
     }))
     setTagDraft('')
+    trackWork()
     setNotice(t('browser.noticeTagged', { n: count }))
     setSelected(new Set())
   }
@@ -307,6 +310,7 @@ export function CardBrowser({ focusCardId, initialQuery, onCloseFocus }: CardBro
     const count = selected.size
     if (count === 0) return
     update((current) => trashCards(current, selected))
+    trackWork()
     setSelected(new Set())
     setPendingDelete(false)
     setNotice(t('browser.noticeDeleted', { n: count }))

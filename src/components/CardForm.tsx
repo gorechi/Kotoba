@@ -19,7 +19,7 @@ interface CardFormProps {
 }
 
 export function CardForm({ deckId, card, onClose }: CardFormProps) {
-  const { data, update } = useStore()
+  const { data, update, trackWork } = useStore()
   const { t } = useI18n()
   const deck = data.decks.find((item) => item.id === deckId)
   const defaultTranscription: 'romaji' | 'cyrillic' = data.settings.defaultTranscription
@@ -157,6 +157,7 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
         ],
       }
     })
+    trackWork()
 
     if (!keepOpen) {
       onClose()

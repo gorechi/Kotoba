@@ -20,7 +20,7 @@ interface DeckFormProps {
 }
 
 export function DeckForm({ deck, kind = 'kana', onClose, onCreated }: DeckFormProps) {
-  const { update } = useStore()
+  const { update, trackWork } = useStore()
   const { t } = useI18n()
   const deckKind: DeckKind = deck?.kind ?? kind
   const isKanji = deckKind === 'kanji'
@@ -81,6 +81,7 @@ export function DeckForm({ deck, kind = 'kana', onClose, onCreated }: DeckFormPr
       }
     })
     if (created) onCreated?.(created)
+    trackWork()
     onClose()
   }
 

@@ -143,6 +143,8 @@ export interface StudyTotals {
 }
 
 export interface DayStat extends StudyTotals {
+  /** Действия с карточками и колодами: создание, правка, перенос, импорт. */
+  work?: number
   /** Подмножество счётчиков за режим письма (входит в общие значения выше). */
   writing?: StudyTotals
   /** Новые карточки за день по колодам. */

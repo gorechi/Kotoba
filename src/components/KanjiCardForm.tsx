@@ -28,7 +28,7 @@ function emptyExample(): CardExample {
 }
 
 export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
-  const { data, update } = useStore()
+  const { data, update, trackWork } = useStore()
   const { t } = useI18n()
   const deck = data.decks.find((item) => item.id === deckId)
   const defaultTranscription: 'romaji' | 'cyrillic' = data.settings.defaultTranscription
@@ -227,6 +227,7 @@ export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
         ],
       }
     })
+    trackWork()
 
     if (!keepOpen) {
       onClose()

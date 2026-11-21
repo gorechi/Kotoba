@@ -49,6 +49,8 @@ interface StoreValue {
   ) => RatingUndo | null
   undoRating: (snapshot: RatingUndo) => void
   setSettings: (patch: Partial<Settings>) => void
+  /** Отмечает действие с карточками или колодами как активность дня. */
+  trackWork: () => void
   replaceData: (raw: unknown) => void
   resetProgress: () => void
   resetDeckProgress: (deckId: string) => void
@@ -440,8 +442,20 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       }
 
       const history = { ...prev.history }
+      const currentDay = history[snapshot.historyKey]
+      // Оценка работу с карточками не меняет, поэтому счётчик действий,
+      // накопленный после неё, не должен откатываться вместе с оценкой.
+      const work = Math.max(snapshot.day?.work ?? 0, currentDay?.work ?? 0)
       if (snapshot.day) {
-        history[snapshot.historyKey] = { ...snapshot.day }
+        history[snapshot.historyKey] = { ...snapshot.day, work }
+      } else if (work > 0) {
+        history[snapshot.historyKey] = {
+          reviews: 0,
+          correct: 0,
+          newCards: 0,
+          ms: 0,
+          work,
+        }
       } else {
         delete history[snapshot.historyKey]
       }
@@ -455,6 +469,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setData((prev) =>
       prev ? { ...prev, settings: { ...prev.settings, ...patch } } : prev,
     )
+  }, [])
+
+  const trackWork = useCallback(() => {
+    const current = dataRef.current
+    if (!current) return
+    const historyKey = dayKey(Date.now(), current.settings.dayStartHour)
+    dirtyRef.current.history = true
+    setData((prev) => {
+      if (!prev) return prev
+      const previous = prev.history[historyKey]
+      const day: DayStat = previous
+        ? { ...previous }
+        : { reviews: 0, correct: 0, newCards: 0, ms: 0 }
+      day.work = (day.work ?? 0) + 1
+      return { ...prev, history: { ...prev.history, [historyKey]: day } }
+    })
   }, [])
 
   const replaceData = useCallback((raw: unknown) => {
@@ -614,6 +644,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       rateCard,
       undoRating,
       setSettings,
+      trackWork,
       replaceData,
       resetProgress,
       resetDeckProgress,
@@ -629,6 +660,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     rateCard,
     undoRating,
     setSettings,
+    trackWork,
     replaceData,
     resetProgress,
     resetDeckProgress,

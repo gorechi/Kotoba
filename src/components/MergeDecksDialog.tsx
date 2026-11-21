@@ -15,7 +15,7 @@ interface MergeDecksDialogProps {
 
 /** Объединение колоды с другой колодой того же типа. */
 export function MergeDecksDialog({ source, onClose, onMerged }: MergeDecksDialogProps) {
-  const { data, update } = useStore()
+  const { data, update, trackWork } = useStore()
   const { t } = useI18n()
 
   const targets = data.decks.filter(
@@ -31,6 +31,7 @@ export function MergeDecksDialog({ source, onClose, onMerged }: MergeDecksDialog
     const result = mergeDecks(data, source.id, targetId)
     if (!result.merged) return
     update(() => result.data)
+    trackWork()
     onMerged(targetId)
     onClose()
   }

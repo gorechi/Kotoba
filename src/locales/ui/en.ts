@@ -150,8 +150,6 @@ export const messages: Record<string, string> = {
   "customStudy.scriptAny": "Any",
   "customStudy.scriptHiragana": "Hiragana",
   "customStudy.scriptKatakana": "Katakana",
-  "customStudy.scriptHint": "Only cards written in the selected script. Mixed cards are left out.",
-  "customStudy.scriptKanjiHint": "Not available for kanji cards.",
   "customStudy.jlpt": "JLPT",
   "customStudy.jlptAny": "Any",
   "customStudy.tagFilter": "Tag",

@@ -150,8 +150,6 @@ export const messages: Record<string, string> = {
   "customStudy.scriptAny": "Любая",
   "customStudy.scriptHiragana": "Хирагана",
   "customStudy.scriptKatakana": "Катакана",
-  "customStudy.scriptHint": "Только карточки на выбранной письменности. Смешанные карточки не попадут.",
-  "customStudy.scriptKanjiHint": "Для карточек-кандзи фильтр недоступен.",
   "customStudy.jlpt": "JLPT",
   "customStudy.jlptAny": "Любой",
   "customStudy.tagFilter": "Тег",

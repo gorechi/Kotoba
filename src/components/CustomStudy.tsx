@@ -499,11 +499,6 @@ export function CustomStudy({
                   <option value="hiragana">{t('customStudy.scriptHiragana')}</option>
                   <option value="katakana">{t('customStudy.scriptKatakana')}</option>
                 </Select>
-                <p className="field-hint">
-                  {form.kind === 'kanji'
-                    ? t('customStudy.scriptKanjiHint')
-                    : t('customStudy.scriptHint')}
-                </p>
               </div>
 
               <div className="field">

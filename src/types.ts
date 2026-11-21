@@ -22,6 +22,10 @@ export type DeckOrder = 'order' | 'random' | 'frequency' | 'jlpt'
 export type SessionOrder = 'random' | 'deck' | 'new-first' | 'reviews-first'
 /** Режим изучения колоды: общий из настроек или собственный. */
 export type DeckStudyMode = 'global' | StudyMode
+/** Письменность японской стороны карточки. */
+export type KanaScript = 'hiragana' | 'katakana' | 'mixed'
+/** Фильтр по письменности в своих подборках. */
+export type KanaScriptFilter = 'hiragana' | 'katakana'
 
 export interface DeckStudySettings {
   /** null — использовать общий лимит новых карточек. */
@@ -87,6 +91,8 @@ export interface Card {
   frequency?: number
   /** Карточка временно исключена из учёбы. */
   suspended?: boolean
+  /** Письменность японской стороны: хирагана, катакана или смесь. */
+  script?: KanaScript
   /** Чтения иероглифа: кана + транскрипция (для карточек-иероглифов). */
   readings: CardReading[]
   /** Примеры использования (для карточек-иероглифов). */
@@ -246,6 +252,8 @@ export interface CustomStudyOptions {
   /** 5 = N5, 1 = N1. */
   jlpt?: number
   tag?: string
+  /** Только карточки на выбранной письменности. */
+  script?: KanaScriptFilter
   /** 0 — без ограничения. */
   limit: number
   /** Сколько карточек показывать за одну сессию; 0 — весь набор. */

@@ -16,6 +16,7 @@ import type {
   DeckOrder,
   DeckStudyMode,
   DeckStudySettings,
+  KanaScriptFilter,
   SessionOrder,
   Settings,
   SrsState,
@@ -28,6 +29,7 @@ import type {
 } from '../types'
 import { freshSrs } from './srs'
 import { uid } from './utils'
+import { detectKanaScript } from './kana-script'
 import { DEFAULT_TRASH_RETENTION_DAYS, MAX_TRASH_RETENTION_DAYS, pruneTrash } from './trash'
 import { createBaseSeedData, createSeedData } from '../data/seed'
 import { LEGACY_N5_EXAMPLES, LEGACY_N5_MEANINGS } from '../data/legacy-n5'
@@ -210,6 +212,9 @@ function normalizeCard(raw: unknown): Card | null {
     jlpt: jlpt >= 1 && jlpt <= 5 ? jlpt : undefined,
     frequency: frequency > 0 ? frequency : undefined,
     suspended: Boolean(raw.suspended),
+    // Признак письменности не хранится отдельно от текста: пересчитываем
+    // при каждой загрузке, чтобы старые карточки получили его автоматически.
+    script: detectKanaScript(raw.front) ?? undefined,
     readings: normalizeReadings(raw.readings),
     examples: normalizeExamples(raw.examples),
     group,
@@ -255,7 +260,8 @@ function normalizeTrash(raw: unknown, retentionDays: number): TrashEntry[] {
   return pruneTrash(entries, Date.now(), retentionDays)
 }
 
-function normalizeStudySetOptions(raw: unknown): CustomStudyOptions {  const value = isObj(raw) ? raw : {}
+function normalizeStudySetOptions(raw: unknown): CustomStudyOptions {
+  const value = isObj(raw) ? raw : {}
   const jlpt = Math.round(num(value.jlpt, 0))
   const limit = Math.max(0, Math.round(num(value.limit, 50)))
   const deckId = typeof value.deckId === 'string' && value.deckId.trim()
@@ -270,6 +276,10 @@ function normalizeStudySetOptions(raw: unknown): CustomStudyOptions {  const val
   const tag = typeof value.tag === 'string' && value.tag.trim()
     ? value.tag.trim()
     : undefined
+  const script =
+    value.script === 'hiragana' || value.script === 'katakana'
+      ? (value.script as KanaScriptFilter)
+      : undefined
   const sessionSize =
     value.sessionSize === undefined
       ? undefined
@@ -283,6 +293,8 @@ function normalizeStudySetOptions(raw: unknown): CustomStudyOptions {  const val
     status,
     kind,
     jlpt: jlpt >= 1 && jlpt <= 5 ? jlpt : undefined,
+    // Для кандзи фильтр по письменности не имеет смысла.
+    script: kind === 'kanji' ? undefined : script,
     tag,
     limit,
     sessionSize,

@@ -4,6 +4,7 @@ import { useStore } from '../state/store'
 import { useI18n } from '../lib/i18n-react'
 import { deckTitle, isProtectedDeck } from '../lib/content'
 import { freshSrs } from '../lib/srs'
+import { detectKanaScript } from '../lib/kana-script'
 import { uid } from '../lib/utils'
 import { toCyrillic } from '../lib/cyrillic'
 import { suggestReading } from '../lib/romaji'
@@ -278,6 +279,7 @@ export function CsvImport({ kind }: { kind: DeckKind }) {
         readings: [],
         examples: [],
         group: 'custom',
+        script: detectKanaScript(front) ?? undefined,
         order,
         srs: freshSrs(),
         createdAt,
@@ -330,6 +332,7 @@ export function CsvImport({ kind }: { kind: DeckKind }) {
       readings,
       examples,
       group: 'custom',
+      script: detectKanaScript(front) ?? undefined,
       order,
       srs: freshSrs(),
       createdAt,
@@ -471,6 +474,7 @@ export function CsvImport({ kind }: { kind: DeckKind }) {
           ...existing,
           front: draft.front,
           meaning: draft.meaning,
+          script: draft.script,
           id: existing.id,
           deckId: existing.deckId,
           order: existing.order,

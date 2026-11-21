@@ -4,6 +4,7 @@ import { useStore } from '../state/store'
 import { useI18n } from '../lib/i18n-react'
 import { cardExampleTranslation, cardMeaning, deckTitle } from '../lib/content'
 import { freshSrs } from '../lib/srs'
+import { detectKanaScript } from '../lib/kana-script'
 import { convertRomajiTail, guessKanaMode } from '../lib/romaji'
 import { toCyrillic } from '../lib/cyrillic'
 import { uid } from '../lib/utils'
@@ -186,6 +187,7 @@ export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
                   meaning: nextMeaning,
                   note: note.trim(),
                   tags,
+                  script: detectKanaScript(cleanFront) ?? undefined,
                   jlpt: jlpt >= 1 && jlpt <= 5 ? jlpt : undefined,
                   frequency: parsedFrequency > 0 ? parsedFrequency : undefined,
                   readings: cleanReadings,
@@ -212,6 +214,7 @@ export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
             note: note.trim(),
             mnemonic: '',
             tags,
+            script: detectKanaScript(cleanFront) ?? undefined,
             jlpt: jlpt >= 1 && jlpt <= 5 ? jlpt : undefined,
             frequency: parsedFrequency > 0 ? parsedFrequency : undefined,
             readings: cleanReadings,

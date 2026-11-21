@@ -7,6 +7,7 @@ import type {
   CustomStudyOrder,
   CustomStudyPreset,
   CustomStudyStatus,
+  KanaScriptFilter,
 } from '../lib/custom-study'
 import { buildCustomStudyQueue, presetOptions } from '../lib/custom-study'
 import { useStore } from '../state/store'
@@ -119,6 +120,7 @@ export function CustomStudy({
       set
         ? {
             ...set.options,
+            script: set.options.kind === 'kanji' ? undefined : set.options.script,
             sessionSize: set.options.sessionSize ?? 0,
             order: set.options.order ?? 'random',
           }
@@ -200,6 +202,15 @@ export function CustomStudy({
     if (options.jlpt) parts.push(`JLPT N${options.jlpt}`)
     if (options.status !== 'all') parts.push(t(STATUS_LABEL_KEYS[options.status]))
     if (options.kind !== 'all') parts.push(t(KIND_LABEL_KEYS[options.kind]))
+    if (options.script) {
+      parts.push(
+        t(
+          options.script === 'hiragana'
+            ? 'customStudy.scriptHiragana'
+            : 'customStudy.scriptKatakana',
+        ),
+      )
+    }
     if (options.tag) parts.push(t('customStudy.tagTitle', { tag: options.tag }))
     if (options.limit > 0) parts.push(t('customStudy.limitN', { n: options.limit }))
     if (options.sessionSize && options.sessionSize > 0) {
@@ -429,9 +440,14 @@ export function CustomStudy({
                 <Select
                   id="custom-kind"
                   value={form.kind}
-                  onChange={(event) =>
-                    setForm({ ...form, kind: event.target.value as CustomStudyKind })
-                  }
+                  onChange={(event) => {
+                    const kind = event.target.value as CustomStudyKind
+                    setForm({
+                      ...form,
+                      kind,
+                      script: kind === 'kanji' ? undefined : form.script,
+                    })
+                  }}
                 >
                   <option value="all">{t('customStudy.typeAll')}</option>
                   <option value="kana">{t('customStudy.typeKana')}</option>
@@ -463,6 +479,34 @@ export function CustomStudy({
 
             <div className="form-row">
               <div className="field">
+                <label htmlFor="custom-script">{t('customStudy.script')}</label>
+                <Select
+                  id="custom-script"
+                  value={form.script ?? ''}
+                  disabled={form.kind === 'kanji'}
+                  onChange={(event) => {
+                    const value = event.target.value
+                    setForm({
+                      ...form,
+                      script:
+                        value === 'hiragana' || value === 'katakana'
+                          ? (value as KanaScriptFilter)
+                          : undefined,
+                    })
+                  }}
+                >
+                  <option value="">{t('customStudy.scriptAny')}</option>
+                  <option value="hiragana">{t('customStudy.scriptHiragana')}</option>
+                  <option value="katakana">{t('customStudy.scriptKatakana')}</option>
+                </Select>
+                <p className="field-hint">
+                  {form.kind === 'kanji'
+                    ? t('customStudy.scriptKanjiHint')
+                    : t('customStudy.scriptHint')}
+                </p>
+              </div>
+
+              <div className="field">
                 <label htmlFor="custom-tag">{t('customStudy.tagFilter')}</label>
                 <Select
                   id="custom-tag"
@@ -480,7 +524,9 @@ export function CustomStudy({
                 </Select>
                 {!allTags.length && <p className="field-hint">{t('customStudy.noTags')}</p>}
               </div>
+            </div>
 
+            <div className="form-row">
               <div className="field">
                 <label htmlFor="custom-limit">{t('customStudy.limit')}</label>
                 <Select
@@ -497,9 +543,7 @@ export function CustomStudy({
                   ))}
                 </Select>
               </div>
-            </div>
 
-            <div className="form-row">
               <div className="field">
                 <label htmlFor="custom-session-size">{t('customStudy.sessionSize')}</label>
                 <Select
@@ -516,7 +560,9 @@ export function CustomStudy({
                   ))}
                 </Select>
               </div>
+            </div>
 
+            <div className="form-row">
               <div className="field">
                 <label htmlFor="custom-order">{t('customStudy.order')}</label>
                 <Select

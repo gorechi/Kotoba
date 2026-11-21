@@ -7,6 +7,7 @@ import type {
   QueueItem,
 } from '../types'
 import { isProblemCard } from './problems'
+import { detectKanaScript } from './kana-script'
 import { DAY } from './srs'
 import { shuffle } from './utils'
 
@@ -15,6 +16,7 @@ export type {
   CustomStudyOptions,
   CustomStudyOrder,
   CustomStudyStatus,
+  KanaScriptFilter,
 } from '../types'
 
 export type CustomStudyPreset =
@@ -114,6 +116,10 @@ export function buildCustomStudyQueue(
     if (!deck) return false
     if (options.deckId !== 'all' && card.deckId !== options.deckId) return false
     if (options.kind !== 'all' && deck.kind !== options.kind) return false
+    if (options.script && options.kind !== 'kanji') {
+      const script = card.script ?? detectKanaScript(card.front)
+      if (script !== options.script) return false
+    }
     if (options.jlpt !== undefined && card.jlpt !== options.jlpt) return false
     if (options.tag && !card.tags.includes(options.tag)) return false
 

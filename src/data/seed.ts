@@ -1,6 +1,7 @@
 import type { Card, Deck, StudySet, TrashEntry } from '../types'
 import { freshSrs } from '../lib/srs'
 import { detectSystemLocale } from '../lib/i18n'
+import { detectKanaScript } from '../lib/kana-script'
 import {
   HIRAGANA_BASIC,
   HIRAGANA_VOICED,
@@ -104,6 +105,7 @@ function seedCards(
     note: '',
     mnemonic: '',
     tags: [],
+    script: detectKanaScript(seed.kana) ?? undefined,
     readings: [],
     examples: [],
     group,

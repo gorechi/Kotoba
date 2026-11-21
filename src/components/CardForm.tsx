@@ -4,6 +4,7 @@ import { useStore } from '../state/store'
 import { useI18n } from '../lib/i18n-react'
 import { deckTitle } from '../lib/content'
 import { freshSrs } from '../lib/srs'
+import { detectKanaScript } from '../lib/kana-script'
 import { finalizeRomajiTail, guessKanaMode, suggestReading, type KanaMode } from '../lib/romaji'
 import { toCyrillic } from '../lib/cyrillic'
 import { uid } from '../lib/utils'
@@ -118,6 +119,7 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
                   meaning: meaning.trim(),
                   note: note.trim(),
                   tags,
+                  script: detectKanaScript(cleanFront) ?? undefined,
                   jlpt: jlpt >= 1 && jlpt <= 5 ? jlpt : undefined,
                   frequency: parsedFrequency > 0 ? parsedFrequency : undefined,
                 }
@@ -142,6 +144,7 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
             note: note.trim(),
             mnemonic: '',
             tags,
+            script: detectKanaScript(cleanFront) ?? undefined,
             jlpt: jlpt >= 1 && jlpt <= 5 ? jlpt : undefined,
             frequency: parsedFrequency > 0 ? parsedFrequency : undefined,
             readings: [],

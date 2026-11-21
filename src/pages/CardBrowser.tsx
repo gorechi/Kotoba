@@ -310,7 +310,6 @@ export function CardBrowser({ focusCardId, initialQuery, onCloseFocus }: CardBro
     const count = selected.size
     if (count === 0) return
     update((current) => trashCards(current, selected))
-    trackWork()
     setSelected(new Set())
     setPendingDelete(false)
     setNotice(t('browser.noticeDeleted', { n: count }))

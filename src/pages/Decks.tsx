@@ -113,7 +113,7 @@ interface DeckDetailProps {
 }
 
 export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
-  const { data, update, trackWork, resetDeckProgress } = useStore()
+  const { data, update, resetDeckProgress } = useStore()
   const { t } = useI18n()
   const [adding, setAdding] = useState(false)
   const [editingDeck, setEditingDeck] = useState(false)
@@ -176,7 +176,6 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
 
   const deleteDeck = () => {
     update((current) => trashDeck(current, deckId))
-    trackWork()
     onNavigate(listRoute)
   }
 
@@ -548,7 +547,6 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
           onClose={() => setDeletingCard(null)}
           onConfirm={() => {
             update((current) => trashCards(current, [deletingCard.id]))
-            trackWork()
           }}
         />
       )}

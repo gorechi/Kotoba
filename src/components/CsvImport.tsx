@@ -102,6 +102,7 @@ export function CsvImport({ kind }: { kind: DeckKind }) {
   const { data, update, trackWork } = useStore()
   const { t } = useI18n()
   const fileRef = useRef<HTMLInputElement>(null)
+  const newDeckRef = useRef<HTMLInputElement>(null)
 
   const [file, setFile] = useState<{ name: string; text: string } | null>(null)
   const [delimiterMode, setDelimiterMode] = useState<'auto' | Delimiter>('auto')
@@ -120,9 +121,6 @@ export function CsvImport({ kind }: { kind: DeckKind }) {
   const existingDecks = useMemo(
     () => data.decks.filter((deck) => deck.kind === kind && !isProtectedDeck(deck)),
     [data.decks, kind],
-  )
-  const hasBuiltinDecks = data.decks.some(
-    (deck) => deck.kind === kind && isProtectedDeck(deck),
   )
 
   const delimiter = useMemo<Delimiter>(() => {
@@ -598,25 +596,21 @@ export function CsvImport({ kind }: { kind: DeckKind }) {
     <>
       {hiddenInput}
       <section className="panel data-import-panel data-mapping-panel">
-        <div className="panel-head data-mapping-head">
-          <div>
-            <div className="eyebrow">{t('data.mappingEyebrow')}</div>
-            <h2>{t('data.mappingTitle')}</h2>
-            <p>{t('data.mappingSub')}</p>
-          </div>
-          <button type="button" className="btn btn-ghost btn-small" onClick={reset}>
-            <Icon name="chevron-left" size={14} />
-            {t('data.back')}
-          </button>
-        </div>
-
-        <div className="data-file-meta">
+        <div className="data-file-meta data-file-meta--mapping">
           <span>
             <Icon name="upload" size={13} />
             {file.name}
           </span>
           <span>{t('data.rowsCount', { n: table.rows.length })}</span>
           <span>{t('data.columnsCount', { n: table.columns.length })}</span>
+          <button
+            type="button"
+            className="btn btn-ghost btn-small data-meta-back"
+            onClick={reset}
+          >
+            <Icon name="chevron-left" size={14} />
+            {t('data.back')}
+          </button>
         </div>
 
         <div className="data-file-options">
@@ -655,7 +649,10 @@ export function CsvImport({ kind }: { kind: DeckKind }) {
             <button
               type="button"
               className={targetMode === 'new' ? 'active' : ''}
-              onClick={() => setTargetMode('new')}
+              onClick={() => {
+                setTargetMode('new')
+                window.requestAnimationFrame(() => newDeckRef.current?.focus())
+              }}
             >
               {t('data.newDeck')}
             </button>
@@ -670,13 +667,19 @@ export function CsvImport({ kind }: { kind: DeckKind }) {
           </div>
 
           {targetMode === 'new' ? (
-            <input
-              value={newDeckName}
-              onChange={(event) => setNewDeckName(event.target.value)}
-              placeholder={t('data.newDeckPlaceholder')}
-              aria-label={t('data.newDeck')}
-              maxLength={60}
-            />
+            <div className="data-new-deck">
+              <label htmlFor="data-new-deck-name">{t('data.newDeckName')}</label>
+              <input
+                id="data-new-deck-name"
+                ref={newDeckRef}
+                className="data-new-deck-input"
+                value={newDeckName}
+                onChange={(event) => setNewDeckName(event.target.value)}
+                placeholder={t('data.newDeckPlaceholder')}
+                aria-label={t('data.newDeck')}
+                maxLength={60}
+              />
+            </div>
           ) : (
             <Select
               value={targetDeckId}
@@ -692,7 +695,6 @@ export function CsvImport({ kind }: { kind: DeckKind }) {
           )}
 
           {!existingDecks.length && <p className="hint">{t('data.noExistingDecks')}</p>}
-          {hasBuiltinDecks && <p className="hint">{t('data.builtinDecksHint')}</p>}
         </div>
 
         <div className="mapping-list">

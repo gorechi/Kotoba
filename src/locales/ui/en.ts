@@ -586,7 +586,6 @@ export const messages: Record<string, string> = {
   "data.newDeckName": "Deck name",
   "data.newDeckPlaceholder": "For example, “My kana”",
   "data.untitledDeck": "New deck",
-  "data.noExistingDecks": "No suitable decks — a new one will be created.",
   "data.required": "required",
   "data.optional": "optional",
   "data.selectColumn": "Choose a column",

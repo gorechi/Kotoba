@@ -644,29 +644,44 @@ export function CsvImport({ kind }: { kind: DeckKind }) {
         </div>
 
         <div className="data-target">
-          <span className="label">{t('data.targetDeck')}</span>
-          <div className="segmented data-target-switch">
-            <button
-              type="button"
-              className={targetMode === 'new' ? 'active' : ''}
-              onClick={() => {
-                setTargetMode('new')
-                window.requestAnimationFrame(() => newDeckRef.current?.focus())
-              }}
-            >
-              {t('data.newDeck')}
-            </button>
-            <button
-              type="button"
-              className={targetMode === 'existing' ? 'active' : ''}
-              disabled={!existingDecks.length}
-              onClick={() => setTargetMode('existing')}
-            >
-              {t('data.existingDeck')}
-            </button>
-          </div>
+          {existingDecks.length > 0 && (
+            <>
+              <span className="label">{t('data.targetDeck')}</span>
+              <div className="segmented data-target-switch">
+                <button
+                  type="button"
+                  className={targetMode === 'new' ? 'active' : ''}
+                  onClick={() => {
+                    setTargetMode('new')
+                    window.requestAnimationFrame(() => newDeckRef.current?.focus())
+                  }}
+                >
+                  {t('data.newDeck')}
+                </button>
+                <button
+                  type="button"
+                  className={targetMode === 'existing' ? 'active' : ''}
+                  onClick={() => setTargetMode('existing')}
+                >
+                  {t('data.existingDeck')}
+                </button>
+              </div>
+            </>
+          )}
 
-          {targetMode === 'new' ? (
+          {targetMode === 'existing' && existingDecks.length > 0 ? (
+            <Select
+              value={targetDeckId}
+              aria-label={t('data.targetDeck')}
+              onChange={(event) => setTargetDeckId(event.target.value)}
+            >
+              {existingDecks.map((deck) => (
+                <option key={deck.id} value={deck.id}>
+                  {deckTitle(deck, t)}
+                </option>
+              ))}
+            </Select>
+          ) : (
             <div className="data-new-deck">
               <label htmlFor="data-new-deck-name">{t('data.newDeckName')}</label>
               <input
@@ -680,21 +695,7 @@ export function CsvImport({ kind }: { kind: DeckKind }) {
                 maxLength={60}
               />
             </div>
-          ) : (
-            <Select
-              value={targetDeckId}
-              aria-label={t('data.targetDeck')}
-              onChange={(event) => setTargetDeckId(event.target.value)}
-            >
-              {existingDecks.map((deck) => (
-                <option key={deck.id} value={deck.id}>
-                  {deckTitle(deck, t)}
-                </option>
-              ))}
-            </Select>
           )}
-
-          {!existingDecks.length && <p className="hint">{t('data.noExistingDecks')}</p>}
         </div>
 
         <div className="mapping-list">

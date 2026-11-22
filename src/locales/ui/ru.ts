@@ -586,7 +586,6 @@ export const messages: Record<string, string> = {
   "data.newDeckName": "Название колоды",
   "data.newDeckPlaceholder": "Например, «Моя кана»",
   "data.untitledDeck": "Новая колода",
-  "data.noExistingDecks": "Подходящих колод нет — будет создана новая.",
   "data.required": "обязательно",
   "data.optional": "необязательно",
   "data.selectColumn": "Выберите столбец",

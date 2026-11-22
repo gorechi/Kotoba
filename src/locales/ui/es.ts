@@ -584,7 +584,6 @@ export const messages: Record<string, string> = {
   "data.newDeckName": "Nombre del mazo",
   "data.newDeckPlaceholder": "Por ejemplo, “Mis kana”",
   "data.untitledDeck": "Mazo nuevo",
-  "data.noExistingDecks": "No hay mazos adecuados: se creará uno nuevo.",
   "data.required": "obligatorio",
   "data.optional": "opcional",
   "data.selectColumn": "Elige una columna",

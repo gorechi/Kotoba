@@ -304,7 +304,7 @@ export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
         </div>
 
         <div className="form-row">
-          <div className="field">
+          <div className="field is-required">
             <label htmlFor="kanji-front">{t('kanjiForm.kanji')}</label>
             <input
               ref={frontRef}
@@ -336,9 +336,7 @@ export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
 
         <div className="form-row">
           <div className="field">
-            <label htmlFor="kanji-jlpt">
-              {t('cardForm.jlpt')} <span className="field-hint">{t('common.optional')}</span>
-            </label>
+            <label htmlFor="kanji-jlpt">{t('cardForm.jlpt')}</label>
             <select
               id="kanji-jlpt"
               value={jlpt}
@@ -353,10 +351,7 @@ export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
             </select>
           </div>
           <div className="field">
-            <label htmlFor="kanji-frequency">
-              {t('cardForm.frequency')}{' '}
-              <span className="field-hint">{t('common.optional')}</span>
-            </label>
+            <label htmlFor="kanji-frequency">{t('cardForm.frequency')}</label>
             <input
               id="kanji-frequency"
               type="number"
@@ -475,9 +470,7 @@ export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
         </section>
 
         <div className="field">
-          <label htmlFor="kanji-note">
-            {t('kanjiForm.note')} <span className="field-hint">{t('common.optional')}</span>
-          </label>
+          <label htmlFor="kanji-note">{t('kanjiForm.note')}</label>
           <textarea
             id="kanji-note"
             value={note}
@@ -489,9 +482,7 @@ export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
         </div>
 
         <div className="field">
-          <label htmlFor="kanji-tags">
-            {t('kanjiForm.tags')} <span className="field-hint">{t('common.optional')}</span>
-          </label>
+          <label htmlFor="kanji-tags">{t('kanjiForm.tags')}</label>
           <div className="tag-input" id="kanji-tags">
             {tags.map((tag) => (
               <span key={tag} className="tag-chip">

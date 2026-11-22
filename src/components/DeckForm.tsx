@@ -128,7 +128,7 @@ export function DeckForm({ deck, kind = 'kana', onClose, onCreated }: DeckFormPr
           </span>
         </div>
 
-        <div className="field">
+        <div className="field is-required">
           <label htmlFor="deck-name">{t('deckForm.name')}</label>
           <input
             id="deck-name"
@@ -144,9 +144,7 @@ export function DeckForm({ deck, kind = 'kana', onClose, onCreated }: DeckFormPr
         </div>
 
         <div className="field">
-          <label htmlFor="deck-jp">
-            {t('deckForm.jp')} <span className="field-hint">{t('common.optional')}</span>
-          </label>
+          <label htmlFor="deck-jp">{t('deckForm.jp')}</label>
           <KanaInput
             id="deck-jp"
             value={nameJp}
@@ -160,9 +158,7 @@ export function DeckForm({ deck, kind = 'kana', onClose, onCreated }: DeckFormPr
         </div>
 
         <div className="field">
-          <label htmlFor="deck-desc">
-            {t('deckForm.description')} <span className="field-hint">{t('common.optional')}</span>
-          </label>
+          <label htmlFor="deck-desc">{t('deckForm.description')}</label>
           <input
             id="deck-desc"
             value={description}

@@ -228,7 +228,7 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
         </div>
 
         <div className="form-row">
-          <div className="field">
+          <div className="field is-required">
             <label htmlFor="card-front">{t('cardForm.front')}</label>
             <KanaInput
               id="card-front"
@@ -273,9 +273,7 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
 
         <div className="form-row">
           <div className="field">
-            <label htmlFor="card-jlpt">
-              {t('cardForm.jlpt')} <span className="field-hint">{t('common.optional')}</span>
-            </label>
+            <label htmlFor="card-jlpt">{t('cardForm.jlpt')}</label>
             <select
               id="card-jlpt"
               value={jlpt}
@@ -290,10 +288,7 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
             </select>
           </div>
           <div className="field">
-            <label htmlFor="card-frequency">
-              {t('cardForm.frequency')}{' '}
-              <span className="field-hint">{t('common.optional')}</span>
-            </label>
+            <label htmlFor="card-frequency">{t('cardForm.frequency')}</label>
             <input
               id="card-frequency"
               type="number"
@@ -307,9 +302,7 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
         </div>
 
         <div className="field">
-          <label htmlFor="card-note">
-            {t('cardForm.note')} <span className="field-hint">{t('common.optional')}</span>
-          </label>
+          <label htmlFor="card-note">{t('cardForm.note')}</label>
           <textarea
             id="card-note"
             value={note}
@@ -321,9 +314,7 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
         </div>
 
         <div className="field">
-          <label htmlFor="card-tags">
-            {t('cardForm.tags')} <span className="field-hint">{t('common.optional')}</span>
-          </label>
+          <label htmlFor="card-tags">{t('cardForm.tags')}</label>
           <div className="tag-input" id="card-tags">
             {tags.map((tag) => (
               <span key={tag} className="tag-chip">
@@ -382,7 +373,6 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
               </div>
             )}
           </div>
-          <p className="field-hint">{t('cardForm.tagsHint')}</p>
         </div>
 
         {!card && <p className="form-hint">{t('cardForm.ctrlEnter')}</p>}

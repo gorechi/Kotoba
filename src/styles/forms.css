@@ -142,6 +142,29 @@
   line-height: 1.5;
 }
 
+/* Обязательное поле: тихий акцент вместо подписи «необязательно»
+   у всех остальных. */
+.field.is-required label::after {
+  content: '';
+  width: 5px;
+  height: 5px;
+  margin-left: 1px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.field.is-required input,
+.field.is-required textarea,
+.field.is-required .select-trigger {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--accent) 6%, var(--surface-2)),
+    color-mix(in srgb, var(--accent) 2%, var(--surface-2))
+  );
+  border-color: color-mix(in srgb, var(--accent) 24%, var(--line));
+}
+
 .field input:focus,
 .field textarea:focus,
 .field select:focus,

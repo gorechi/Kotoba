@@ -122,16 +122,17 @@ export function Sidebar({ route, onNavigate, onZen, onSearch }: SidebarProps) {
       <div className="sidebar-bottom">
         <button
           type="button"
-          className="streak-card"
+          className="nav-item"
           onClick={() => onNavigate({ name: 'stats' })}
-          data-label={t('nav.stats')}
+          data-label={days > 0 ? t('count.days', { n: days }) : t('sidebar.streak')}
         >
-          <span className={`streak-flame${days > 0 ? ' lit' : ''}`}>
-            <Icon name="flame" size={18} />
-          </span>
-          <span className="streak-copy">
-            <strong>{days > 0 ? t('count.days', { n: days }) : t('sidebar.streak')}</strong>
-            <span>{days > 0 ? t('sidebar.streakActive') : t('sidebar.streakEmpty')}</span>
+          <Icon
+            name="flame"
+            size={19}
+            className={days > 0 ? 'streak-flame-lit' : undefined}
+          />
+          <span className="nav-label">
+            {days > 0 ? t('count.days', { n: days }) : t('sidebar.streak')}
           </span>
         </button>
 

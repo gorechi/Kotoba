@@ -2,13 +2,12 @@ import { useState, type CSSProperties, type FormEvent } from 'react'
 import type { Deck, DeckKind } from '../types'
 import { useStore } from '../state/store'
 import { useI18n } from '../lib/i18n-react'
+import { DEFAULT_DECK_ACCENT, DECK_ACCENTS } from '../lib/deck-accents'
 import { deckDescription, deckTitle } from '../lib/content'
 import { finalizeRomajiTail, guessKanaMode, type KanaMode } from '../lib/romaji'
 import { uid } from '../lib/utils'
 import { KanaInput } from './KanaInput'
 import { Modal } from './Modal'
-
-const ACCENTS = ['#E1523D', '#4A5FC1', '#5C8A5A', '#C98A2E', '#D96A93', '#3E8FA8']
 
 interface DeckFormProps {
   deck?: Deck
@@ -30,7 +29,7 @@ export function DeckForm({ deck, kind = 'kana', onClose, onCreated }: DeckFormPr
   const [description, setDescription] = useState(() =>
     deck ? deckDescription(deck, t) : '',
   )
-  const [accent, setAccent] = useState(deck?.accent ?? ACCENTS[0])
+  const [accent, setAccent] = useState(deck?.accent ?? DEFAULT_DECK_ACCENT)
   const [error, setError] = useState('')
 
   const submit = (event: FormEvent) => {
@@ -171,7 +170,7 @@ export function DeckForm({ deck, kind = 'kana', onClose, onCreated }: DeckFormPr
         <div className="field">
           <span className="label">{t('deckForm.accent')}</span>
           <div className="swatches">
-            {ACCENTS.map((color) => (
+            {DECK_ACCENTS.map((color) => (
               <button
                 key={color}
                 type="button"

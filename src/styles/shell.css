@@ -253,15 +253,15 @@
 
 .nav-search {
   justify-content: flex-start;
-  border: 1px solid var(--line);
-  background: var(--surface);
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--line));
+  background: transparent;
   box-shadow: var(--shadow-sm);
   margin-bottom: 4px;
 }
 
 .nav-search:hover {
-  border-color: var(--line-strong);
-  background: var(--surface-2);
+  border-color: color-mix(in srgb, var(--accent) 75%, var(--line));
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
 }
 
 .nav-kbd {

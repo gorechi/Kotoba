@@ -48,12 +48,6 @@
   .sidebar {
     width: 200px;
     flex-basis: 200px;
-    padding-left: 10px;
-    padding-right: 10px;
-  }
-
-  .nav-item.active::before {
-    left: -10px;
   }
 
   .hero-art {

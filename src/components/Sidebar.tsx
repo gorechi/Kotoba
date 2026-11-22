@@ -72,6 +72,8 @@ export function Sidebar({ route, onNavigate, onZen, onSearch }: SidebarProps) {
             className="sidebar-toggle"
             onClick={() => setCollapsed((value) => !value)}
             aria-label={collapsed ? t('sidebar.expand') : t('sidebar.collapse')}
+            aria-expanded={!collapsed}
+            aria-controls="sidebar-nav"
             data-label={collapsed ? t('sidebar.expand') : t('sidebar.collapse')}
             title={collapsed ? t('sidebar.expand') : t('sidebar.collapse')}
           >
@@ -79,7 +81,7 @@ export function Sidebar({ route, onNavigate, onZen, onSearch }: SidebarProps) {
           </button>
         </div>
 
-        <nav className="nav">
+        <nav className="nav" id="sidebar-nav">
           <button
             type="button"
             className="nav-item nav-search"
@@ -95,8 +97,10 @@ export function Sidebar({ route, onNavigate, onZen, onSearch }: SidebarProps) {
           {NAV.map((item) => (
             <button
               key={item.id}
+              type="button"
               className={`nav-item${isActive(item.id) ? ' active' : ''}`}
               onClick={() => onNavigate({ name: item.id } as Route)}
+              aria-current={isActive(item.id) ? 'page' : undefined}
               data-label={t(item.labelKey)}
             >
               <Icon name={item.icon} size={19} />
@@ -117,6 +121,7 @@ export function Sidebar({ route, onNavigate, onZen, onSearch }: SidebarProps) {
 
       <div className="sidebar-bottom">
         <button
+          type="button"
           className="streak-card"
           onClick={() => onNavigate({ name: 'stats' })}
           data-label={t('nav.stats')}
@@ -131,8 +136,10 @@ export function Sidebar({ route, onNavigate, onZen, onSearch }: SidebarProps) {
         </button>
 
         <button
+          type="button"
           className={`nav-item nav-settings${route.name === 'settings' ? ' active' : ''}`}
           onClick={() => onNavigate({ name: 'settings' })}
+          aria-current={route.name === 'settings' ? 'page' : undefined}
           data-label={t('nav.settings')}
         >
           <Icon name="sliders" size={19} />
@@ -140,6 +147,7 @@ export function Sidebar({ route, onNavigate, onZen, onSearch }: SidebarProps) {
         </button>
 
         <button
+          type="button"
           className={`nav-item nav-help${
             route.name === 'help' ||
             route.name === 'helpGuide' ||
@@ -148,6 +156,13 @@ export function Sidebar({ route, onNavigate, onZen, onSearch }: SidebarProps) {
               : ''
           }`}
           onClick={() => onNavigate({ name: 'help' })}
+          aria-current={
+            route.name === 'help' ||
+            route.name === 'helpGuide' ||
+            route.name === 'ttsHelp'
+              ? 'page'
+              : undefined
+          }
           data-label={t('nav.help')}
         >
           <Icon name="help" size={19} />

@@ -190,7 +190,7 @@ export function CustomStudy({
     if (options.status === 'mistakes') return t('customStudy.mistakes')
     if (options.status === 'problems') return t('customStudy.problems')
     if (options.kind === 'kanji') return t('customStudy.kanji')
-    return t('customStudy.title')
+    return t('customStudy.defaultTitle')
   }
 
   const summaryForOptions = (options: CustomStudyOptions): string => {
@@ -282,7 +282,6 @@ export function CustomStudy({
       <div className="custom-study-group">
         <div className="custom-study-group-head">
           <h3>{t('customStudy.presetsGroup')}</h3>
-          <span>{t('customStudy.presetsHint')}</span>
         </div>
         <div className="custom-study-grid">{presetCards}</div>
       </div>
@@ -290,7 +289,6 @@ export function CustomStudy({
       <div className="custom-study-group">
         <div className="custom-study-group-head">
           <h3>{t('customStudy.mySetsGroup')}</h3>
-          <span>{t('customStudy.mySetsHint')}</span>
         </div>
 
         <div className="custom-study-grid">

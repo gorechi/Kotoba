@@ -221,7 +221,7 @@ describe('normalizeData: корзина', () => {
   })
 })
 
-describe('normalizeData: свои подборки', () => {
+describe('normalizeData: свои наборы', () => {
   it('сохраняет письменность и сбрасывает её для кандзи', () => {
     const data = normalizeData({
       studySets: [
@@ -243,7 +243,7 @@ describe('normalizeData: свои подборки', () => {
     expect(byId.get('kanji')?.options.script).toBeUndefined()
   })
 
-  it('отбрасывает подборки без названия и с некорректными опциями', () => {
+  it('отбрасывает наборы без названия и с некорректными опциями', () => {
     const data = normalizeData({
       studySets: [
         { id: 'empty', name: '   ', options: {} },

@@ -8,7 +8,7 @@ export const HELP_ES: Record<string, string> = {
   "Open Home": "Abrir Inicio",
   "Open the Home screen": "Abre la pantalla de Inicio",
   "Choose Study in the sidebar. Find the Custom study section: it contains preset sets and your own sets.": "Elige Estudiar en la barra lateral. Busca la sección Estudio personalizado: contiene conjuntos predefinidos y tus propios conjuntos.",
-  "Click Set up": "Haz clic en Configurar",
+  "Click Create": "Haz clic en Crear",
   "The set builder opens. Here you choose a name and the rules for selecting cards.": "Se abre el creador de conjuntos. Aquí eliges un nombre y las reglas para seleccionar las tarjetas.",
   "Give the set a name": "Ponle un nombre al conjunto",
   "For example, “Kanji before bed” or “Mistakes this week”. A name is required to save the set.": "Por ejemplo, “Kanji antes de dormir” o “Errores de esta semana”. El nombre es obligatorio para guardar el conjunto.",

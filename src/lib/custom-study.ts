@@ -29,7 +29,7 @@ export type CustomStudyPreset =
   | 'mistakes'
   | 'problems'
 
-/** Готовые подборки с главного экрана. */
+/** Готовые наборы с главного экрана. */
 export function presetOptions(preset: CustomStudyPreset, tag?: string): CustomStudyOptions {
   switch (preset) {
     case 'overdue':
@@ -98,8 +98,8 @@ function sortPoolByOrder(
 }
 
 /**
- * Собирает очередь для пользовательской подборки.
- * Не учитывает дневные лимиты колод — это осознанный режим «своя подборка».
+ * Собирает очередь для пользовательского набора.
+ * Не учитывает дневные лимиты колод — это осознанный режим «свой набор».
  */
 export function buildCustomStudyQueue(
   cards: Card[],

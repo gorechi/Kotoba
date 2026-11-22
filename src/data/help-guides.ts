@@ -60,33 +60,33 @@ export const HELP_GUIDES: HelpGuide[] = [
     id: 'custom-study',
     section: 'learning',
     icon: 'bookmark',
-    title: L('Создание своих подборок', 'Creating custom study sets'),
+    title: L('Создание своих наборов', 'Creating custom study sets'),
     description: L(
-      'Как собрать личную подборку карточек под конкретную цель.',
+      'Как собрать личный набор карточек под конкретную цель.',
       'How to build a personal study set for a specific goal.',
     ),
     time: L('3 минуты', '3 min'),
     intro: L(
-      'Подборка — это сохранённые правила, а не копия карточек. Котоба каждый раз заново выбирает карточки, которые подходят под фильтры. Поэтому новые подходящие карточки появляются в подборке автоматически.',
+      'Набор — это сохранённые правила, а не копия карточек. Котоба каждый раз заново выбирает карточки, которые подходят под фильтры. Поэтому новые подходящие карточки появляются в наборе автоматически.',
       'A study set stores rules, not copies of cards. Kotoba rebuilds the selection from your current cards every time you start it, so new matching cards appear automatically.',
     ),
     steps: [
       step(
         'Откройте главную',
         'Open the Home screen',
-        'В боковом меню выберите «Учить». Найдите блок «Своя подборка»: в нём есть готовые наборы и ваши собственные.',
+        'В боковом меню выберите «Учить». Найдите блок «Наборы карточек»: в нём есть готовые наборы и ваши собственные.',
         'Choose Study in the sidebar. Find the Custom study section: it contains preset sets and your own sets.',
       ),
       step(
-        'Нажмите «Настроить»',
-        'Click Set up',
-        'Откроется конструктор подборки. Здесь задаются название и правила отбора карточек.',
+        'Нажмите «Создать»',
+        'Click Create',
+        'Откроется конструктор набора. Здесь задаются название и правила отбора карточек.',
         'The set builder opens. Here you choose a name and the rules for selecting cards.',
       ),
       step(
         'Придумайте название',
         'Give the set a name',
-        'Например, «Кандзи перед сном» или «Ошибки за неделю». Без названия сохранить подборку нельзя.',
+        'Например, «Кандзи перед сном» или «Ошибки за неделю». Без названия сохранить набор нельзя.',
         'For example, “Kanji before bed” or “Mistakes this week”. A name is required to save the set.',
       ),
       step(
@@ -104,20 +104,20 @@ export const HELP_GUIDES: HelpGuide[] = [
       step(
         'Сохраните или начните',
         'Save or start',
-        '«Сохранить» добавит подборку в группу «Мои наборы». «Начать» запустит её сразу, без сохранения.',
+        '«Сохранить» добавит набор в группу «Мои наборы». «Начать» запустит его сразу, без сохранения.',
         'Save adds the set to My sets. Start runs it immediately without saving.',
       ),
       step(
         'Управляйте набором',
         'Manage the set',
-        'Клик по карточке запускает подборку. Карандаш меняет название и правила, корзина удаляет подборку. Сами карточки при этом остаются в колодах.',
+        'Клик по карточке запускает набор. Карандаш меняет название и правила, корзина удаляет набор. Сами карточки при этом остаются в колодах.',
         'Click a set card to start it. The pencil edits its name and rules; the trash icon deletes the set. The cards themselves stay in their decks.',
       ),
     ],
     note: {
       title: L('Полезно знать', 'Good to know'),
       text: L(
-        'Готовые наборы помечены замком: их нельзя изменить. Подборки не учитывают дневные лимиты колод — это режим свободной практики.',
+        'Готовые наборы помечены замком: их нельзя изменить. Наборы не учитывают дневные лимиты колод — это режим свободной практики.',
         'Preset sets are marked with a lock and cannot be edited. Custom sets ignore daily deck limits — they are a free-practice mode.',
       ),
     },
@@ -244,7 +244,7 @@ export const HELP_GUIDES: HelpGuide[] = [
       step(
         'Добавьте смысл',
         'Add meaning and context',
-        'Перевод, заметку, JLPT, частоту и теги можно заполнить по желанию. Теги потом помогут собирать подборки.',
+        'Перевод, заметку, JLPT, частоту и теги можно заполнить по желанию. Теги потом помогут собирать наборы.',
         'Meaning, note, JLPT level, frequency, and tags are optional. Tags can be used later in custom study sets.',
       ),
       step(
@@ -314,7 +314,7 @@ export const HELP_GUIDES: HelpGuide[] = [
       step(
         'Дополните карточку',
         'Add optional details',
-        'JLPT, частоту, заметку и теги можно заполнить по желанию. Теги используются в фильтрах и подборках.',
+        'JLPT, частоту, заметку и теги можно заполнить по желанию. Теги используются в фильтрах и наборах.',
         'JLPT, frequency, note, and tags are optional. Tags are used in filters and custom study sets.',
       ),
       step(
@@ -405,7 +405,7 @@ export const HELP_GUIDES: HelpGuide[] = [
     ),
     time: L('3 минуты', '3 min'),
     intro: L(
-      'Резервная копия — это один JSON-файл. В нём сохраняются колоды, карточки, подборки, настройки, прогресс SRS и история. Импорт заменяет текущие данные целиком, а не объединяет их.',
+      'Резервная копия — это один JSON-файл. В нём сохраняются колоды, карточки, наборы, настройки, прогресс SRS и история. Импорт заменяет текущие данные целиком, а не объединяет их.',
       'A backup is a single JSON file containing decks, cards, study sets, settings, SRS progress, and history. Import replaces your current data completely; it does not merge it.',
     ),
     steps: [
@@ -430,7 +430,7 @@ export const HELP_GUIDES: HelpGuide[] = [
       step(
         'Что происходит с данными',
         'What import does',
-        'После подтверждения текущие колоды, карточки, подборки и прогресс заменяются данными из файла. Перед импортом сделайте экспорт текущего состояния.',
+        'После подтверждения текущие колоды, карточки, наборы и прогресс заменяются данными из файла. Перед импортом сделайте экспорт текущего состояния.',
         'After confirmation, the current decks, cards, sets, and progress are replaced by the file contents. Export your current state before importing.',
       ),
       step(
@@ -442,7 +442,7 @@ export const HELP_GUIDES: HelpGuide[] = [
       step(
         'Сброс прогресса',
         'Reset progress',
-        'Отдельная кнопка сбрасывает SRS и статистику, но оставляет колоды, карточки и подборки. Это удобно, чтобы начать курс заново.',
+        'Отдельная кнопка сбрасывает SRS и статистику, но оставляет колоды, карточки и наборы. Это удобно, чтобы начать курс заново.',
         'A separate button resets SRS and statistics while keeping decks, cards, and sets. Use it to start the course over.',
       ),
       step(

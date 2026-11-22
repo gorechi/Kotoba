@@ -85,7 +85,7 @@ describe('mergeDecks', () => {
     expect(entry.kind === 'card' && entry.card.deckId).toBe('target')
   })
 
-  it('переключает пользовательские подборки на целевую колоду', () => {
+  it('переключает пользовательские наборы на целевую колоду', () => {
     const data = makeData({
       decks: [makeDeck({ id: 'source' }), makeDeck({ id: 'target' })],
       studySets: [studySet('source'), studySet('other')],

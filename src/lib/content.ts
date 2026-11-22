@@ -38,6 +38,11 @@ function builtinKanjiKey(card: Card): { pack: 'n5' | 'n4'; number: string } | nu
   return null
 }
 
+/** Что произносить: для кандзи — первое чтение каной, иначе само написание. */
+export function cardSpeakText(card: Card): string {
+  return card.readings.find((item) => item.kana.trim())?.kana.trim() || card.front
+}
+
 /**
  * Значение кандзи: пользовательский текст имеет приоритет,
  * иначе берётся локализованный текст встроенной колоды N5 или N4.

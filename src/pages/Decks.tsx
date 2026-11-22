@@ -6,10 +6,12 @@ import {
   cardExampleTranslation,
   cardMeaning,
   cardNote,
+  cardSpeakText,
   deckDescription,
   deckTitle,
   isProtectedDeck,
 } from '../lib/content'
+import { speakJa } from '../lib/tts'
 import { DeckCard } from '../components/DeckCard'
 import { DeckForm } from '../components/DeckForm'
 import { DeckSettingsForm } from '../components/DeckSettingsForm'
@@ -442,13 +444,24 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
             const note = cardNote(card, deck, t)
             return (
               <div className="card-row" key={card.id}>
-                <FitText
-                  className="row-jp"
-                  text={card.front}
-                  maxFontSize={27}
-                  minFontSize={9}
-                  title={card.front}
-                />
+                <div className="row-front">
+                  <button
+                    type="button"
+                    className="icon-btn row-speak"
+                    onClick={() => speakJa(cardSpeakText(card))}
+                    title={t('session.listen')}
+                    aria-label={t('session.listen')}
+                  >
+                    <Icon name="speaker" size={16} />
+                  </button>
+                  <FitText
+                    className="row-jp"
+                    text={card.front}
+                    maxFontSize={27}
+                    minFontSize={9}
+                    title={card.front}
+                  />
+                </div>
                 <div className="row-info">
                   <div className="row-main">
                     {(isKanji

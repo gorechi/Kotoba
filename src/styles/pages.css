@@ -807,7 +807,7 @@
 
 .card-row {
   display: grid;
-  grid-template-columns: 64px minmax(0, 1fr) auto auto;
+  grid-template-columns: 98px minmax(0, 1fr) auto auto;
   gap: 14px;
   align-items: center;
   padding: 9px 14px;
@@ -822,8 +822,22 @@
   box-shadow: var(--shadow-sm);
 }
 
+.row-front {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.row-speak {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+}
+
 .row-jp {
-  width: 100%;
+  width: 64px;
+  flex: none;
   height: 38px;
   font-family: var(--font-kana);
   font-size: 27px;

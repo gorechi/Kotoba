@@ -2,7 +2,13 @@ import { useEffect, useRef, useState, type DragEvent } from 'react'
 import type { Card, Deck, DeckKind } from '../types'
 import { useStore } from '../state/store'
 import { useI18n } from '../lib/i18n-react'
-import { cardExampleTranslation, cardMeaning, deckTitle, isProtectedDeck } from '../lib/content'
+import {
+  cardExampleTranslation,
+  cardMeaning,
+  cardSpeakText,
+  deckTitle,
+  isProtectedDeck,
+} from '../lib/content'
 import { freshSrs, knownSrs } from '../lib/srs'
 import { dueLabel, formatDate } from '../lib/utils'
 import { speakJa } from '../lib/tts'
@@ -839,7 +845,7 @@ export function CardBrowser({ focusCardId, initialQuery, onCloseFocus }: CardBro
               <button
                 type="button"
                 className="icon-btn"
-                onClick={() => speakJa(preview.readings[0]?.kana || preview.front)}
+                onClick={() => speakJa(cardSpeakText(preview))}
                 aria-label={t('session.listen')}
                 title={t('session.listen')}
               >

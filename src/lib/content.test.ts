@@ -3,6 +3,7 @@ import {
   cardExampleTranslation,
   cardMeaning,
   cardNote,
+  cardSpeakText,
   deckDescription,
   deckTitle,
 } from './content'
@@ -101,6 +102,20 @@ describe('cardExampleTranslation', () => {
   it('возвращает пустую строку для неизвестного примера', () => {
     const example = { id: 'other', text: '', transcription: '', translation: '' }
     expect(cardExampleTranslation(makeCard(), example, translator())).toBe('')
+  })
+})
+
+describe('cardSpeakText', () => {
+  it('для кандзи произносит первое чтение каной', () => {
+    const card = makeCard({
+      front: '水',
+      readings: [{ id: 'reading-1', kana: 'みず', transcription: 'mizu' }],
+    })
+    expect(cardSpeakText(card)).toBe('みず')
+  })
+
+  it('без чтения произносит само написание', () => {
+    expect(cardSpeakText(makeCard({ front: 'かな' }))).toBe('かな')
   })
 })
 

@@ -266,9 +266,9 @@ export function CustomStudy({
           <h2>{t('customStudy.title')}</h2>
           <p className="section-sub">{t('customStudy.sub')}</p>
         </div>
-        <button type="button" className="link-btn" onClick={() => openBuilder()}>
-          {t('customStudy.setup')}
-          <Icon name="sliders" size={15} />
+        <button type="button" className="btn btn-ghost btn-small" onClick={() => openBuilder()}>
+          <Icon name="plus" size={15} />
+          {t('customStudy.create')}
         </button>
       </div>
 
@@ -293,9 +293,8 @@ export function CustomStudy({
           <span>{t('customStudy.mySetsHint')}</span>
         </div>
 
-        {studySets.length > 0 ? (
-          <div className="custom-study-grid">
-            {studySets.map((set) => {
+        <div className="custom-study-grid">
+          {studySets.map((set) => {
               const count = buildCustomStudyQueue(
                 data.cards,
                 data.decks,
@@ -345,10 +344,19 @@ export function CustomStudy({
                 </div>
               )
             })}
-          </div>
-        ) : (
-          <p className="custom-study-placeholder">{t('customStudy.noSets')}</p>
-        )}
+
+          <button
+            type="button"
+            className="custom-study-new"
+            onClick={() => openBuilder()}
+          >
+            <span className="custom-study-new-icon">
+              <Icon name="plus" size={18} />
+            </span>
+            <strong>{t('customStudy.createTitle')}</strong>
+            <span>{t('customStudy.createHint')}</span>
+          </button>
+        </div>
       </div>
 
       {builderOpen && (

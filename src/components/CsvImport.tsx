@@ -645,44 +645,44 @@ export function CsvImport({ kind }: { kind: DeckKind }) {
 
         <div className="data-target">
           {existingDecks.length > 0 && (
-            <>
-              <span className="label">{t('data.targetDeck')}</span>
-              <div className="segmented data-target-switch">
-                <button
-                  type="button"
-                  className={targetMode === 'new' ? 'active' : ''}
-                  onClick={() => {
-                    setTargetMode('new')
-                    window.requestAnimationFrame(() => newDeckRef.current?.focus())
-                  }}
-                >
-                  {t('data.newDeck')}
-                </button>
-                <button
-                  type="button"
-                  className={targetMode === 'existing' ? 'active' : ''}
-                  onClick={() => setTargetMode('existing')}
-                >
-                  {t('data.existingDeck')}
-                </button>
-              </div>
-            </>
+            <div className="segmented data-target-switch">
+              <button
+                type="button"
+                className={targetMode === 'new' ? 'active' : ''}
+                onClick={() => {
+                  setTargetMode('new')
+                  window.requestAnimationFrame(() => newDeckRef.current?.focus())
+                }}
+              >
+                {t('data.newDeck')}
+              </button>
+              <button
+                type="button"
+                className={targetMode === 'existing' ? 'active' : ''}
+                onClick={() => setTargetMode('existing')}
+              >
+                {t('data.existingDeck')}
+              </button>
+            </div>
           )}
 
           {targetMode === 'existing' && existingDecks.length > 0 ? (
-            <Select
-              value={targetDeckId}
-              aria-label={t('data.targetDeck')}
-              onChange={(event) => setTargetDeckId(event.target.value)}
-            >
-              {existingDecks.map((deck) => (
-                <option key={deck.id} value={deck.id}>
-                  {deckTitle(deck, t)}
-                </option>
-              ))}
-            </Select>
+            <div className="data-target-field">
+              <label htmlFor="data-existing-deck">{t('data.targetDeck')}</label>
+              <Select
+                id="data-existing-deck"
+                value={targetDeckId}
+                onChange={(event) => setTargetDeckId(event.target.value)}
+              >
+                {existingDecks.map((deck) => (
+                  <option key={deck.id} value={deck.id}>
+                    {deckTitle(deck, t)}
+                  </option>
+                ))}
+              </Select>
+            </div>
           ) : (
-            <div className="data-new-deck">
+            <div className="data-target-field">
               <label htmlFor="data-new-deck-name">{t('data.newDeckName')}</label>
               <input
                 id="data-new-deck-name"

@@ -77,7 +77,7 @@ export function Sidebar({ route, onNavigate, onZen, onSearch }: SidebarProps) {
             data-label={collapsed ? t('sidebar.expand') : t('sidebar.collapse')}
             title={collapsed ? t('sidebar.expand') : t('sidebar.collapse')}
           >
-            <Icon name={collapsed ? 'chevron-right' : 'chevron-left'} size={16} />
+            <Icon name={collapsed ? 'chevron-right' : 'chevron-left'} size={19} />
           </button>
         </div>
 

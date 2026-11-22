@@ -122,7 +122,7 @@
   font-weight: 600;
 }
 
-.data-target-field > .select select {
+.data-target-field > .select .select-trigger {
   height: 52px;
   padding: 0 38px 0 16px;
   border-color: var(--line-strong);
@@ -155,7 +155,8 @@
 }
 
 .data-import-panel input:not([type='checkbox']):not([type='file']),
-.data-import-panel select {
+.data-import-panel select,
+.data-import-panel .select-trigger {
   width: 100%;
   height: 42px;
   border: 1px solid var(--line);
@@ -169,12 +170,14 @@
   transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
 }
 
-.data-import-panel .select select {
+.data-import-panel .select select,
+.data-import-panel .select .select-trigger {
   padding-right: 38px;
 }
 
 .data-import-panel input:not([type='checkbox']):not([type='file']):focus,
-.data-import-panel select:focus {
+.data-import-panel select:focus,
+.data-import-panel .select-trigger:focus-visible {
   border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
   background: var(--surface);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent);
@@ -1087,7 +1090,7 @@
   min-width: 0;
 }
 
-.deck-transfer-controls .select select {
+.deck-transfer-controls .select .select-trigger {
   width: 100%;
   height: 40px;
   border: 1px solid var(--line);
@@ -1101,7 +1104,7 @@
   cursor: pointer;
 }
 
-.deck-transfer-controls .select select:focus {
+.deck-transfer-controls .select .select-trigger:focus-visible {
   border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent);
 }
@@ -1175,7 +1178,7 @@
   width: 160px;
 }
 
-.problems-pause-setting .select select {
+.problems-pause-setting .select .select-trigger {
   width: 100%;
   height: 38px;
   border: 1px solid var(--line);
@@ -1189,7 +1192,7 @@
   cursor: pointer;
 }
 
-.problems-pause-setting .select select:focus {
+.problems-pause-setting .select .select-trigger:focus-visible {
   border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent);
 }

@@ -178,7 +178,7 @@
   font-weight: 600;
 }
 
-.browser-select-field .select select {
+.browser-select-field .select .select-trigger {
   width: 100%;
   height: 38px;
   padding: 8px 32px 8px 10px;
@@ -193,7 +193,7 @@
   transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
 }
 
-.browser-select-field .select select:focus {
+.browser-select-field .select .select-trigger:focus-visible {
   border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
   background: var(--surface);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent);
@@ -255,13 +255,13 @@
   gap: 6px;
 }
 
-.browser-bulk-select .select select:disabled,
+.browser-bulk-select .select .select-trigger:disabled,
 .browser-tag-add input:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.browser-bulk-select .select:has(select:disabled) .select-chevron {
+.browser-bulk-select .select:has(.select-trigger:disabled) .select-chevron {
   opacity: 0.35;
 }
 
@@ -269,7 +269,7 @@
   width: 170px;
 }
 
-.browser-bulk-select .select select {
+.browser-bulk-select .select .select-trigger {
   width: 100%;
   height: 32px;
   padding: 5px 30px 5px 9px;

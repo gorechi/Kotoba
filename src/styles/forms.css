@@ -118,7 +118,8 @@
 
 .field input,
 .field textarea,
-.field select {
+.field select,
+.field .select-trigger {
   width: 100%;
   border: 1px solid var(--line);
   background: var(--surface-2);
@@ -143,7 +144,8 @@
 
 .field input:focus,
 .field textarea:focus,
-.field select:focus {
+.field select:focus,
+.field .select-trigger:focus-visible {
   border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
   background: var(--surface);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent);
@@ -209,20 +211,47 @@
   color: color-mix(in srgb, var(--muted) 75%, transparent);
 }
 
-/* Нативный select с собственной стрелкой: её отступ справа
-   совпадает с внутренним отступом текста слева. */
+/* Свой выпадающий список: системный на Windows красит выбранный
+   пункт синим цветом ОС, и это нельзя переопределить. */
 .select {
   position: relative;
   display: block;
   width: 100%;
 }
 
-.select select {
-  appearance: none;
-  -webkit-appearance: none;
-  background-image: none;
-  padding-right: 38px;
+.select-trigger {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 10px 38px 10px 12px;
+  font: inherit;
+  font-size: 13.5px;
+  text-align: left;
   cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+
+.select-trigger:focus-visible {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
+  background: var(--surface);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.select-trigger:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.select-value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .select-chevron {
@@ -238,6 +267,44 @@
 
 .select:hover .select-chevron {
   color: var(--text-soft);
+}
+
+.select-menu {
+  z-index: 1200;
+  margin: 0;
+  padding: 4px;
+  overflow-y: auto;
+  list-style: none;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+}
+
+.select-option {
+  padding: 8px 10px;
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 13px;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.select-option.is-active {
+  background: var(--surface-2);
+}
+
+.select-option[aria-selected='true'] {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+.select-option[aria-disabled='true'] {
+  color: var(--muted);
+  cursor: default;
 }
 
 .jp-input {

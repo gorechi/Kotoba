@@ -39,10 +39,16 @@
   gap: 8px 18px;
   margin: 12px 0 14px;
   padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--line));
   border-radius: 10px;
-  background: var(--surface-2);
-  color: var(--muted);
+  background: color-mix(in srgb, var(--accent) 7%, var(--surface));
+  color: var(--accent-ink);
   font-size: 11.5px;
+  font-weight: 550;
+}
+
+.data-file-meta svg {
+  color: var(--accent);
 }
 
 .data-meta-back {

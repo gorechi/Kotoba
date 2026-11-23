@@ -41,25 +41,16 @@ describe('normalizeData: настройки', () => {
     expect(settings.trashRetentionDays).toBe(10)
     expect(settings.onboardingDone).toBe(true)
     expect(settings.ttsAutoplay).toBe('off')
-    expect(settings.duplicatePolicy).toEqual({
-      withinDeck: 'ask',
-      acrossDecks: 'ignore',
-    })
+    expect(settings.duplicateAction).toBe('ask')
   })
 
   it('нормализует настройку дубликатов', () => {
     expect(
-      normalizeData({
-        settings: {
-          duplicatePolicy: { withinDeck: 'deny', acrossDecks: 'ask' },
-        },
-      }).settings.duplicatePolicy,
-    ).toEqual({ withinDeck: 'deny', acrossDecks: 'ask' })
+      normalizeData({ settings: { duplicateAction: 'deny' } }).settings.duplicateAction,
+    ).toBe('deny')
     expect(
-      normalizeData({
-        settings: { duplicatePolicy: { withinDeck: 'oops' } },
-      }).settings.duplicatePolicy,
-    ).toEqual({ withinDeck: 'ask', acrossDecks: 'ignore' })
+      normalizeData({ settings: { duplicateAction: 'oops' } }).settings.duplicateAction,
+    ).toBe('ask')
   })
 
   it('сохраняет выбранный режим автоплея', () => {    expect(normalizeData({ settings: { ttsAutoplay: 'reading' } }).settings.ttsAutoplay).toBe(

@@ -10,7 +10,7 @@ import { MAX_TRASH_RETENTION_DAYS, pruneTrash } from '../lib/trash'
 import { Icon, type IconName } from '../components/Icon'
 import { NumberInput } from '../components/NumberInput'
 import { Select } from '../components/Select'
-import { DuplicatePolicySettings } from '../components/DuplicatePolicySettings'
+import { DuplicateActionSettings } from '../components/DuplicateActionSettings'
 
 const THEMES: { value: Theme; labelKey: string; icon: IconName }[] = [
   { value: 'light', labelKey: 'settings.themeLight', icon: 'sun' },
@@ -596,9 +596,9 @@ export function Settings({
               <p>{t('settings.duplicatesSub')}</p>
             </div>
           </div>
-          <DuplicatePolicySettings
-            value={data.settings.duplicatePolicy}
-            onChange={(duplicatePolicy) => setSettings({ duplicatePolicy })}
+          <DuplicateActionSettings
+            value={data.settings.duplicateAction}
+            onChange={(duplicateAction) => setSettings({ duplicateAction })}
           />
         </section>
 

@@ -31,7 +31,7 @@ import type {
 import { freshSrs } from './srs'
 import { uid } from './utils'
 import { detectKanaScript } from './kana-script'
-import { normalizeDuplicatePolicy } from './duplicate-policy'
+import { normalizeDuplicateAction } from './duplicate-action'
 import { DEFAULT_TRASH_RETENTION_DAYS, MAX_TRASH_RETENTION_DAYS, pruneTrash } from './trash'
 import { createBaseSeedData, createSeedData } from '../data/seed'
 import { LEGACY_N5_EXAMPLES, LEGACY_N5_MEANINGS } from '../data/legacy-n5'
@@ -395,7 +395,7 @@ function normalizeSettings(raw: unknown): Settings {
     ttsVoiceURI: null,
     ttsRate: 0.85,
     ttsAutoplay: 'off',
-    duplicatePolicy: { withinDeck: 'ask', acrossDecks: 'ignore' },
+    duplicateAction: 'ask',
     zenAuto: true,
     zenIdleMinutes: 5,
     language: DEFAULT_LOCALE,
@@ -447,7 +447,8 @@ function normalizeSettings(raw: unknown): Settings {
     ttsAutoplay: TTS_AUTOPLAY.includes(raw.ttsAutoplay as TtsAutoplay)
       ? (raw.ttsAutoplay as TtsAutoplay)
       : base.ttsAutoplay,
-    duplicatePolicy: normalizeDuplicatePolicy(
+    duplicateAction: normalizeDuplicateAction(
+      raw.duplicateAction,
       raw.duplicatePolicy,
       raw.duplicateChecks,
     ),

@@ -1160,27 +1160,11 @@
 }
 
 .duplicate-settings {
-  margin-top: 22px;
+  margin-top: 16px;
 }
 
-.duplicate-columns {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 28px;
-}
-
-.duplicate-column {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  min-width: 0;
-  margin: 0;
-  padding: 0;
-  border: 0;
-}
-
-.duplicate-column-title {
-  padding: 0;
+.duplicate-title {
+  margin-bottom: 10px;
   color: var(--text-soft);
   font-size: 12px;
   font-weight: 600;
@@ -1195,16 +1179,14 @@
 
 .duplicate-radio {
   display: flex;
-  align-items: center;
-  gap: 9px;
+  align-items: flex-start;
+  gap: 10px;
   padding: 10px 12px;
   border: 1px solid var(--line);
-  border-radius: 9px;
+  border-radius: 10px;
   background: var(--surface-2);
-  color: var(--text-soft);
-  font-size: 12.5px;
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s, color 0.15s;
+  transition: border-color 0.15s, background 0.15s;
 }
 
 .duplicate-radio:hover {
@@ -1214,16 +1196,34 @@
 .duplicate-radio.is-checked {
   border-color: color-mix(in srgb, var(--accent) 35%, var(--line));
   background: color-mix(in srgb, var(--accent) 5%, var(--surface-2));
-  color: var(--text);
 }
 
 .duplicate-radio input {
   width: 15px;
   height: 15px;
-  margin: 0;
+  margin: 2px 0 0;
   flex: none;
   accent-color: var(--accent);
   cursor: inherit;
+}
+
+.duplicate-radio-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.duplicate-radio-copy strong {
+  color: var(--text);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.duplicate-radio-copy span {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.4;
 }
 
 .settings-side {

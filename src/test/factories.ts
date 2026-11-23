@@ -89,7 +89,7 @@ export function makeSettings(patch: Partial<Settings> = {}): Settings {
     ttsVoiceURI: null,
     ttsRate: 0.85,
     ttsAutoplay: 'off',
-    duplicatePolicy: { withinDeck: 'ask', acrossDecks: 'ignore' },
+    duplicateAction: 'ask',
     zenAuto: true,
     zenIdleMinutes: 5,
     language: 'en',

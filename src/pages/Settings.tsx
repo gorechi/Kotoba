@@ -363,30 +363,32 @@ export function Settings({
             {data.settings.zenAuto && (
               <div className="zen-idle-control">
                 <span>{t('settings.zenIdle')}</span>
-                <strong>{data.settings.zenIdleMinutes}</strong>
-                <div className="stepper small">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setSettings({
-                        zenIdleMinutes: Math.max(1, data.settings.zenIdleMinutes - 1),
-                      })
-                    }
-                    aria-label={t('settings.lessAria')}
-                  >
-                    <Icon name="minus" size={14} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setSettings({
-                        zenIdleMinutes: Math.min(120, data.settings.zenIdleMinutes + 1),
-                      })
-                    }
-                    aria-label={t('settings.moreAria')}
-                  >
-                    <Icon name="plus" size={14} />
-                  </button>
+                <div className="zen-idle-value">
+                  <strong>{data.settings.zenIdleMinutes}</strong>
+                  <div className="stepper small">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSettings({
+                          zenIdleMinutes: Math.max(1, data.settings.zenIdleMinutes - 1),
+                        })
+                      }
+                      aria-label={t('settings.lessAria')}
+                    >
+                      <Icon name="minus" size={14} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSettings({
+                          zenIdleMinutes: Math.min(120, data.settings.zenIdleMinutes + 1),
+                        })
+                      }
+                      aria-label={t('settings.moreAria')}
+                    >
+                      <Icon name="plus" size={14} />
+                    </button>
+                  </div>
                 </div>
               </div>
             )}

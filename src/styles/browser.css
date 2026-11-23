@@ -702,9 +702,17 @@
 .zen-idle-control {
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: space-between;
+  width: 100%;
+  gap: 12px;
   color: var(--muted);
   font-size: 12px;
+}
+
+.zen-idle-value {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .zen-idle-control strong {

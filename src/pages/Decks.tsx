@@ -18,6 +18,7 @@ import { DeckSettingsForm } from '../components/DeckSettingsForm'
 import { MergeDecksDialog } from '../components/MergeDecksDialog'
 import { CardForm } from '../components/CardForm'
 import { KanjiCardForm } from '../components/KanjiCardForm'
+import { CardPreview } from '../components/CardPreview'
 import { ConfirmDialog } from '../components/Modal'
 import { FitText } from '../components/FitText'
 import { Icon } from '../components/Icon'
@@ -120,6 +121,7 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
   const [adding, setAdding] = useState(false)
   const [editingDeck, setEditingDeck] = useState(false)
   const [editingCard, setEditingCard] = useState<Card | null>(null)
+  const [previewCard, setPreviewCard] = useState<Card | null>(null)
   const [deletingCard, setDeletingCard] = useState<Card | null>(null)
   const [deletingDeck, setDeletingDeck] = useState(false)
   const [mergingDeck, setMergingDeck] = useState(false)
@@ -497,26 +499,36 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
                   )}
                 </div>
                 <span className={statusClass}>{dueLabel(card.srs.due, card.srs.introduced, now)}</span>
-                {!protectedDeck && (
-                  <div className="row-actions">
-                    <button
-                      className="icon-btn"
-                      onClick={() => setEditingCard(card)}
-                      title={t('deckDetail.edit')}
-                      aria-label={t('deckDetail.editCardAria')}
-                    >
-                      <Icon name="pencil" size={16} />
-                    </button>
-                    <button
-                      className="icon-btn danger"
-                      onClick={() => setDeletingCard(card)}
-                      title={t('deckDetail.delete')}
-                      aria-label={t('deckDetail.deleteCardAria')}
-                    >
-                      <Icon name="trash" size={16} />
-                    </button>
-                  </div>
-                )}
+                <div className="row-actions">
+                  <button
+                    className="icon-btn"
+                    onClick={() => setPreviewCard(card)}
+                    title={t('browser.preview')}
+                    aria-label={`${t('browser.preview')}: ${card.front}`}
+                  >
+                    <Icon name="eye" size={16} />
+                  </button>
+                  {!protectedDeck && (
+                    <>
+                      <button
+                        className="icon-btn"
+                        onClick={() => setEditingCard(card)}
+                        title={t('deckDetail.edit')}
+                        aria-label={t('deckDetail.editCardAria')}
+                      >
+                        <Icon name="pencil" size={16} />
+                      </button>
+                      <button
+                        className="icon-btn danger"
+                        onClick={() => setDeletingCard(card)}
+                        title={t('deckDetail.delete')}
+                        aria-label={t('deckDetail.deleteCardAria')}
+                      >
+                        <Icon name="trash" size={16} />
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
             )
           })}
@@ -550,6 +562,14 @@ export function DeckDetail({ deckId, onNavigate, onStudy }: DeckDetailProps) {
           />
         ))}
       {editingDeck && <DeckForm deck={deck} onClose={() => setEditingDeck(false)} />}
+
+      {previewCard && (
+        <CardPreview
+          card={previewCard}
+          deck={deck}
+          onClose={() => setPreviewCard(null)}
+        />
+      )}
 
       {deletingCard && (
         <ConfirmDialog

@@ -3,21 +3,17 @@ import type { Card, Deck, DeckKind } from '../types'
 import { useStore } from '../state/store'
 import { useI18n } from '../lib/i18n-react'
 import {
-  cardExampleTranslation,
   cardMeaning,
-  cardSpeakText,
   deckTitle,
   isProtectedDeck,
 } from '../lib/content'
 import { freshSrs, knownSrs } from '../lib/srs'
-import { dueLabel, formatDate } from '../lib/utils'
-import { speakJa } from '../lib/tts'
 import { trashCards } from '../lib/trash'
 import { Icon } from '../components/Icon'
-import { ConfirmDialog, Modal } from '../components/Modal'
+import { ConfirmDialog } from '../components/Modal'
+import { CardPreview } from '../components/CardPreview'
 import { DeckForm } from '../components/DeckForm'
 import { Select } from '../components/Select'
-import { SpeakButton } from '../components/SpeakButton'
 import {
   MAX_TAGS_COLLAPSED,
   PAGE_SIZE,
@@ -826,141 +822,11 @@ export function CardBrowser({ focusCardId, initialQuery, onCloseFocus }: CardBro
       </div>
 
       {preview && (
-        <Modal
-          title={t('browser.previewTitle')}
-          subtitle={
-            deckMap.get(preview.deckId)
-              ? deckTitle(deckMap.get(preview.deckId)!, t)
-              : undefined
-          }
+        <CardPreview
+          card={preview}
+          deck={deckMap.get(preview.deckId)}
           onClose={closePreview}
-          footer={
-            <button className="btn btn-ghost" onClick={closePreview}>
-              {t('common.close')}
-            </button>
-          }
-        >
-          <div className="browser-preview">
-            <div className="browser-preview-front">
-              <span className="kana-char">{preview.front}</span>
-              <button
-                type="button"
-                className="icon-btn"
-                onClick={() => speakJa(cardSpeakText(preview))}
-                aria-label={t('session.listen')}
-                title={t('session.listen')}
-              >
-                <Icon name="speaker" size={17} />
-              </button>
-            </div>
-
-            <div className="browser-preview-grid">
-              <div>
-                <span>{t('browser.reading')}</span>
-                <strong>{preview.reading || t('browser.noValue')}</strong>
-              </div>
-              <div>
-                <span>{t('browser.meaning')}</span>
-                <strong>{cardMeaning(preview, t) || t('browser.noValue')}</strong>
-              </div>
-              <div>
-                <span>{t('browser.status')}</span>
-                <strong>{t(STATUS_LABEL_KEY[cardStatus(preview, now)])}</strong>
-              </div>
-              <div>
-                <span>{t('browser.interval')}</span>
-                <strong>
-                  {preview.srs.introduced
-                    ? `${Math.round(preview.srs.interval)} ${t('browser.daysShort')}`
-                    : t('browser.noValue')}
-                </strong>
-              </div>
-              <div>
-                <span>{t('browser.due')}</span>
-                <strong>{dueLabel(preview.srs.due, preview.srs.introduced)}</strong>
-              </div>
-              <div>
-                <span>{t('browser.lapses')}</span>
-                <strong>{preview.srs.lapses}</strong>
-              </div>
-              <div>
-                <span>{t('cardForm.jlpt')}</span>
-                <strong>{preview.jlpt ? `N${preview.jlpt}` : t('browser.noValue')}</strong>
-              </div>
-              <div>
-                <span>{t('cardForm.frequency')}</span>
-                <strong>{preview.frequency ?? t('browser.noValue')}</strong>
-              </div>
-              <div>
-                <span>{t('browser.created')}</span>
-                <strong>{formatDate(preview.createdAt)}</strong>
-              </div>
-            </div>
-
-            {preview.note && (
-              <div className="browser-preview-section">
-                <span>{t('browser.note')}</span>
-                <p>{preview.note}</p>
-              </div>
-            )}
-            {preview.mnemonic && (
-              <div className="browser-preview-section">
-                <span>{t('browser.mnemonic')}</span>
-                <p>{preview.mnemonic}</p>
-              </div>
-            )}
-            {preview.tags.length > 0 && (
-              <div className="browser-preview-section">
-                <span>{t('browser.tags')}</span>
-                <div className="browser-preview-tags">
-                  {preview.tags.map((tag) => (
-                    <span className="browser-tag" key={tag}>
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-            {preview.readings.length > 0 && (
-              <div className="browser-preview-section">
-                <span>{t('browser.readings')}</span>
-                <ul>
-                  {preview.readings.map((item) => (
-                    <li key={item.id}>
-                      {item.kana}
-                      {item.transcription ? ` — ${item.transcription}` : ''}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            {preview.examples.length > 0 && (
-              <div className="browser-preview-section browser-preview-examples">
-                <span>{t('browser.examples')}</span>
-                <ul>
-                  {preview.examples.map((item) => {
-                    const translation = cardExampleTranslation(preview, item, t)
-                    return (
-                      <li key={item.id}>
-                        <span className="browser-preview-example-text">
-                          {item.text}
-                          {item.transcription ? ` — ${item.transcription}` : ''}
-                          {translation ? ` — ${translation}` : ''}
-                        </span>
-                        {item.text.trim() && (
-                          <SpeakButton
-                            text={item.text}
-                            label={t('session.listenExample')}
-                          />
-                        )}
-                      </li>
-                    )
-                  })}
-                </ul>
-              </div>
-            )}
-          </div>
-        </Modal>
+        />
       )}
 
       {pendingDelete && (

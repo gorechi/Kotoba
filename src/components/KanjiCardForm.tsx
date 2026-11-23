@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
+import { useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
 import type { Card, CardExample, CardReading } from '../types'
 import { useStore } from '../state/store'
 import { useI18n } from '../lib/i18n-react'
@@ -11,6 +11,7 @@ import { uid } from '../lib/utils'
 import { toRomaji } from 'wanakana'
 import { FitText } from './FitText'
 import { Icon } from './Icon'
+import { TagInput } from './TagInput'
 import { Modal } from './Modal'
 
 interface KanjiCardFormProps {
@@ -58,36 +59,11 @@ export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
     }))
   })
   const [tags, setTags] = useState<string[]>(card?.tags ?? [])
-  const [tagInput, setTagInput] = useState('')
-  const [tagSuggestions, setTagSuggestions] = useState<string[]>([])
   const [error, setError] = useState('')
   const frontRef = useRef<HTMLInputElement>(null)
 
-  useEffect(() => {
-    const input = tagInput.trim().toLowerCase()
-    if (!input) {
-      setTagSuggestions([])
-      return
-    }
-    setTagSuggestions(
-      deckTags.filter((tag) => tag.toLowerCase().includes(input) && !tags.includes(tag)),
-    )
-  }, [tagInput, deckTags, tags])
-
   const transcriptionFor = (kana: string) =>
     defaultTranscription === 'cyrillic' ? toCyrillic(kana) : toRomaji(kana).toLowerCase()
-
-  const addTag = (tag: string) => {
-    const trimmed = tag.trim()
-    if (!trimmed || tags.includes(trimmed)) return
-    setTags([...tags, trimmed])
-    setTagInput('')
-    setTagSuggestions([])
-  }
-
-  const removeTag = (tag: string) => {
-    setTags(tags.filter((item) => item !== tag))
-  }
 
   const updateReading = (id: string, patch: Partial<CardReading>) => {
     setReadings((prev) => prev.map((item) => (item.id === id ? { ...item, ...patch } : item)))
@@ -481,56 +457,16 @@ export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
           />
         </div>
 
-        <div className="field">
-          <label htmlFor="kanji-tags">{t('kanjiForm.tags')}</label>
-          <div className="tag-input" id="kanji-tags">
-            {tags.map((tag) => (
-              <span key={tag} className="tag-chip">
-                {tag}
-                <button
-                  type="button"
-                  className="tag-remove"
-                  onClick={() => removeTag(tag)}
-                  title={t('kanjiForm.tagRemoveTitle', { tag })}
-                  aria-label={t('kanjiForm.tagRemoveAria', { tag })}
-                >
-                  ×
-                </button>
-              </span>
-            ))}
-            <input
-              id="kanji-tag-input"
-              value={tagInput}
-              onChange={(event) => setTagInput(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter') {
-                  event.preventDefault()
-                  addTag(tagInput)
-                }
-                if (event.key === 'Escape') {
-                  setTagInput('')
-                  setTagSuggestions([])
-                }
-              }}
-              placeholder={t('kanjiForm.tagPlaceholder')}
-              maxLength={40}
-            />
-            {tagSuggestions.length > 0 && (
-              <div className="tag-suggestions">
-                {tagSuggestions.map((tag) => (
-                  <button
-                    key={tag}
-                    type="button"
-                    className="tag-suggestion"
-                    onClick={() => addTag(tag)}
-                  >
-                    {tag}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+        <TagInput
+          id="kanji-tag-input"
+          label={t('kanjiForm.tags')}
+          tags={tags}
+          suggestions={deckTags}
+          onChange={setTags}
+          placeholder={t('kanjiForm.tagPlaceholder')}
+          removeTitle={(tag) => t('kanjiForm.tagRemoveTitle', { tag })}
+          removeAria={(tag) => t('kanjiForm.tagRemoveAria', { tag })}
+        />
 
         {!card && <p className="form-hint">{t('kanjiForm.ctrlEnter')}</p>}
 

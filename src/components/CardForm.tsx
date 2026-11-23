@@ -10,6 +10,7 @@ import { toCyrillic } from '../lib/cyrillic'
 import { uid } from '../lib/utils'
 import { FitText } from './FitText'
 import { KanaInput } from './KanaInput'
+import { TagInput } from './TagInput'
 import { Modal } from './Modal'
 
 interface CardFormProps {
@@ -40,22 +41,9 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
     card?.frequency ? String(card.frequency) : '',
   )
   const [tags, setTags] = useState<string[]>(card?.tags ?? [])
-  const [tagInput, setTagInput] = useState('')
-  const [tagSuggestions, setTagSuggestions] = useState<string[]>([])
   const [frontMode, setFrontMode] = useState<KanaMode>(() => guessKanaMode(card?.front, 'hiragana'))
   const [error, setError] = useState('')
   const frontRef = useRef<HTMLInputElement>(null)
-
-  useEffect(() => {
-    const input = tagInput.trim().toLowerCase()
-    if (!input) {
-      setTagSuggestions([])
-      return
-    }
-    setTagSuggestions(
-      deckTags.filter((tag) => tag.toLowerCase().includes(input) && !tags.includes(tag)),
-    )
-  }, [tagInput, deckTags, tags])
 
   // Автогенерация чтения при изменении поля «Слово или знак»
   useEffect(() => {
@@ -79,22 +67,6 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
 
   const changeReading = (value: string) => {
     setReading(value)
-  }
-
-  const addTag = (tag: string) => {
-    const trimmed = tag.trim()
-    if (!trimmed || tags.includes(trimmed)) return
-    setTags([...tags, trimmed])
-    setTagInput('')
-    setTagSuggestions([])
-  }
-
-  const removeTag = (tag: string) => {
-    setTags(tags.filter((item) => item !== tag))
-  }
-
-  const selectSuggestion = (tag: string) => {
-    addTag(tag)
   }
 
   const save = (keepOpen: boolean) => {
@@ -313,67 +285,16 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
           />
         </div>
 
-        <div className="field">
-          <label htmlFor="card-tags">{t('cardForm.tags')}</label>
-          <div className="tag-input" id="card-tags">
-            {tags.map((tag) => (
-              <span key={tag} className="tag-chip">
-                {tag}
-                <button
-                  type="button"
-                  className="tag-remove"
-                  onClick={() => removeTag(tag)}
-                  title={t('cardForm.tagRemoveTitle', { tag })}
-                  aria-label={t('cardForm.tagRemoveAria', { tag })}
-                >
-                  ×
-                </button>
-              </span>
-            ))}
-            <input
-              id="card-tag-input"
-              value={tagInput}
-              onChange={(event) => setTagInput(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter') {
-                  event.preventDefault()
-                  addTag(tagInput)
-                }
-                if (event.key === 'Escape') {
-                  setTagInput('')
-                  setTagSuggestions([])
-                }
-              }}
-              onFocus={() => {
-                if (tagInput.trim()) {
-                  const input = tagInput.trim().toLowerCase()
-                  setTagSuggestions(
-                    deckTags.filter(
-                      (tag) => tag.toLowerCase().includes(input) && !tags.includes(tag),
-                    ),
-                  )
-                }
-              }}
-              placeholder={t('cardForm.tagPlaceholder')}
-              maxLength={40}
-            />
-
-            {tagSuggestions.length > 0 && (
-              <div className="tag-suggestions">
-                {tagSuggestions.map((tag) => (
-                  <button
-                    key={tag}
-                    type="button"
-                    className="tag-suggestion"
-                    onClick={() => selectSuggestion(tag)}
-                  >
-                    {tag}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+        <TagInput
+          id="card-tag-input"
+          label={t('cardForm.tags')}
+          tags={tags}
+          suggestions={deckTags}
+          onChange={setTags}
+          placeholder={t('cardForm.tagPlaceholder')}
+          removeTitle={(tag) => t('cardForm.tagRemoveTitle', { tag })}
+          removeAria={(tag) => t('cardForm.tagRemoveAria', { tag })}
+        />
 
         {!card && <p className="form-hint">{t('cardForm.ctrlEnter')}</p>}
 

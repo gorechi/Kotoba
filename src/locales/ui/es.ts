@@ -1177,8 +1177,6 @@ export const messages: Record<string, string> = {
   "trash.unknownDeck": "Mazo eliminado",
   "settings.duplicatesTitle": "Duplicados de tarjetas",
   "settings.duplicatesSub": "Que hacer si la misma tarjeta ya existe",
-  "settings.duplicatesIgnoreAll": "Ignorar duplicados",
-  "settings.duplicatesIgnoreAllHint": "Desactivar la comprobacion y permitir tarjetas identicas.",
   "settings.duplicatesWithinTitle": "¿Que hacer con los duplicados dentro de un mazo?",
   "settings.duplicatesAcrossTitle": "¿Que hacer con los duplicados en todos los mazos?",
   "settings.duplicatesActionIgnore": "Ignorar",

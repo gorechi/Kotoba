@@ -1188,8 +1188,6 @@ export const messages: Record<string, string> = {
   "trash.unknownDeck": "Колода удалена",
   "settings.duplicatesTitle": "Дубликаты карточек",
   "settings.duplicatesSub": "Что делать, если такая карточка уже есть",
-  "settings.duplicatesIgnoreAll": "Не обращать внимания",
-  "settings.duplicatesIgnoreAllHint": "Отключить проверку дубликатов и разрешать любые одинаковые карточки.",
   "settings.duplicatesWithinTitle": "Что делать с дубликатами внутри колоды?",
   "settings.duplicatesAcrossTitle": "Что делать с дубликатами во всех колодах?",
   "settings.duplicatesActionIgnore": "Игнорировать",

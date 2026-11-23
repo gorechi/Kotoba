@@ -10,7 +10,6 @@ vi.mock('../lib/i18n-react', () => ({
 }))
 
 const DEFAULT: DuplicatePolicy = {
-  ignoreAll: false,
   withinDeck: 'ask',
   acrossDecks: 'ignore',
 }
@@ -40,20 +39,6 @@ describe('DuplicatePolicySettings', () => {
         name: 'settings.duplicatesActionIgnore',
       }) as HTMLInputElement).checked,
     ).toBe(true)
-  })
-
-  it('большой переключатель отключает обе колонки', () => {
-    render(<Demo />)
-
-    const master = screen.getByRole('checkbox', {
-      name: /settings.duplicatesIgnoreAll/,
-    }) as HTMLInputElement
-    fireEvent.click(master)
-
-    expect(master.checked).toBe(true)
-    for (const radio of screen.getAllByRole('radio') as HTMLInputElement[]) {
-      expect(radio.disabled).toBe(true)
-    }
   })
 
   it('позволяет выбрать действие в каждой колонке отдельно', () => {

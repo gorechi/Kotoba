@@ -21,7 +21,7 @@ export function DuplicatePolicySettings({ value, onChange }: DuplicatePolicySett
     selected: DuplicateAction,
     onSelect: (action: DuplicateAction) => void,
   ) => (
-    <fieldset className="duplicate-column" disabled={value.ignoreAll}>
+    <fieldset className="duplicate-column">
       <legend className="duplicate-column-title">{t(titleKey)}</legend>
       <div className="duplicate-radio-list">
         {ACTIONS.map((action) => {
@@ -36,7 +36,6 @@ export function DuplicatePolicySettings({ value, onChange }: DuplicatePolicySett
                 name={name}
                 value={action.value}
                 checked={checked}
-                disabled={value.ignoreAll}
                 onChange={() => onSelect(action.value)}
               />
               <span>{t(action.labelKey)}</span>
@@ -49,21 +48,7 @@ export function DuplicatePolicySettings({ value, onChange }: DuplicatePolicySett
 
   return (
     <div className="duplicate-settings">
-      <label className={`duplicate-master${value.ignoreAll ? ' is-checked' : ''}`}>
-        <input
-          type="checkbox"
-          checked={value.ignoreAll}
-          onChange={(event) => onChange({ ...value, ignoreAll: event.target.checked })}
-        />
-        <span className="duplicate-copy">
-          <strong>{t('settings.duplicatesIgnoreAll')}</strong>
-          <span>{t('settings.duplicatesIgnoreAllHint')}</span>
-        </span>
-      </label>
-
-      <div className="duplicate-divider" aria-hidden="true" />
-
-      <div className={`duplicate-columns${value.ignoreAll ? ' is-disabled' : ''}`}>
+      <div className="duplicate-columns">
         {radioGroup(
           'duplicate-within',
           'settings.duplicatesWithinTitle',

@@ -395,7 +395,7 @@ function normalizeSettings(raw: unknown): Settings {
     ttsVoiceURI: null,
     ttsRate: 0.85,
     ttsAutoplay: 'off',
-    duplicatePolicy: { ignoreAll: false, withinDeck: 'ask', acrossDecks: 'ignore' },
+    duplicatePolicy: { withinDeck: 'ask', acrossDecks: 'ignore' },
     zenAuto: true,
     zenIdleMinutes: 5,
     language: DEFAULT_LOCALE,

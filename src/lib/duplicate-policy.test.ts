@@ -4,7 +4,6 @@ import { normalizeDuplicatePolicy } from './duplicate-policy'
 describe('normalizeDuplicatePolicy', () => {
   it('по умолчанию спрашивает внутри колоды и игнорирует остальные', () => {
     expect(normalizeDuplicatePolicy(undefined)).toEqual({
-      ignoreAll: false,
       withinDeck: 'ask',
       acrossDecks: 'ignore',
     })
@@ -13,28 +12,32 @@ describe('normalizeDuplicatePolicy', () => {
   it('сохраняет корректные значения', () => {
     expect(
       normalizeDuplicatePolicy({
-        ignoreAll: true,
         withinDeck: 'deny',
         acrossDecks: 'ask',
       }),
-    ).toEqual({ ignoreAll: true, withinDeck: 'deny', acrossDecks: 'ask' })
+    ).toEqual({ withinDeck: 'deny', acrossDecks: 'ask' })
   })
 
   it('заменяет мусор значениями по умолчанию', () => {
     expect(
-      normalizeDuplicatePolicy({ ignoreAll: 'yes', withinDeck: 'maybe', acrossDecks: 42 }),
-    ).toEqual({ ignoreAll: false, withinDeck: 'ask', acrossDecks: 'ignore' })
+      normalizeDuplicatePolicy({ withinDeck: 'maybe', acrossDecks: 42 }),
+    ).toEqual({ withinDeck: 'ask', acrossDecks: 'ignore' })
   })
 
   it('переносит значения старой схемы', () => {
     expect(normalizeDuplicatePolicy(undefined, ['deny-deck', 'ask-all'])).toEqual({
-      ignoreAll: false,
       withinDeck: 'deny',
       acrossDecks: 'ask',
     })
     expect(normalizeDuplicatePolicy(undefined, ['ignore'])).toEqual({
-      ignoreAll: true,
-      withinDeck: 'ask',
+      withinDeck: 'ignore',
+      acrossDecks: 'ignore',
+    })
+  })
+
+  it('переносит промежуточный вариант с общим отключением', () => {
+    expect(normalizeDuplicatePolicy({ ignoreAll: true })).toEqual({
+      withinDeck: 'ignore',
       acrossDecks: 'ignore',
     })
   })

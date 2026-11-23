@@ -11,8 +11,6 @@ export type DuplicateAction = 'ignore' | 'ask' | 'deny'
 
 /** Настройки проверки одинаковых карточек. */
 export interface DuplicatePolicy {
-  /** Полностью отключить проверку и разрешать любые дубликаты. */
-  ignoreAll: boolean
   /** Что делать с дубликатами внутри одной колоды. */
   withinDeck: DuplicateAction
   /** Что делать с дубликатами во всех колодах. */

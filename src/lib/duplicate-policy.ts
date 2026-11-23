@@ -1,7 +1,6 @@
 import type { DuplicateAction, DuplicatePolicy } from '../types'
 
 export const DEFAULT_DUPLICATE_POLICY: DuplicatePolicy = {
-  ignoreAll: false,
   withinDeck: 'ask',
   acrossDecks: 'ignore',
 }
@@ -15,9 +14,10 @@ function action(value: unknown, fallback: DuplicateAction): DuplicateAction {
 function legacyPolicy(raw: unknown): DuplicatePolicy | null {
   if (!Array.isArray(raw)) return null
   const values = new Set(raw)
-  if (values.has('ignore')) return { ...DEFAULT_DUPLICATE_POLICY, ignoreAll: true }
+  if (values.has('ignore')) {
+    return { withinDeck: 'ignore', acrossDecks: 'ignore' }
+  }
   return {
-    ignoreAll: false,
     withinDeck: values.has('deny-deck')
       ? 'deny'
       : values.has('ask-deck')
@@ -40,8 +40,10 @@ export function normalizeDuplicatePolicy(raw: unknown, legacy?: unknown): Duplic
   }
 
   const value = raw as Record<string, unknown>
+  if (value.ignoreAll === true) {
+    return { withinDeck: 'ignore', acrossDecks: 'ignore' }
+  }
   return {
-    ignoreAll: value.ignoreAll === true,
     withinDeck: action(value.withinDeck, DEFAULT_DUPLICATE_POLICY.withinDeck),
     acrossDecks: action(value.acrossDecks, DEFAULT_DUPLICATE_POLICY.acrossDecks),
   }

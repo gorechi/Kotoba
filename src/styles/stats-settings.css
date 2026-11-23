@@ -1160,57 +1160,19 @@
 }
 
 .duplicate-settings {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 14px;
-}
-
-.duplicate-divider {
-  height: 2px;
-  margin: 2px 0;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    color-mix(in srgb, var(--accent) 46%, transparent) 18%,
-    color-mix(in srgb, var(--accent) 46%, transparent) 82%,
-    transparent
-  );
+  margin-top: 16px;
 }
 
 .duplicate-columns {
-  position: relative;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 18px;
-}
-
-.duplicate-columns.is-disabled {
-  opacity: 0.55;
-}
-
-.duplicate-columns::before {
-  content: '';
-  position: absolute;
-  top: 4px;
-  bottom: 4px;
-  left: 50%;
-  width: 2px;
-  transform: translateX(-50%);
-  background: linear-gradient(
-    180deg,
-    transparent,
-    color-mix(in srgb, var(--accent) 46%, transparent) 22%,
-    color-mix(in srgb, var(--accent) 46%, transparent) 78%,
-    transparent
-  );
-  pointer-events: none;
+  gap: 28px;
 }
 
 .duplicate-column {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   min-width: 0;
   margin: 0;
   padding: 0;
@@ -1228,14 +1190,14 @@
 .duplicate-radio-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .duplicate-radio {
   display: flex;
   align-items: center;
   gap: 9px;
-  padding: 8px 10px;
+  padding: 10px 12px;
   border: 1px solid var(--line);
   border-radius: 9px;
   background: var(--surface-2);
@@ -1262,54 +1224,6 @@
   flex: none;
   accent-color: var(--accent);
   cursor: inherit;
-}
-
-.duplicate-master {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 11px 12px;
-  border: 1px solid var(--line);
-  border-radius: 11px;
-  background: var(--surface-2);
-  cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
-}
-
-.duplicate-master:hover {
-  border-color: var(--line-strong);
-}
-
-.duplicate-master.is-checked {
-  border-color: color-mix(in srgb, var(--accent) 35%, var(--line));
-  background: color-mix(in srgb, var(--accent) 5%, var(--surface-2));
-}
-
-.duplicate-master input {
-  width: 16px;
-  height: 16px;
-  margin-top: 1px;
-  flex: none;
-  accent-color: var(--accent);
-  cursor: inherit;
-}
-
-.duplicate-copy {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.duplicate-copy strong {
-  font-size: 12.5px;
-  font-weight: 600;
-}
-
-.duplicate-copy span {
-  color: var(--muted);
-  font-size: 11px;
-  line-height: 1.4;
 }
 
 .settings-side {

@@ -71,7 +71,7 @@ export function createBaseSeedData(now = Date.now()) {
       ttsVoiceURI: null,
       ttsRate: 0.85,
       ttsAutoplay: 'off' as const,
-      duplicatePolicy: { ignoreAll: false, withinDeck: 'ask', acrossDecks: 'ignore' } as DuplicatePolicy,
+      duplicatePolicy: { withinDeck: 'ask', acrossDecks: 'ignore' } as DuplicatePolicy,
       zenAuto: true,
       zenIdleMinutes: 5,
       language: detectSystemLocale(),

@@ -69,10 +69,6 @@
   .duplicate-columns {
     grid-template-columns: 1fr;
   }
-
-  .duplicate-columns::before {
-    display: none;
-  }
 }
 
 @media (max-height: 760px) {

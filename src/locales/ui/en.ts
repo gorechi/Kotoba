@@ -1180,8 +1180,6 @@ export const messages: Record<string, string> = {
   "trash.unknownDeck": "Deck deleted",
   "settings.duplicatesTitle": "Card duplicates",
   "settings.duplicatesSub": "What to do when the same card already exists",
-  "settings.duplicatesIgnoreAll": "Ignore duplicates",
-  "settings.duplicatesIgnoreAllHint": "Turn off duplicate checks and allow identical cards.",
   "settings.duplicatesWithinTitle": "What to do with duplicates within a deck?",
   "settings.duplicatesAcrossTitle": "What to do with duplicates across all decks?",
   "settings.duplicatesActionIgnore": "Ignore",

@@ -1182,7 +1182,7 @@
   position: relative;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  gap: 18px;
 }
 
 .duplicate-columns::before {

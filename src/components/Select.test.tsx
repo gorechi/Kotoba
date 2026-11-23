@@ -93,6 +93,38 @@ describe('Select', () => {
     expect(screen.getByRole('listbox')).toBeTruthy()
   })
 
+  it('скрывает плейсхолдер в меню, но оставляет его в кнопке', () => {
+    render(
+      <Select value="" aria-label="Колода" onChange={() => {}}>
+        <option value="" disabled>
+          Перенести в…
+        </option>
+        <option value="a">Хирагана</option>
+      </Select>,
+    )
+
+    const trigger = screen.getByRole('button', { name: 'Колода' })
+    expect(trigger.textContent).toBe('Перенести в…')
+
+    fireEvent.click(trigger)
+
+    expect(screen.queryByRole('option', { name: 'Перенести в…' })).toBeNull()
+    expect(screen.getByRole('option', { name: 'Хирагана' })).toBeTruthy()
+  })
+
+  it('не скрывает пустой пункт, если это настоящий выбор', () => {
+    render(
+      <Select value="" aria-label="Колода" onChange={() => {}}>
+        <option value="">Все колоды</option>
+        <option value="a">Хирагана</option>
+      </Select>,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Колода' }))
+
+    expect(screen.getByRole('option', { name: 'Все колоды' })).toBeTruthy()
+  })
+
   it('не открывается, если отключён', () => {
     renderSelect({ disabled: true })
     fireEvent.click(screen.getByRole('button', { name: 'Письменность' }))

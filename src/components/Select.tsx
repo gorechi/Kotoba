@@ -80,6 +80,11 @@ export function Select({
 
   const selectedIndex = options.findIndex((option) => option.value === valueString)
   const selectedLabel = selectedIndex >= 0 ? options[selectedIndex].label : ''
+  const menuOptions = useMemo(
+    () => options.filter((option) => !(option.value === '' && option.disabled)),
+    [options],
+  )
+  const selectedMenuIndex = menuOptions.findIndex((option) => option.value === valueString)
 
   const [open, setOpen] = useState(false)
   const [activeIndex, setActiveIndex] = useState(-1)
@@ -108,14 +113,14 @@ export function Select({
     })
   }
 
-  const firstEnabled = () => options.findIndex((option) => !option.disabled)
+  const firstEnabled = () => menuOptions.findIndex((option) => !option.disabled)
 
   const openMenu = () => {
-    if (disabled || options.length === 0) return
+    if (disabled || menuOptions.length === 0) return
     updatePosition()
     const initial =
-      selectedIndex >= 0 && !options[selectedIndex].disabled
-        ? selectedIndex
+      selectedMenuIndex >= 0 && !menuOptions[selectedMenuIndex].disabled
+        ? selectedMenuIndex
         : firstEnabled()
     setActiveIndex(initial)
     setOpen(true)
@@ -127,11 +132,11 @@ export function Select({
   }
 
   const moveActive = (delta: 1 | -1) => {
-    if (!options.length) return
+    if (!menuOptions.length) return
     let next = activeIndex
-    for (let step = 0; step < options.length; step += 1) {
-      next = (next + delta + options.length) % options.length
-      if (!options[next].disabled) {
+    for (let step = 0; step < menuOptions.length; step += 1) {
+      next = (next + delta + menuOptions.length) % menuOptions.length
+      if (!menuOptions[next].disabled) {
         setActiveIndex(next)
         return
       }
@@ -139,7 +144,7 @@ export function Select({
   }
 
   const choose = (index: number) => {
-    const option = options[index]
+    const option = menuOptions[index]
     if (!option || option.disabled) return
     setOpen(false)
     triggerRef.current?.focus()
@@ -180,8 +185,8 @@ export function Select({
         break
       case 'End':
         event.preventDefault()
-        for (let index = options.length - 1; index >= 0; index -= 1) {
-          if (!options[index].disabled) {
+        for (let index = menuOptions.length - 1; index >= 0; index -= 1) {
+          if (!menuOptions[index].disabled) {
             setActiveIndex(index)
             break
           }
@@ -278,12 +283,12 @@ export function Select({
             style={menuStyle}
             aria-label={ariaLabel}
           >
-            {options.map((option, index) => (
+            {menuOptions.map((option, index) => (
               <li
                 key={`${option.value}-${index}`}
                 id={optionId(index)}
                 role="option"
-                aria-selected={index === selectedIndex}
+                aria-selected={option.value === valueString}
                 aria-disabled={option.disabled || undefined}
                 className={`select-option${index === activeIndex ? ' is-active' : ''}`}
                 onMouseEnter={() => setActiveIndex(index)}

@@ -694,10 +694,9 @@
 
 .zen-settings-row {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px 20px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
 }
 
 .zen-idle-control {

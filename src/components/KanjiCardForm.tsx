@@ -7,11 +7,13 @@ import { freshSrs } from '../lib/srs'
 import { detectKanaScript } from '../lib/kana-script'
 import { convertRomajiTail, guessKanaMode } from '../lib/romaji'
 import { toCyrillic } from '../lib/cyrillic'
+import { findDuplicateCards, duplicateOutcome } from '../lib/duplicates'
 import { uid } from '../lib/utils'
 import { toRomaji } from 'wanakana'
 import { FitText } from './FitText'
 import { Icon } from './Icon'
 import { TagInput } from './TagInput'
+import { DuplicateCardsDialog, DuplicateDenyDialog } from './DuplicateCardsDialog'
 import { Modal } from './Modal'
 
 interface KanjiCardFormProps {
@@ -60,6 +62,12 @@ export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
   })
   const [tags, setTags] = useState<string[]>(card?.tags ?? [])
   const [error, setError] = useState('')
+  const [duplicateDialog, setDuplicateDialog] = useState<{
+    mode: 'ask' | 'deny'
+    cards: Card[]
+    front: string
+    keepOpen: boolean
+  } | null>(null)
   const frontRef = useRef<HTMLInputElement>(null)
 
   const transcriptionFor = (kana: string) =>
@@ -98,13 +106,7 @@ export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
     setExamples([emptyExample()])
   }
 
-  const save = (keepOpen: boolean) => {
-    const cleanFront = front.trim()
-    if (!cleanFront) {
-      setError(t('kanjiForm.frontError'))
-      frontRef.current?.focus()
-      return
-    }
+  const buildPayload = (cleanFront: string) => {
     const cleanReadings = readings
       .map((item) => ({
         ...item,
@@ -148,8 +150,33 @@ export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
 
     if (!cleanMeaning && !cleanReadings.length) {
       setError(t('kanjiForm.contentError'))
-      return
+      return null
     }
+
+    return {
+      cleanFront,
+      cleanReadings,
+      cleanExamples,
+      cleanMeaning,
+      nextMeaning,
+      nextExamples,
+      parsedFrequency,
+    }
+  }
+
+  const commit = (
+    payload: NonNullable<ReturnType<typeof buildPayload>>,
+    keepOpen: boolean,
+  ) => {
+    const {
+      cleanFront,
+      cleanReadings,
+      cleanExamples,
+      cleanMeaning,
+      nextMeaning,
+      nextExamples,
+      parsedFrequency,
+    } = payload
 
     update((current) => {
       if (card) {
@@ -220,6 +247,37 @@ export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
     window.requestAnimationFrame(() => frontRef.current?.focus())
   }
 
+  const save = (keepOpen: boolean) => {
+    const cleanFront = front.trim()
+    if (!cleanFront) {
+      setError(t('kanjiForm.frontError'))
+      frontRef.current?.focus()
+      return
+    }
+
+    const payload = buildPayload(cleanFront)
+    if (!payload) return
+
+    if (card) {
+      commit(payload, keepOpen)
+      return
+    }
+
+    const duplicates = findDuplicateCards(data.cards, cleanFront)
+    const outcome = duplicateOutcome(duplicates, data.settings.duplicateAction)
+    if (outcome === 'create') {
+      commit(payload, keepOpen)
+      return
+    }
+
+    setDuplicateDialog({
+      mode: outcome,
+      cards: duplicates,
+      front: cleanFront,
+      keepOpen,
+    })
+  }
+
   const submit = (event: FormEvent) => {
     event.preventDefault()
     save(false)
@@ -237,7 +295,8 @@ export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
     t('kanjiForm.previewPlaceholder')
 
   return (
-    <Modal
+    <>
+      <Modal
       title={card ? t('kanjiForm.edit') : t('kanjiForm.new')}
       subtitle={deck ? t('kanjiForm.subtitle', { name: deckTitle(deck, t) }) : undefined}
       onClose={onClose}
@@ -472,6 +531,24 @@ export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
 
         {error && <p className="form-error">{error}</p>}
       </form>
-    </Modal>
+      </Modal>
+
+      {duplicateDialog?.mode === 'ask' && (
+        <DuplicateCardsDialog
+          cards={duplicateDialog.cards}
+          onIgnore={() => {
+            const pending = duplicateDialog
+            if (!pending) return
+            setDuplicateDialog(null)
+            const payload = buildPayload(pending.front)
+            if (payload) commit(payload, pending.keepOpen)
+          }}
+          onCancel={() => setDuplicateDialog(null)}
+        />
+      )}
+      {duplicateDialog?.mode === 'deny' && (
+        <DuplicateDenyDialog onClose={() => setDuplicateDialog(null)} />
+      )}
+    </>
   )
 }

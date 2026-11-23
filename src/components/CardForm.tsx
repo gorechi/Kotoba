@@ -7,10 +7,12 @@ import { freshSrs } from '../lib/srs'
 import { detectKanaScript } from '../lib/kana-script'
 import { finalizeRomajiTail, guessKanaMode, suggestReading, type KanaMode } from '../lib/romaji'
 import { toCyrillic } from '../lib/cyrillic'
+import { findDuplicateCards, duplicateOutcome } from '../lib/duplicates'
 import { uid } from '../lib/utils'
 import { FitText } from './FitText'
 import { KanaInput } from './KanaInput'
 import { TagInput } from './TagInput'
+import { DuplicateCardsDialog, DuplicateDenyDialog } from './DuplicateCardsDialog'
 import { Modal } from './Modal'
 
 interface CardFormProps {
@@ -43,6 +45,12 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
   const [tags, setTags] = useState<string[]>(card?.tags ?? [])
   const [frontMode, setFrontMode] = useState<KanaMode>(() => guessKanaMode(card?.front, 'hiragana'))
   const [error, setError] = useState('')
+  const [duplicateDialog, setDuplicateDialog] = useState<{
+    mode: 'ask' | 'deny'
+    cards: Card[]
+    front: string
+    keepOpen: boolean
+  } | null>(null)
   const frontRef = useRef<HTMLInputElement>(null)
 
   // Автогенерация чтения при изменении поля «Слово или знак»
@@ -69,13 +77,7 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
     setReading(value)
   }
 
-  const save = (keepOpen: boolean) => {
-    const cleanFront = finalizeRomajiTail(front, frontMode).trim()
-    if (!cleanFront) {
-      setError(t('cardForm.frontError'))
-      frontRef.current?.focus()
-      return
-    }
+  const commit = (cleanFront: string, keepOpen: boolean) => {
     const cleanReading = reading.trim()
     const parsedFrequency = Math.round(Number(frequency))
     update((current) => {
@@ -146,6 +148,33 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
     window.requestAnimationFrame(() => frontRef.current?.focus())
   }
 
+  const save = (keepOpen: boolean) => {
+    const cleanFront = finalizeRomajiTail(front, frontMode).trim()
+    if (!cleanFront) {
+      setError(t('cardForm.frontError'))
+      frontRef.current?.focus()
+      return
+    }
+    if (card) {
+      commit(cleanFront, keepOpen)
+      return
+    }
+
+    const duplicates = findDuplicateCards(data.cards, cleanFront)
+    const outcome = duplicateOutcome(duplicates, data.settings.duplicateAction)
+    if (outcome === 'create') {
+      commit(cleanFront, keepOpen)
+      return
+    }
+
+    setDuplicateDialog({
+      mode: outcome,
+      cards: duplicates,
+      front: cleanFront,
+      keepOpen,
+    })
+  }
+
   const submit = (event: FormEvent) => {
     event.preventDefault()
     save(false)
@@ -159,7 +188,8 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
   }
 
   return (
-    <Modal
+    <>
+      <Modal
       title={card ? t('cardForm.edit') : t('cardForm.new')}
       subtitle={deck ? t('cardForm.subtitle', { name: deckTitle(deck, t) }) : undefined}
       onClose={onClose}
@@ -300,6 +330,23 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
 
         {error && <p className="form-error">{error}</p>}
       </form>
-    </Modal>
+      </Modal>
+
+      {duplicateDialog?.mode === 'ask' && (
+        <DuplicateCardsDialog
+          cards={duplicateDialog.cards}
+          onIgnore={() => {
+            const pending = duplicateDialog
+            if (!pending) return
+            setDuplicateDialog(null)
+            commit(pending.front, pending.keepOpen)
+          }}
+          onCancel={() => setDuplicateDialog(null)}
+        />
+      )}
+      {duplicateDialog?.mode === 'deny' && (
+        <DuplicateDenyDialog onClose={() => setDuplicateDialog(null)} />
+      )}
+    </>
   )
 }

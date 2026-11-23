@@ -759,6 +759,7 @@ export const messages: Record<string, string> = {
   "session.mistakesTitle": "Repaso de errores",
   "session.mistakesSub": "Marcaste estas tarjetas como “Otra vez”.",
   "session.listen": "Escuchar",
+  "session.listenExample": "Escuchar ejemplo",
   "session.listenAria": "Escuchar {front}",
   "tts.missingVoice": "La voz aún no funciona: Windows no tiene instalada ninguna voz en japonés.",
   "tts.openHelp": "Cómo activar la voz",

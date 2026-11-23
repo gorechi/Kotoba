@@ -11,6 +11,7 @@ import { FitText } from './FitText'
 import { Icon } from './Icon'
 import { CardForm } from './CardForm'
 import { KanjiCardForm } from './KanjiCardForm'
+import { SpeakButton } from './SpeakButton'
 import { useSessionShortcuts } from './session/useSessionShortcuts'
 
 const RATINGS: { rating: Rating; labelKey: string; key: string }[] = [
@@ -764,12 +765,20 @@ export function Session({
                           const translation = cardExampleTranslation(card, item, t)
                           return (
                             <div className="kanji-usage" key={item.id}>
-                              <div className="kanji-usage-jp">
-                                {item.text}
-                                {item.transcription && (
-                                  <span className="kanji-usage-transcription">
-                                    {item.transcription}
-                                  </span>
+                              <div className="kanji-usage-line">
+                                <div className="kanji-usage-jp">
+                                  {item.text}
+                                  {item.transcription && (
+                                    <span className="kanji-usage-transcription">
+                                      {item.transcription}
+                                    </span>
+                                  )}
+                                </div>
+                                {item.text.trim() && (
+                                  <SpeakButton
+                                    text={item.text}
+                                    label={t('session.listenExample')}
+                                  />
                                 )}
                               </div>
                               {translation && (

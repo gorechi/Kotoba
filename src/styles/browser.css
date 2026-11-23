@@ -594,6 +594,21 @@
   line-height: 1.65;
 }
 
+.browser-preview-examples li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.browser-preview-example-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.browser-preview-examples .speak-button {
+  margin: -4px 0;
+}
+
 .browser-preview-tags {
   display: flex;
   flex-wrap: wrap;

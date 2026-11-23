@@ -767,6 +767,7 @@ export const messages: Record<string, string> = {
   "session.mistakesTitle": "Разбор ошибок",
   "session.mistakesSub": "Эти карточки ты отметил как «Снова».",
   "session.listen": "Прослушать",
+  "session.listenExample": "Прослушать пример",
   "session.listenAria": "Прослушать {front}",
   "tts.missingVoice": "Озвучка пока не работает: в Windows не установлен японский голос.",
   "tts.openHelp": "Как включить озвучку",

@@ -17,6 +17,7 @@ import { Icon } from '../components/Icon'
 import { ConfirmDialog, Modal } from '../components/Modal'
 import { DeckForm } from '../components/DeckForm'
 import { Select } from '../components/Select'
+import { SpeakButton } from '../components/SpeakButton'
 import {
   MAX_TAGS_COLLAPSED,
   PAGE_SIZE,
@@ -934,16 +935,24 @@ export function CardBrowser({ focusCardId, initialQuery, onCloseFocus }: CardBro
               </div>
             )}
             {preview.examples.length > 0 && (
-              <div className="browser-preview-section">
+              <div className="browser-preview-section browser-preview-examples">
                 <span>{t('browser.examples')}</span>
                 <ul>
                   {preview.examples.map((item) => {
                     const translation = cardExampleTranslation(preview, item, t)
                     return (
                       <li key={item.id}>
-                        {item.text}
-                        {item.transcription ? ` — ${item.transcription}` : ''}
-                        {translation ? ` — ${translation}` : ''}
+                        <span className="browser-preview-example-text">
+                          {item.text}
+                          {item.transcription ? ` — ${item.transcription}` : ''}
+                          {translation ? ` — ${translation}` : ''}
+                        </span>
+                        {item.text.trim() && (
+                          <SpeakButton
+                            text={item.text}
+                            label={t('session.listenExample')}
+                          />
+                        )}
                       </li>
                     )
                   })}

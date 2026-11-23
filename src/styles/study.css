@@ -450,6 +450,21 @@
   background: var(--surface-2);
 }
 
+.kanji-usage-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.kanji-usage-line .kanji-usage-jp {
+  flex: 1;
+  min-width: 0;
+}
+
+.kanji-usage-line .speak-button {
+  margin: -2px 0;
+}
+
 .kanji-usage-jp {
   font-family: var(--font-jp);
   font-size: 16px;

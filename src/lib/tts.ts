@@ -1,3 +1,5 @@
+import type { StudyMode, TtsAutoplay } from '../types'
+
 export type TtsFailureReason = 'unsupported' | 'missing-voice' | 'error'
 
 export type TtsResult = { ok: true } | { ok: false; reason: TtsFailureReason }
@@ -25,6 +27,11 @@ export function setTtsPreferences(next: Partial<TtsPreferences>): void {
 
 export function getTtsPreferences(): TtsPreferences {
   return preferences
+}
+
+/** Нужно ли озвучивать карточку при перевороте в текущем режиме. */
+export function ttsAutoplayEnabled(autoplay: TtsAutoplay, mode: StudyMode): boolean {
+  return autoplay === 'always' || (autoplay === 'reading' && mode === 'reading')
 }
 
 function getSynth(): SpeechSynthesis | null {
@@ -128,19 +135,23 @@ function report(reason: TtsFailureReason): void {
  * Если японского голоса нет, ничего не произносит и сообщает об этом:
  * голос по умолчанию прочитал бы кану/кандзи неправильно или молча.
  */
-export async function speakJa(text: string): Promise<TtsResult> {
+export async function speakJa(
+  text: string,
+  options: { reportErrors?: boolean } = {},
+): Promise<TtsResult> {
   const value = text.trim()
   if (!value) return { ok: true }
 
+  const reportErrors = options.reportErrors !== false
   const synth = getSynth()
   if (!synth || typeof SpeechSynthesisUtterance === 'undefined') {
-    report('unsupported')
+    if (reportErrors) report('unsupported')
     return { ok: false, reason: 'unsupported' }
   }
 
   const voice = await getJapaneseVoice()
   if (!voice) {
-    report('missing-voice')
+    if (reportErrors) report('missing-voice')
     return { ok: false, reason: 'missing-voice' }
   }
 
@@ -151,7 +162,7 @@ export async function speakJa(text: string): Promise<TtsResult> {
     utterance.rate = Math.min(1.5, Math.max(0.5, preferences.rate))
     utterance.onerror = (event) => {
       if (event.error === 'interrupted' || event.error === 'canceled') return
-      report('error')
+      if (reportErrors) report('error')
     }
     synth.cancel()
     synth.speak(utterance)

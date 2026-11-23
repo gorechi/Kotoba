@@ -1147,6 +1147,10 @@
   gap: 8px;
 }
 
+.tts-autoplay-field {
+  margin-top: 14px;
+}
+
 /* ---------- Знакомство ---------- */
 .settings-replay {
   display: flex;

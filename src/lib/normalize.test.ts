@@ -40,10 +40,19 @@ describe('normalizeData: настройки', () => {
     expect(settings.sessionSize).toBe(0)
     expect(settings.trashRetentionDays).toBe(10)
     expect(settings.onboardingDone).toBe(true)
+    expect(settings.ttsAutoplay).toBe('off')
   })
 
-  it('ограничивает числовые значения разумными пределами', () => {
-    const settings = normalizeData({
+  it('сохраняет выбранный режим автоплея', () => {
+    expect(normalizeData({ settings: { ttsAutoplay: 'reading' } }).settings.ttsAutoplay).toBe(
+      'reading',
+    )
+    expect(normalizeData({ settings: { ttsAutoplay: 'always' } }).settings.ttsAutoplay).toBe(
+      'always',
+    )
+  })
+
+  it('ограничивает числовые значения разумными пределами', () => {    const settings = normalizeData({
       settings: {
         newPerDay: 999,
         dayStartHour: 99,
@@ -71,12 +80,19 @@ describe('normalizeData: настройки', () => {
 
   it('отбрасывает неизвестные значения перечислений', () => {
     const settings = normalizeData({
-      settings: { theme: 'neon', language: 'klingon', autoBackup: 'hourly', studyMode: 'fly' },
+      settings: {
+        theme: 'neon',
+        language: 'klingon',
+        autoBackup: 'hourly',
+        studyMode: 'fly',
+        ttsAutoplay: 'sometimes',
+      },
     }).settings
     expect(settings.theme).toBe('system')
     expect(settings.language).toBe('en')
     expect(settings.autoBackup).toBe('daily')
     expect(settings.studyMode).toBe('reading')
+    expect(settings.ttsAutoplay).toBe('off')
   })
 })
 

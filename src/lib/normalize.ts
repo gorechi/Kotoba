@@ -25,6 +25,7 @@ import type {
   StudyTotals,
   Theme,
   TrashEntry,
+  TtsAutoplay,
   WritingDifficulty,
 } from '../types'
 import { freshSrs } from './srs'
@@ -38,6 +39,7 @@ import { DEFAULT_LOCALE, isLocaleCode } from './i18n'
 const THEMES: Theme[] = ['light', 'dark', 'system']
 const DECK_KINDS: DeckKind[] = ['kana', 'kanji']
 const STUDY_MODES: StudyMode[] = ['reading', 'writing']
+const TTS_AUTOPLAY: TtsAutoplay[] = ['off', 'reading', 'always']
 const WRITING_DIFFICULTIES: WritingDifficulty[] = ['normal', 'hard']
 const DAILY_GOAL_TYPES: DailyGoalType[] = ['reviews', 'minutes']
 const DECK_ORDERS: DeckOrder[] = ['order', 'random', 'frequency', 'jlpt']
@@ -391,6 +393,7 @@ function normalizeSettings(raw: unknown): Settings {
     leechThreshold: 0,
     ttsVoiceURI: null,
     ttsRate: 0.85,
+    ttsAutoplay: 'off',
     zenAuto: true,
     zenIdleMinutes: 5,
     language: DEFAULT_LOCALE,
@@ -439,6 +442,9 @@ function normalizeSettings(raw: unknown): Settings {
         ? raw.ttsVoiceURI.trim()
         : null,
     ttsRate: clamp(num(raw.ttsRate, base.ttsRate), 0.5, 1.5),
+    ttsAutoplay: TTS_AUTOPLAY.includes(raw.ttsAutoplay as TtsAutoplay)
+      ? (raw.ttsAutoplay as TtsAutoplay)
+      : base.ttsAutoplay,
     zenAuto: raw.zenAuto !== false,
     zenIdleMinutes: clamp(
       Math.round(num(raw.zenIdleMinutes, base.zenIdleMinutes)),

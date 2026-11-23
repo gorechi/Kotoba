@@ -70,6 +70,7 @@ export function createBaseSeedData(now = Date.now()) {
       leechThreshold: 0,
       ttsVoiceURI: null,
       ttsRate: 0.85,
+      ttsAutoplay: 'off' as const,
       zenAuto: true,
       zenIdleMinutes: 5,
       language: detectSystemLocale(),

@@ -88,6 +88,7 @@ export function makeSettings(patch: Partial<Settings> = {}): Settings {
     leechThreshold: 0,
     ttsVoiceURI: null,
     ttsRate: 0.85,
+    ttsAutoplay: 'off',
     zenAuto: true,
     zenIdleMinutes: 5,
     language: 'en',

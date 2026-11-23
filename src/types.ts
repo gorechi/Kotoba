@@ -5,6 +5,9 @@ export type CardGroup = 'basic' | 'voiced' | 'custom'
 export type DeckKind = 'kana' | 'kanji'
 /** Режим сеанса: чтение (японский → ответ) или письмо (перевод → японский). */
 export type StudyMode = 'reading' | 'writing'
+
+/** Когда автоматически озвучивать карточку при перевороте. */
+export type TtsAutoplay = 'off' | 'reading' | 'always'
 /** Сложность режима письма. */
 export type WritingDifficulty = 'normal' | 'hard'
 /** Чем измеряется ежедневная цель. */
@@ -186,6 +189,8 @@ export interface Settings {
   ttsVoiceURI: string | null
   /** Скорость озвучки: 0.5–1.5. */
   ttsRate: number
+  /** Автоматическая озвучка при перевороте карточки. */
+  ttsAutoplay: TtsAutoplay
   /** Автоматически включать режим Дзен при бездействии. */
   zenAuto: boolean
   /** Через сколько минут бездействия включать Дзен. */

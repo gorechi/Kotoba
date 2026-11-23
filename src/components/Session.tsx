@@ -6,7 +6,7 @@ import { cardExampleTranslation, cardMeaning, deckTitle } from '../lib/content'
 import { intervalPreview } from '../lib/srs'
 import { buildStudyQueue } from '../lib/study'
 import { formatDuration } from '../lib/utils'
-import { speakJa } from '../lib/tts'
+import { speakJa, ttsAutoplayEnabled } from '../lib/tts'
 import { FitText } from './FitText'
 import { Icon } from './Icon'
 import { CardForm } from './CardForm'
@@ -317,9 +317,24 @@ export function Session({
     setLastRating(null)
   }, [lastRating, undoRating])
 
+  const autoplaySpeak = useCallback(() => {
+    if (!ttsAutoplayEnabled(data.settings.ttsAutoplay, mode)) return
+    if (!speakText.trim()) return
+    void speakJa(speakText, { reportErrors: false })
+  }, [data.settings.ttsAutoplay, mode, speakText])
+
+  const revealAnswer = useCallback(() => {
+    setRevealed(true)
+    autoplaySpeak()
+  }, [autoplaySpeak])
+
   const toggleAnswer = useCallback(() => {
-    setRevealed((prev) => !prev)
-  }, [])
+    if (revealed) {
+      setRevealed(false)
+      return
+    }
+    revealAnswer()
+  }, [revealed, revealAnswer])
 
   useSessionShortcuts({
     finished,
@@ -549,7 +564,7 @@ export function Session({
           <div className="flashcard-wrap">
             <div
               className={`flashcard${revealed ? ' flipped' : ''}`}
-              onClick={() => setRevealed((prev) => !prev)}
+              onClick={toggleAnswer}
             >
               <div className="face face-front">
                 <div className="face-top">
@@ -855,7 +870,7 @@ export function Session({
               ) : (
                 <button
                   className="btn btn-primary btn-lg show-answer"
-                  onClick={() => setRevealed(true)}
+                  onClick={revealAnswer}
                 >
                   {t('session.showAnswer')}
                   <kbd>{t('session.space')}</kbd>

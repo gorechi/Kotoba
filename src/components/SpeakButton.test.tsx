@@ -28,4 +28,17 @@ describe('SpeakButton', () => {
 
     expect(screen.getByRole('button', { name: 'session.listen' })).toBeTruthy()
   })
+
+  it('не переворачивает карточку, если лежит поверх кликабельной области', () => {
+    const parentClick = vi.fn()
+    render(
+      <div onClick={parentClick}>
+        <SpeakButton text="水" />
+      </div>,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'session.listen' }))
+
+    expect(parentClick).not.toHaveBeenCalled()
+  })
 })

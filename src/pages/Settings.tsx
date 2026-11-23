@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { SessionOrder, Theme } from '../types'
+import type { SessionOrder, Theme, TtsAutoplay } from '../types'
 import { useStore } from '../state/store'
 import { useI18n } from '../lib/i18n-react'
 import { APP_VERSION } from '../lib/version'
@@ -640,6 +640,24 @@ export function Settings({
           <div className="range-scale">
             <span>0.5×</span>
             <span>1.5×</span>
+          </div>
+
+          <div className="field tts-autoplay-field">
+            <label htmlFor="settings-tts-autoplay">
+              {t('settings.speechAutoplay')}
+            </label>
+            <Select
+              id="settings-tts-autoplay"
+              value={data.settings.ttsAutoplay}
+              onChange={(event) =>
+                setSettings({ ttsAutoplay: event.target.value as TtsAutoplay })
+              }
+            >
+              <option value="off">{t('settings.speechAutoplayOff')}</option>
+              <option value="reading">{t('settings.speechAutoplayReading')}</option>
+              <option value="always">{t('settings.speechAutoplayAlways')}</option>
+            </Select>
+            <p className="field-hint">{t('settings.speechAutoplayHint')}</p>
           </div>
 
           <div className="settings-actions">

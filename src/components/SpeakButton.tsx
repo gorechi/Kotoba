@@ -20,7 +20,10 @@ export function SpeakButton({ text, size = 14, className, label }: SpeakButtonPr
     <button
       type="button"
       className={`icon-btn speak-button${className ? ` ${className}` : ''}`}
-      onClick={() => speakJa(text)}
+      onClick={(event) => {
+        event.stopPropagation()
+        void speakJa(text)
+      }}
       title={title}
       aria-label={title}
     >

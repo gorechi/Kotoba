@@ -10,6 +10,7 @@ import { MAX_TRASH_RETENTION_DAYS, pruneTrash } from '../lib/trash'
 import { Icon, type IconName } from '../components/Icon'
 import { NumberInput } from '../components/NumberInput'
 import { Select } from '../components/Select'
+import { DuplicateChecks } from '../components/DuplicateChecks'
 
 const THEMES: { value: Theme; labelKey: string; icon: IconName }[] = [
   { value: 'light', labelKey: 'settings.themeLight', icon: 'sun' },
@@ -586,6 +587,19 @@ export function Settings({
             </button>
           </div>
           <p className="hint">{t('settings.writingModeHint')}</p>
+        </section>
+
+        <section className="panel panel-wide">
+          <div className="panel-head">
+            <div>
+              <h2>{t('settings.duplicatesTitle')}</h2>
+              <p>{t('settings.duplicatesSub')}</p>
+            </div>
+          </div>
+          <DuplicateChecks
+            value={data.settings.duplicateChecks}
+            onChange={(duplicateChecks) => setSettings({ duplicateChecks })}
+          />
         </section>
 
         <section className="panel">

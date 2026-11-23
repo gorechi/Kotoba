@@ -41,10 +41,21 @@ describe('normalizeData: настройки', () => {
     expect(settings.trashRetentionDays).toBe(10)
     expect(settings.onboardingDone).toBe(true)
     expect(settings.ttsAutoplay).toBe('off')
+    expect(settings.duplicateChecks).toEqual(['ignore'])
   })
 
-  it('сохраняет выбранный режим автоплея', () => {
-    expect(normalizeData({ settings: { ttsAutoplay: 'reading' } }).settings.ttsAutoplay).toBe(
+  it('нормализует настройку дубликатов', () => {
+    expect(
+      normalizeData({ settings: { duplicateChecks: ['ask-deck', 'deny-deck'] } }).settings
+        .duplicateChecks,
+    ).toEqual(['ask-deck'])
+    expect(
+      normalizeData({ settings: { duplicateChecks: ['ask-deck', 'deny-all'] } }).settings
+        .duplicateChecks,
+    ).toEqual(['ask-deck', 'deny-all'])
+  })
+
+  it('сохраняет выбранный режим автоплея', () => {    expect(normalizeData({ settings: { ttsAutoplay: 'reading' } }).settings.ttsAutoplay).toBe(
       'reading',
     )
     expect(normalizeData({ settings: { ttsAutoplay: 'always' } }).settings.ttsAutoplay).toBe(

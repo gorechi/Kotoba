@@ -89,6 +89,7 @@ export function makeSettings(patch: Partial<Settings> = {}): Settings {
     ttsVoiceURI: null,
     ttsRate: 0.85,
     ttsAutoplay: 'off',
+    duplicateChecks: ['ignore'],
     zenAuto: true,
     zenIdleMinutes: 5,
     language: 'en',

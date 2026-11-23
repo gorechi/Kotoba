@@ -1159,6 +1159,70 @@
   margin-top: 16px;
 }
 
+.duplicate-checks {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.duplicate-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--surface-2);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, opacity 0.15s;
+}
+
+.duplicate-option:first-child {
+  grid-column: 1 / -1;
+}
+
+.duplicate-option:hover {
+  border-color: var(--line-strong);
+}
+
+.duplicate-option.is-checked {
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--line));
+  background: color-mix(in srgb, var(--accent) 5%, var(--surface-2));
+}
+
+.duplicate-option.is-disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.duplicate-option input {
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+  flex: none;
+  accent-color: var(--accent);
+  cursor: inherit;
+}
+
+.duplicate-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.duplicate-copy strong {
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.duplicate-copy span {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
 .settings-side {
   display: flex;
   flex-direction: column;

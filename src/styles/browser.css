@@ -616,6 +616,11 @@
   margin-top: 6px;
 }
 
+.browser-preview-tags .tag-chip {
+  padding: 5px 10px;
+  font-size: 13px;
+}
+
 .deck-settings-section {
   display: flex;
   flex-direction: column;

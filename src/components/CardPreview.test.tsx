@@ -19,6 +19,7 @@ describe('CardPreview', () => {
     const card = makeCard({
       front: '水',
       reading: 'みず',
+      tags: ['N5'],
       examples: [
         { id: 'example-1', text: '水を飲む', transcription: 'mizu o nomu', translation: 'пить воду' },
       ],
@@ -30,6 +31,7 @@ describe('CardPreview', () => {
     expect(screen.getByText('水')).toBeTruthy()
     expect(screen.getByText('browser.previewTitle')).toBeTruthy()
     expect(screen.getByText('Кандзи')).toBeTruthy()
+    expect(screen.getByText('N5').className).toBe('tag-chip')
     expect(screen.getByRole('button', { name: 'session.listenExample' })).toBeTruthy()
   })
 })

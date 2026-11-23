@@ -104,7 +104,7 @@ export function CardPreview({ card, deck, onClose }: CardPreviewProps) {
             <span>{t('browser.tags')}</span>
             <div className="browser-preview-tags">
               {card.tags.map((tag) => (
-                <span className="browser-tag" key={tag}>
+                <span className="tag-chip" key={tag}>
                   {tag}
                 </span>
               ))}

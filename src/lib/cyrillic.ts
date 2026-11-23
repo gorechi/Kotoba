@@ -131,12 +131,34 @@ const Y_COMBINATIONS: Record<string, string> = {
 }
 
 /** Малые гласные */
+const SMALL_VOWEL_CHARS = '\u3041\u3043\u3045\u3047\u3049'
 const SMALL_VOWELS: Record<string, string> = {
   '\u3041': '\u0430', // ぁ → а
   '\u3043': '\u0438', // ぃ → и
   '\u3045': '\u0443', // ぅ → у
   '\u3047': '\u044D', // ぇ → э
   '\u3049': '\u043E', // ぉ → о
+}
+
+/** Исключения для сочетаний с малыми гласными (заимствованные звуки). */
+const SMALL_VOWEL_COMBINATIONS: Record<string, string> = {
+  '\u3044\u3047': '\u0435', // いぇ → е
+  '\u3046\u3041': '\u0432\u0430', // うぁ → ва
+  '\u3046\u3043': '\u0432\u0438', // うぃ → ви
+  '\u3046\u3047': '\u0432\u044D', // うぇ → вэ
+  '\u3046\u3049': '\u0432\u043E', // うぉ → во
+  '\u304F\u3041': '\u043A\u0432\u0430', // くぁ → ква
+  '\u304F\u3043': '\u043A\u0432\u0438', // くぃ → кви
+  '\u304F\u3047': '\u043A\u0432\u044D', // くぇ → квэ
+  '\u304F\u3049': '\u043A\u0432\u043E', // くぉ → кво
+  '\u3050\u3041': '\u0433\u0432\u0430', // ぐぁ → гва
+  '\u3050\u3043': '\u0433\u0432\u0438', // ぐぃ → гви
+  '\u3050\u3047': '\u0433\u0432\u044D', // ぐぇ → гвэ
+  '\u3050\u3049': '\u0433\u0432\u043E', // ぐぉ → гво
+  '\u3064\u3041': '\u0446\u0430', // つぁ → ца
+  '\u3064\u3043': '\u0446\u0438', // つぃ → ци
+  '\u3064\u3047': '\u0446\u044D', // つぇ → цэ
+  '\u3064\u3049': '\u0446\u043E', // つぉ → цо
 }
 
 /** Гласные кана (для правила удлиннения) */
@@ -226,6 +248,23 @@ function combineSmallY(base: string, small: string): string | null {
   return null
 }
 
+/** Заменить гласную базового слога на малую: ち + ぇ → чэ, ふ + ぁ → фа. */
+function combineSmallVowel(base: string, small: string): string | null {
+  const special = SMALL_VOWEL_COMBINATIONS[base + small]
+  if (special) return special
+
+  const baseCyr = KANA_TO_CYRILLIC[base]
+  const replacement = SMALL_VOWELS[small]
+  if (!baseCyr || !replacement) return null
+
+  for (let i = baseCyr.length - 1; i >= 0; i--) {
+    if (VOWELS.includes(baseCyr[i])) {
+      return baseCyr.slice(0, i) + replacement + baseCyr.slice(i + 1)
+    }
+  }
+  return null
+}
+
 function transcribeToken(token: string): string {
   const direct =
     KANA_TO_CYRILLIC[token] ??
@@ -234,6 +273,9 @@ function transcribeToken(token: string): string {
   if (direct) return direct
   if (token.length === 2 && SMALL_Y.includes(token[1])) {
     return combineSmallY(token[0], token[1]) ?? token
+  }
+  if (token.length === 2 && SMALL_VOWEL_CHARS.includes(token[1])) {
+    return combineSmallVowel(token[0], token[1]) ?? SMALL_VOWELS[token[1]] ?? token
   }
   return token
 }
@@ -261,6 +303,17 @@ function tokenize(kana: string): string[] {
 
     // слог с дополнительным символом: консонант + малый я/ю/ё
     if (i + 1 < kana.length && SMALL_Y.includes(kana[i + 1])) {
+      tokens.push(kana[i] + kana[i + 1])
+      i += 2
+      continue
+    }
+
+    // слог с малой гласной: ちぇ, ふぁ, うぃ
+    if (
+      i + 1 < kana.length &&
+      kana[i] in KANA_TO_CYRILLIC &&
+      SMALL_VOWEL_CHARS.includes(kana[i + 1])
+    ) {
       tokens.push(kana[i] + kana[i + 1])
       i += 2
       continue

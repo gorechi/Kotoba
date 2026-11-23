@@ -41,6 +41,19 @@ describe('toCyrillic', () => {
     expect(toCyrillic('しょ')).toBe('шё')
   })
 
+  it('обрабатывает заимствованные сочетания с малыми гласными', () => {
+    expect(toCyrillic('チェ')).toBe('чэ')
+    expect(toCyrillic('アームチェア')).toBe('а:-му-чэ-а')
+    expect(toCyrillic('シェ')).toBe('шэ')
+    expect(toCyrillic('ジェ')).toBe('дзэ')
+    expect(toCyrillic('ファ')).toBe('фа')
+    expect(toCyrillic('ティ')).toBe('ти')
+    expect(toCyrillic('ウィ')).toBe('ви')
+    expect(toCyrillic('クァ')).toBe('ква')
+    expect(toCyrillic('ツァ')).toBe('ца')
+    expect(toCyrillic('ヴァ')).toBe('ва')
+  })
+
   it('не удваивает согласную перед гласной', () => {
     expect(toCyrillic('っあ')).toBe('а')
   })

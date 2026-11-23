@@ -6,8 +6,18 @@ export type DeckKind = 'kana' | 'kanji'
 /** Режим сеанса: чтение (японский → ответ) или письмо (перевод → японский). */
 export type StudyMode = 'reading' | 'writing'
 
-/** Варианты политики для одинаковых карточек. */
-export type DuplicateCheck = 'ignore' | 'ask-deck' | 'ask-all' | 'deny-deck' | 'deny-all'
+/** Действие для одинаковых карточек в одной области поиска. */
+export type DuplicateAction = 'ignore' | 'ask' | 'deny'
+
+/** Настройки проверки одинаковых карточек. */
+export interface DuplicatePolicy {
+  /** Полностью отключить проверку и разрешать любые дубликаты. */
+  ignoreAll: boolean
+  /** Что делать с дубликатами внутри одной колоды. */
+  withinDeck: DuplicateAction
+  /** Что делать с дубликатами во всех колодах. */
+  acrossDecks: DuplicateAction
+}
 
 /** Когда автоматически озвучивать карточку при перевороте. */
 export type TtsAutoplay = 'off' | 'reading' | 'always'
@@ -194,8 +204,8 @@ export interface Settings {
   ttsRate: number
   /** Автоматическая озвучка при перевороте карточки. */
   ttsAutoplay: TtsAutoplay
-  /** Выбранные варианты проверки дубликатов карточек. */
-  duplicateChecks: DuplicateCheck[]
+  /** Настройки проверки дубликатов карточек. */
+  duplicatePolicy: DuplicatePolicy
   /** Автоматически включать режим Дзен при бездействии. */
   zenAuto: boolean
   /** Через сколько минут бездействия включать Дзен. */

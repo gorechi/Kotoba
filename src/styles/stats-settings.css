@@ -1159,7 +1159,7 @@
   margin-top: 16px;
 }
 
-.duplicate-checks {
+.duplicate-settings {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -1185,6 +1185,10 @@
   gap: 18px;
 }
 
+.duplicate-columns.is-disabled {
+  opacity: 0.55;
+}
+
 .duplicate-columns::before {
   content: '';
   position: absolute;
@@ -1208,9 +1212,59 @@
   flex-direction: column;
   gap: 8px;
   min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
 }
 
-.duplicate-option {
+.duplicate-column-title {
+  padding: 0;
+  color: var(--text-soft);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.duplicate-radio-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.duplicate-radio {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface-2);
+  color: var(--text-soft);
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+
+.duplicate-radio:hover {
+  border-color: var(--line-strong);
+}
+
+.duplicate-radio.is-checked {
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--line));
+  background: color-mix(in srgb, var(--accent) 5%, var(--surface-2));
+  color: var(--text);
+}
+
+.duplicate-radio input {
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  flex: none;
+  accent-color: var(--accent);
+  cursor: inherit;
+}
+
+.duplicate-master {
   display: flex;
   align-items: flex-start;
   gap: 10px;
@@ -1219,24 +1273,19 @@
   border-radius: 11px;
   background: var(--surface-2);
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s, opacity 0.15s;
+  transition: border-color 0.15s, background 0.15s;
 }
 
-.duplicate-option:hover {
+.duplicate-master:hover {
   border-color: var(--line-strong);
 }
 
-.duplicate-option.is-checked {
+.duplicate-master.is-checked {
   border-color: color-mix(in srgb, var(--accent) 35%, var(--line));
   background: color-mix(in srgb, var(--accent) 5%, var(--surface-2));
 }
 
-.duplicate-option.is-disabled {
-  opacity: 0.55;
-  cursor: default;
-}
-
-.duplicate-option input {
+.duplicate-master input {
   width: 16px;
   height: 16px;
   margin-top: 1px;

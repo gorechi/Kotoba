@@ -1,4 +1,4 @@
-import type { Card, Deck, DuplicateCheck, StudySet, TrashEntry } from '../types'
+import type { Card, Deck, DuplicatePolicy, StudySet, TrashEntry } from '../types'
 import { freshSrs } from '../lib/srs'
 import { detectSystemLocale } from '../lib/i18n'
 import { detectKanaScript } from '../lib/kana-script'
@@ -71,7 +71,7 @@ export function createBaseSeedData(now = Date.now()) {
       ttsVoiceURI: null,
       ttsRate: 0.85,
       ttsAutoplay: 'off' as const,
-      duplicateChecks: ['ignore'] as DuplicateCheck[],
+      duplicatePolicy: { ignoreAll: false, withinDeck: 'ask', acrossDecks: 'ignore' } as DuplicatePolicy,
       zenAuto: true,
       zenIdleMinutes: 5,
       language: detectSystemLocale(),

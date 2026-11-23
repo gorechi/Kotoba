@@ -681,79 +681,81 @@ export function Settings({
           <p className="hint">{t('settings.speechHint')}</p>
         </section>
 
-        <section className="panel">
-          <div className="panel-head">
-            <div>
-              <h2>{t('settings.trash')}</h2>
-              <p>{t('settings.trashSub')}</p>
+        <div className="settings-side">
+          <section className="panel">
+            <div className="panel-head">
+              <div>
+                <h2>{t('settings.trash')}</h2>
+                <p>{t('settings.trashSub')}</p>
+              </div>
             </div>
-          </div>
 
-          <div className="field">
-            <label htmlFor="settings-trash-retention">
-              {t('settings.trashRetention')}
-            </label>
-            <Select
-              id="settings-trash-retention"
-              value={String(data.settings.trashRetentionDays)}
-              onChange={(event) => {
-                const days = Number(event.target.value)
-                setSettings({ trashRetentionDays: days })
-                // Сразу убираем записи, которые не проходят по новому сроку.
-                updateData((current) => ({
-                  ...current,
-                  trash: pruneTrash(current.trash, Date.now(), days),
-                }))
-              }}
-            >
-              {Array.from({ length: MAX_TRASH_RETENTION_DAYS }, (_, index) => index + 1).map(
-                (days) => (
-                  <option key={days} value={days}>
-                    {t('settings.trashDays', { n: days })}
-                  </option>
-                ),
-              )}
-              <option value={0}>{t('settings.trashNever')}</option>
-            </Select>
-          </div>
+            <div className="field">
+              <label htmlFor="settings-trash-retention">
+                {t('settings.trashRetention')}
+              </label>
+              <Select
+                id="settings-trash-retention"
+                value={String(data.settings.trashRetentionDays)}
+                onChange={(event) => {
+                  const days = Number(event.target.value)
+                  setSettings({ trashRetentionDays: days })
+                  // Сразу убираем записи, которые не проходят по новому сроку.
+                  updateData((current) => ({
+                    ...current,
+                    trash: pruneTrash(current.trash, Date.now(), days),
+                  }))
+                }}
+              >
+                {Array.from({ length: MAX_TRASH_RETENTION_DAYS }, (_, index) => index + 1).map(
+                  (days) => (
+                    <option key={days} value={days}>
+                      {t('settings.trashDays', { n: days })}
+                    </option>
+                  ),
+                )}
+                <option value={0}>{t('settings.trashNever')}</option>
+              </Select>
+            </div>
 
-          <p className="hint">{t('settings.trashHint')}</p>
-        </section>
+            <p className="hint">{t('settings.trashHint')}</p>
+          </section>
 
-        <section className="panel">
-          <div className="panel-head">
-            <div>
-              <h2>{t('settings.shortcuts')}</h2>
-              <p>{t('settings.shortcutsSub')}</p>
+          <section className="panel">
+            <div className="panel-head">
+              <div>
+                <h2>{t('settings.shortcuts')}</h2>
+                <p>{t('settings.shortcutsSub')}</p>
+              </div>
             </div>
-          </div>
-          <div className="shortcuts">
-            <div>
-              <kbd>{t('settings.keySpace')}</kbd>
-              <span>{t('settings.shortcutFlip')}</span>
+            <div className="shortcuts">
+              <div>
+                <kbd>{t('settings.keySpace')}</kbd>
+                <span>{t('settings.shortcutFlip')}</span>
+              </div>
+              <div>
+                <kbd>1</kbd>
+                <span>{t('settings.shortcutAgain')}</span>
+              </div>
+              <div>
+                <kbd>2</kbd>
+                <span>{t('settings.shortcutHard')}</span>
+              </div>
+              <div>
+                <kbd>3</kbd>
+                <span>{t('settings.shortcutGood')}</span>
+              </div>
+              <div>
+                <kbd>4</kbd>
+                <span>{t('settings.shortcutEasy')}</span>
+              </div>
+              <div>
+                <kbd>esc</kbd>
+                <span>{t('settings.shortcutEscape')}</span>
+              </div>
             </div>
-            <div>
-              <kbd>1</kbd>
-              <span>{t('settings.shortcutAgain')}</span>
-            </div>
-            <div>
-              <kbd>2</kbd>
-              <span>{t('settings.shortcutHard')}</span>
-            </div>
-            <div>
-              <kbd>3</kbd>
-              <span>{t('settings.shortcutGood')}</span>
-            </div>
-            <div>
-              <kbd>4</kbd>
-              <span>{t('settings.shortcutEasy')}</span>
-            </div>
-            <div>
-              <kbd>esc</kbd>
-              <span>{t('settings.shortcutEscape')}</span>
-            </div>
-          </div>
-        </section>
+          </section>
+        </div>
       </div>
 
       <footer className="about">

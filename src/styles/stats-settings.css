@@ -1148,7 +1148,22 @@
 }
 
 .tts-autoplay-field {
-  margin-top: 14px;
+  margin-top: 18px;
+}
+
+.tts-autoplay-field .field-hint {
+  margin-top: 4px;
+}
+
+.tts-autoplay-field + .settings-actions {
+  margin-top: 16px;
+}
+
+.settings-side {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  align-self: start;
 }
 
 /* ---------- Знакомство ---------- */

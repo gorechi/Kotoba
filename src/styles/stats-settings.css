@@ -1160,10 +1160,54 @@
 }
 
 .duplicate-checks {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.duplicate-divider {
+  height: 1px;
+  margin: 2px 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--accent) 46%, transparent) 18%,
+    color-mix(in srgb, var(--accent) 46%, transparent) 82%,
+    transparent
+  );
+}
+
+.duplicate-columns {
+  position: relative;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
-  margin-top: 14px;
+}
+
+.duplicate-columns::before {
+  content: '';
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 50%;
+  width: 1px;
+  transform: translateX(-50%);
+  background: linear-gradient(
+    180deg,
+    transparent,
+    color-mix(in srgb, var(--accent) 46%, transparent) 22%,
+    color-mix(in srgb, var(--accent) 46%, transparent) 78%,
+    transparent
+  );
+  pointer-events: none;
+}
+
+.duplicate-column {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
 }
 
 .duplicate-option {
@@ -1176,10 +1220,6 @@
   background: var(--surface-2);
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s, opacity 0.15s;
-}
-
-.duplicate-option:first-child {
-  grid-column: 1 / -1;
 }
 
 .duplicate-option:hover {

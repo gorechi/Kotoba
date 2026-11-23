@@ -66,8 +66,12 @@
     grid-template-columns: 1fr;
   }
 
-  .duplicate-checks {
+  .duplicate-columns {
     grid-template-columns: 1fr;
+  }
+
+  .duplicate-columns::before {
+    display: none;
   }
 }
 

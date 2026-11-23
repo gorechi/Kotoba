@@ -338,7 +338,7 @@ export function Settings({
           <p className="hint">{t('settings.goalsHint')}</p>
         </section>
 
-        <section className="panel panel-wide">
+        <section className="panel">
           <div className="panel-head">
             <div>
               <h2>{t('settings.zen')}</h2>
@@ -393,6 +393,19 @@ export function Settings({
           </div>
 
           <p className="hint">{t('settings.zenHint')}</p>
+        </section>
+
+        <section className="panel">
+          <div className="panel-head">
+            <div>
+              <h2>{t('settings.duplicatesTitle')}</h2>
+              <p>{t('settings.duplicatesSub')}</p>
+            </div>
+          </div>
+          <DuplicateActionSettings
+            value={data.settings.duplicateAction}
+            onChange={(duplicateAction) => setSettings({ duplicateAction })}
+          />
         </section>
 
         <section className="panel">
@@ -587,19 +600,6 @@ export function Settings({
             </button>
           </div>
           <p className="hint">{t('settings.writingModeHint')}</p>
-        </section>
-
-        <section className="panel panel-wide">
-          <div className="panel-head">
-            <div>
-              <h2>{t('settings.duplicatesTitle')}</h2>
-              <p>{t('settings.duplicatesSub')}</p>
-            </div>
-          </div>
-          <DuplicateActionSettings
-            value={data.settings.duplicateAction}
-            onChange={(duplicateAction) => setSettings({ duplicateAction })}
-          />
         </section>
 
         <section className="panel">

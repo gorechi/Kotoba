@@ -1,4 +1,3 @@
-import { useId } from 'react'
 import type { DuplicateAction } from '../types'
 import { useI18n } from '../lib/i18n-react'
 
@@ -27,14 +26,14 @@ interface DuplicateActionSettingsProps {
 
 export function DuplicateActionSettings({ value, onChange }: DuplicateActionSettingsProps) {
   const { t } = useI18n()
-  const titleId = useId()
 
   return (
     <div className="duplicate-settings">
-      <div className="duplicate-title" id={titleId}>
-        {t('settings.duplicatesQuestion')}
-      </div>
-      <div className="duplicate-radio-list" role="radiogroup" aria-labelledby={titleId}>
+      <div
+        className="duplicate-radio-list"
+        role="radiogroup"
+        aria-label={t('settings.duplicatesQuestion')}
+      >
         {OPTIONS.map((option) => {
           const checked = value === option.value
           return (

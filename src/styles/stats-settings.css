@@ -1163,14 +1163,6 @@
   margin-top: 16px;
 }
 
-.duplicate-title {
-  margin-bottom: 10px;
-  color: var(--text-soft);
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 1.4;
-}
-
 .duplicate-radio-list {
   display: flex;
   flex-direction: column;

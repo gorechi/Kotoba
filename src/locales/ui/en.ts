@@ -1190,7 +1190,7 @@ export const messages: Record<string, string> = {
   "duplicates.title": "This card already exists",
   "duplicates.askText": "You are about to create a card for a word that already exists in the app. Preview the existing cards, delete extras, or create another one anyway.",
   "duplicates.empty": "There are no existing cards left.",
-  "duplicates.ignore": "Ignore",
+  "duplicates.ignore": "Create anyway",
   "duplicates.cancel": "Cancel",
   "duplicates.deck": "Deck: {name}",
   "duplicates.deleteTitle": "Delete this card?",

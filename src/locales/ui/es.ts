@@ -1187,7 +1187,7 @@ export const messages: Record<string, string> = {
   "duplicates.title": "Esta tarjeta ya existe",
   "duplicates.askText": "Estas a punto de crear una tarjeta para una palabra que ya existe en la aplicacion. Puedes ver las tarjetas existentes, eliminar las sobrantes o crear otra igualmente.",
   "duplicates.empty": "Ya no quedan tarjetas existentes.",
-  "duplicates.ignore": "Ignorar",
+  "duplicates.ignore": "Crear igualmente",
   "duplicates.cancel": "Cancelar",
   "duplicates.deck": "Mazo: {name}",
   "duplicates.deleteTitle": "¿Eliminar esta tarjeta?",

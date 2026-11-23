@@ -1198,7 +1198,7 @@ export const messages: Record<string, string> = {
   "duplicates.title": "Такая карточка уже есть",
   "duplicates.askText": "Вы пытаетесь создать карточку слова, которое уже есть в приложении. Можно посмотреть существующие карточки, удалить лишние или всё равно создать новую.",
   "duplicates.empty": "Существующих карточек больше нет.",
-  "duplicates.ignore": "Игнорировать",
+  "duplicates.ignore": "Всё равно создать",
   "duplicates.cancel": "Отменить",
   "duplicates.deck": "Колода: {name}",
   "duplicates.deleteTitle": "Удалить эту карточку?",

@@ -20,7 +20,7 @@ function Demo() {
 }
 
 function group(key: string) {
-  return screen.getByRole('group', { name: key })
+  return screen.getByRole('radiogroup', { name: key })
 }
 
 afterEach(cleanup)

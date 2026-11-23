@@ -1160,7 +1160,7 @@
 }
 
 .duplicate-settings {
-  margin-top: 16px;
+  margin-top: 22px;
 }
 
 .duplicate-columns {
@@ -1172,7 +1172,7 @@
 .duplicate-column {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 15px;
   min-width: 0;
   margin: 0;
   padding: 0;

@@ -21,8 +21,14 @@ export function DuplicatePolicySettings({ value, onChange }: DuplicatePolicySett
     selected: DuplicateAction,
     onSelect: (action: DuplicateAction) => void,
   ) => (
-    <fieldset className="duplicate-column">
-      <legend className="duplicate-column-title">{t(titleKey)}</legend>
+    <div
+      className="duplicate-column"
+      role="radiogroup"
+      aria-labelledby={`${name}-title`}
+    >
+      <div className="duplicate-column-title" id={`${name}-title`}>
+        {t(titleKey)}
+      </div>
       <div className="duplicate-radio-list">
         {ACTIONS.map((action) => {
           const checked = selected === action.value
@@ -43,7 +49,7 @@ export function DuplicatePolicySettings({ value, onChange }: DuplicatePolicySett
           )
         })}
       </div>
-    </fieldset>
+    </div>
   )
 
   return (

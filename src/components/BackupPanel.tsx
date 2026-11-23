@@ -60,6 +60,10 @@ export function BackupPanel() {
   const [canUndoImport, setCanUndoImport] = useState(() => Boolean(lastImportSnapshot))
   const [backupInfo, setBackupInfo] = useState<AutoBackupInfo | null>(null)
   const [backupBusy, setBackupBusy] = useState(false)
+  const [backupStatus, setBackupStatus] = useState<{
+    kind: 'ok' | 'error'
+    text: string
+  } | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const hasApi = Boolean(window.kotoba)
 
@@ -68,6 +72,12 @@ export function BackupPanel() {
     const timer = window.setTimeout(() => setNotice(null), 4500)
     return () => window.clearTimeout(timer)
   }, [notice])
+
+  useEffect(() => {
+    if (backupStatus?.kind !== 'ok') return
+    const timer = window.setTimeout(() => setBackupStatus(null), 6000)
+    return () => window.clearTimeout(timer)
+  }, [backupStatus])
 
   // Проверяем срок автоматической копии при открытии вкладки и после смены
   // частоты/папки. Основной планировщик в главном процессе делает то же самое.
@@ -123,23 +133,27 @@ export function BackupPanel() {
   const backupNow = async () => {
     if (!window.kotoba?.createAutoBackup || backupBusy) return
     setError(null)
+    setBackupStatus(null)
     setBackupBusy(true)
     try {
       // Сначала фиксируем последние изменения на диске, чтобы копия была свежей.
       const saved = await flush()
       if (!saved) {
-        setError(t('autoBackup.saveFirstError'))
+        setBackupStatus({ kind: 'error', text: t('autoBackup.saveFirstError') })
         return
       }
       const result = await window.kotoba.createAutoBackup(data.settings)
       if (result.error) {
-        setError(t('autoBackup.error'))
+        setBackupStatus({ kind: 'error', text: t('autoBackup.error') })
         return
       }
-      setNotice(t('autoBackup.created', { path: result.path ?? '' }))
+      setBackupStatus({
+        kind: 'ok',
+        text: t('autoBackup.created', { path: result.path ?? '' }),
+      })
       await refreshBackupInfo()
     } catch {
-      setError(t('autoBackup.error'))
+      setBackupStatus({ kind: 'error', text: t('autoBackup.error') })
     } finally {
       setBackupBusy(false)
     }
@@ -266,14 +280,22 @@ export function BackupPanel() {
   return (
     <>
       {(notice || error) && (
-        <div className="backup-notices">
-          {notice && (
-            <p className="notice">
-              <Icon name="check" size={15} />
-              <span>{notice}</span>
-            </p>
-          )}
-          {error && <p className="form-error">{error}</p>}
+        <div className={`app-toast${error ? ' is-error' : ''}`} role="status">
+          <Icon name={error ? 'alert' : 'check'} size={16} />
+          <div className="app-toast-body">
+            <span className="app-toast-text">{error ?? notice}</span>
+          </div>
+          <button
+            type="button"
+            className="app-toast-close"
+            aria-label={t('common.close')}
+            onClick={() => {
+              setNotice(null)
+              setError(null)
+            }}
+          >
+            <Icon name="x" size={14} />
+          </button>
         </div>
       )}
 
@@ -376,16 +398,27 @@ export function BackupPanel() {
             ))}
         </div>
 
-        <div className="settings-actions">
-          <button
-            type="button"
-            className="btn btn-ghost"
-            onClick={() => void backupNow()}
-            disabled={!hasApi || backupBusy}
-          >
-            <Icon name="download" size={16} />
-            {backupBusy ? t('autoBackup.creating') : t('autoBackup.backupNow')}
-          </button>
+        <div className="backup-now-row">
+          <div className="settings-actions">
+            <button
+              type="button"
+              className="btn btn-ghost"
+              onClick={() => void backupNow()}
+              disabled={!hasApi || backupBusy}
+            >
+              <Icon name="download" size={16} />
+              {backupBusy ? t('autoBackup.creating') : t('autoBackup.backupNow')}
+            </button>
+          </div>
+          {backupStatus && (
+            <p
+              className={`backup-status${backupStatus.kind === 'error' ? ' is-error' : ''}`}
+              role="status"
+            >
+              {backupStatus.kind === 'ok' && <Icon name="check" size={15} />}
+              <span title={backupStatus.text}>{backupStatus.text}</span>
+            </p>
+          )}
         </div>
 
         <p className="hint">

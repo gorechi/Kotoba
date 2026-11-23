@@ -332,6 +332,10 @@
   color: var(--accent);
 }
 
+.app-toast.is-error > svg {
+  color: var(--red);
+}
+
 .app-toast-body {
   flex: 1;
   display: flex;

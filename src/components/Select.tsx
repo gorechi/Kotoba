@@ -210,7 +210,11 @@ export function Select({
       if (triggerRef.current?.contains(target) || menuRef.current?.contains(target)) return
       setOpen(false)
     }
-    const onScroll = () => setOpen(false)
+    const onScroll = (event: Event) => {
+      const target = event.target as Node | null
+      if (target && menuRef.current?.contains(target)) return
+      setOpen(false)
+    }
     const onResize = () => updatePosition()
 
     document.addEventListener('pointerdown', onPointerDown, true)

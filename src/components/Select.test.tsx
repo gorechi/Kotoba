@@ -82,6 +82,17 @@ describe('Select', () => {
     expect(screen.queryByRole('listbox')).toBeNull()
   })
 
+  it('не закрывается при прокрутке списка', () => {
+    renderSelect()
+    fireEvent.click(screen.getByRole('button', { name: 'Письменность' }))
+    const listbox = screen.getByRole('listbox')
+
+    fireEvent.scroll(listbox)
+    fireEvent.pointerDown(listbox)
+
+    expect(screen.getByRole('listbox')).toBeTruthy()
+  })
+
   it('не открывается, если отключён', () => {
     renderSelect({ disabled: true })
     fireEvent.click(screen.getByRole('button', { name: 'Письменность' }))

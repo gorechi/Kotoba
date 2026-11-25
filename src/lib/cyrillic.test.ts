@@ -54,6 +54,12 @@ describe('toCyrillic', () => {
     expect(toCyrillic('ヴァ')).toBe('ва')
   })
 
+  it('разделяет слова пробелом без лишних дефисов', () => {
+    expect(toCyrillic('したの なまえ')).toBe('ши-та-но на-ма-э')
+    expect(toCyrillic('したの　なまえ')).toBe('ши-та-но на-ма-э')
+    expect(toCyrillic(' したの  なまえ ')).toBe('ши-та-но на-ма-э')
+  })
+
   it('не удваивает согласную перед гласной', () => {
     expect(toCyrillic('っあ')).toBe('а')
   })

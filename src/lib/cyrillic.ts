@@ -349,10 +349,20 @@ export function toCyrillic(kana: string): string {
     String.fromCharCode(char.charCodeAt(0) - 0x60),
   )
   const tokens = tokenize(normalized)
-  const syllables: string[] = []
+  const words: string[][] = []
+  let syllables: string[] = []
   let pendingDouble = false
 
   for (const token of tokens) {
+    // Пробел разделяет слова и не участвует в дефисной разбивке.
+    if (/\s/.test(token)) {
+      if (syllables.length > 0) {
+        words.push(syllables)
+        syllables = []
+      }
+      continue
+    }
+
     // マルチпликатор удвоения
     if (token === '\u3063') {
       pendingDouble = true
@@ -392,5 +402,6 @@ export function toCyrillic(kana: string): string {
     syllables.push(cyr)
   }
 
-  return syllables.join('-')
+  if (syllables.length > 0) words.push(syllables)
+  return words.map((word) => word.join('-')).join(' ')
 }

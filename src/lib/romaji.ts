@@ -25,6 +25,12 @@ const EXTRA_SIGNS: Record<Exclude<KanaMode, 'abc'>, string[]> = {
 
 /** Недавно набранный латинский хвост — его и превращаем в кану. */
 const ROMAJI_TAIL = /[a-z'-]+$/i
+const KANA_AFTER_APOSTROPHE = /'(?=[\u3040-\u30ff])/g
+
+/** Апостроф — служебный разделитель, в готовом тексте его быть не должно. */
+function cleanKanaApostrophes(value: string): string {
+  return value.replace(KANA_AFTER_APOSTROPHE, '')
+}
 /** После этих символов висящая «n» уже точно читается как ん. */
 const SEPARATOR = /[\s、。！？!?.,:;()[\]{}「」『』・]/
 const KANA_TEXT = /^[\u3000-\u303f\u3040-\u30ff\s]+$/
@@ -139,12 +145,12 @@ export function convertRomajiTail(value: string, mode: KanaMode): string {
   if (tail) {
     const prefix = value.slice(0, value.length - tail.length)
     const merged = mergeTrailingN(prefix, tail, mode)
-    if (merged !== null) return merged
+    if (merged !== null) return cleanKanaApostrophes(merged)
 
     // Вторая «n» после ん — это начало следующего слога (konn + i → こんに).
-    if (endsWithN(prefix) && /^n$/i.test(tail)) return value
+    if (endsWithN(prefix) && /^n$/i.test(tail)) return cleanKanaApostrophes(value)
 
-    return prefix + convertLiveTail(tail, mode)
+    return cleanKanaApostrophes(prefix + convertLiveTail(tail, mode))
   }
 
   // Пробел или знак препинания фиксирует отложенную «n».
@@ -152,19 +158,20 @@ export function convertRomajiTail(value: string, mode: KanaMode): string {
   const before = value.slice(0, -1).match(ROMAJI_TAIL)?.[0]
   if (last && SEPARATOR.test(last) && before && /n$/i.test(before)) {
     const prefix = value.slice(0, value.length - last.length - before.length)
-    if (endsWithN(prefix) && /^n$/i.test(before)) return prefix + last
-    return prefix + convert(before, mode, false) + last
+    if (endsWithN(prefix) && /^n$/i.test(before)) return cleanKanaApostrophes(prefix + last)
+    return cleanKanaApostrophes(prefix + convert(before, mode, false) + last)
   }
 
-  return value
+  return cleanKanaApostrophes(value)
 }
 
 /** Полное превращение хвоста — при уходе из поля, Tab и сохранении. */
 export function finalizeRomajiTail(value: string, mode: KanaMode): string {
   if (mode === 'abc' || !value) return value
-  const tail = value.match(ROMAJI_TAIL)?.[0]
-  if (!tail) return value
-  const prefix = value.slice(0, value.length - tail.length)
+  const withoutApostrophes = value.replace(/'/g, '')
+  const tail = withoutApostrophes.match(ROMAJI_TAIL)?.[0]
+  if (!tail) return withoutApostrophes
+  const prefix = withoutApostrophes.slice(0, withoutApostrophes.length - tail.length)
   // Отложенная вторая «n» после ん уже ничего не добавляет: konn → こん.
   if (endsWithN(prefix) && /^n$/i.test(tail)) return prefix
   return prefix + convert(tail, mode, false)
@@ -173,7 +180,7 @@ export function finalizeRomajiTail(value: string, mode: KanaMode): string {
 /** Превращает всю латиницу в кане — при переключении abc → あ/ア. */
 export function convertRomajiText(value: string, mode: KanaMode): string {
   if (mode === 'abc' || !value) return value
-  return convert(value, mode, false)
+  return convert(value, mode, false).replace(/'/g, '')
 }
 
 /** Аккуратно переводит уже введённый текст в выбранный режим. */
@@ -182,7 +189,7 @@ export function convertForModeSwitch(value: string, from: KanaMode, to: KanaMode
   if (to === 'abc') return finalizeRomajiTail(value, from)
   if (from === 'abc') return convertRomajiText(value, to)
   const converter = to === 'katakana' ? toKatakana : toHiragana
-  return converter(value, { passRomaji: true, convertLongVowelMark: false })
+  return converter(value, { passRomaji: true, convertLongVowelMark: false }).replace(/'/g, '')
 }
 
 /**

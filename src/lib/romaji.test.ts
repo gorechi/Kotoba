@@ -56,6 +56,11 @@ describe('convertRomajiTail', () => {
     expect(convertRomajiTail('konnichiha', 'hiragana')).toBe('こんにちは')
   })
 
+  it('убирает служебный апостроф после превращения', () => {
+    expect(convertRomajiTail("ten'in", 'hiragana')).toBe('てんいん')
+    expect(convertRomajiTail("てん'い", 'hiragana')).toBe('てんい')
+  })
+
   it('не трогает готовые знаки', () => {
     expect(convertRomajiTail('かな', 'hiragana')).toBe('かな')
   })
@@ -77,6 +82,11 @@ describe('finalizeRomajiTail', () => {
     expect(finalizeRomajiTail('かな', 'hiragana')).toBe('かな')
     expect(finalizeRomajiTail('kana', 'abc')).toBe('kana')
   })
+
+  it('убирает служебные апострофы при завершении ввода', () => {
+    expect(finalizeRomajiTail("てん'いん", 'hiragana')).toBe('てんいん')
+    expect(finalizeRomajiTail("てん'", 'hiragana')).toBe('てん')
+  })
 })
 
 describe('convertRomajiText', () => {
@@ -84,6 +94,10 @@ describe('convertRomajiText', () => {
     expect(convertRomajiText('kana', 'hiragana')).toBe('かな')
     expect(convertRomajiText('kana', 'katakana')).toBe('カナ')
     expect(convertRomajiText('kana', 'abc')).toBe('kana')
+  })
+
+  it('убирает служебные апострофы', () => {
+    expect(convertRomajiText("ten'in", 'hiragana')).toBe('てんいん')
   })
 })
 

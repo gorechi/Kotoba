@@ -381,10 +381,12 @@ export function toCyrillic(kana: string): string {
     // ищем транскрипцию
     let cyr = transcribeToken(token)
 
-    // правило удлиннения гласной: отдельная гласная после слога
+    // правило удлиннения гласной: отдельная гласная после слога.
+    // Один слог удлиняем только один раз: в さんしょううお после しょ
+    // первый う даёт долгую «о», а второй う уже начинает «уо».
     if (STANDALONE_VOWELS.has(token) && syllables.length > 0) {
       const last = syllables[syllables.length - 1]
-      if (shouldExtendVowel(getLastVowel(last), token)) {
+      if (!last.includes(':') && shouldExtendVowel(getLastVowel(last), token)) {
         syllables[syllables.length - 1] = extendVowel(last)
         continue
       }

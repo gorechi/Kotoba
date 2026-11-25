@@ -60,6 +60,11 @@ describe('toCyrillic', () => {
     expect(toCyrillic(' したの  なまえ ')).toBe('ши-та-но на-ма-э')
   })
 
+  it('удлиняет слог только один раз', () => {
+    expect(toCyrillic('さんしょううお')).toBe('са-н-шё:-у-о')
+    expect(toCyrillic('おおきい')).toBe('о:-ки:')
+  })
+
   it('не удваивает согласную перед гласной', () => {
     expect(toCyrillic('っあ')).toBe('а')
   })

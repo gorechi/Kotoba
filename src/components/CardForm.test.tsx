@@ -46,4 +46,12 @@ describe('CardForm', () => {
 
     expect(screen.getByRole('dialog').textContent).not.toContain('cardForm.tagsHint')
   })
+
+  it('использует свой выпадающий список для JLPT', () => {
+    render(<CardForm deckId="deck-1" onClose={() => {}} />)
+
+    const dialog = screen.getByRole('dialog')
+    expect(dialog.querySelector('select')).toBeNull()
+    expect(dialog.querySelector('#card-jlpt')?.closest('.select')).toBeTruthy()
+  })
 })

@@ -12,6 +12,7 @@ import { uid } from '../lib/utils'
 import { toRomaji } from 'wanakana'
 import { FitText } from './FitText'
 import { Icon } from './Icon'
+import { Select } from './Select'
 import { TagInput } from './TagInput'
 import { DuplicateCardsDialog, DuplicateDenyDialog } from './DuplicateCardsDialog'
 import { Modal } from './Modal'
@@ -372,7 +373,7 @@ export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
         <div className="form-row">
           <div className="field">
             <label htmlFor="kanji-jlpt">{t('cardForm.jlpt')}</label>
-            <select
+            <Select
               id="kanji-jlpt"
               value={jlpt}
               onChange={(event) => setJlpt(Number(event.target.value))}
@@ -383,7 +384,7 @@ export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
               <option value={3}>N3</option>
               <option value={2}>N2</option>
               <option value={1}>N1</option>
-            </select>
+            </Select>
           </div>
           <div className="field">
             <label htmlFor="kanji-frequency">{t('cardForm.frequency')}</label>

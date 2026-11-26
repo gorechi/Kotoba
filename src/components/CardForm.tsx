@@ -11,6 +11,7 @@ import { findDuplicateCards, duplicateOutcome } from '../lib/duplicates'
 import { uid } from '../lib/utils'
 import { FitText } from './FitText'
 import { KanaInput } from './KanaInput'
+import { Select } from './Select'
 import { TagInput } from './TagInput'
 import { DuplicateCardsDialog, DuplicateDenyDialog } from './DuplicateCardsDialog'
 import { Modal } from './Modal'
@@ -276,7 +277,7 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
         <div className="form-row">
           <div className="field">
             <label htmlFor="card-jlpt">{t('cardForm.jlpt')}</label>
-            <select
+            <Select
               id="card-jlpt"
               value={jlpt}
               onChange={(event) => setJlpt(Number(event.target.value))}
@@ -287,7 +288,7 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
               <option value={3}>N3</option>
               <option value={2}>N2</option>
               <option value={1}>N1</option>
-            </select>
+            </Select>
           </div>
           <div className="field">
             <label htmlFor="card-frequency">{t('cardForm.frequency')}</label>

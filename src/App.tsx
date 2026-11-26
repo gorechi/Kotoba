@@ -9,6 +9,7 @@ import { Icon } from './components/Icon'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { Onboarding } from './components/Onboarding'
 import { CommandPalette } from './components/CommandPalette'
+import { ContextMenu } from './components/ContextMenu'
 import { ShortcutsDialog } from './components/ShortcutsDialog'
 import { Home } from './pages/Home'
 
@@ -539,6 +540,7 @@ export default function App() {
       <StoreProvider>
         <I18nProvider>
           <Shell />
+          <ContextMenu />
         </I18nProvider>
       </StoreProvider>
     </ErrorBoundary>

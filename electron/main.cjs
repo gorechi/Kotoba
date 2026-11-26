@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, dialog, ipcMain, screen, shell } = require('electron')
+const { app, BrowserWindow, clipboard, Menu, dialog, ipcMain, screen, shell } = require('electron')
 const path = require('node:path')
 const fs = require('node:fs')
 const { checkUpdates } = require('./updates.cjs')
@@ -249,6 +249,13 @@ function createWindow() {
 }
 
 ipcMain.handle('data:load', () => storage.readParts(app.getPath('userData')))
+
+ipcMain.handle('clipboard:read-text', () => clipboard.readText())
+
+ipcMain.handle('clipboard:write-text', (_event, text) => {
+  clipboard.writeText(String(text ?? ''))
+  return true
+})
 
 /**
  * Язык, выбранный в установщике. Читается только при первом запуске:

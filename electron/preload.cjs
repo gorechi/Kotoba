@@ -17,6 +17,8 @@ contextBridge.exposeInMainWorld('kotoba', {
   openSpeechSettings: () => ipcRenderer.invoke('system:open-speech-settings'),
   checkUpdates: () => ipcRenderer.invoke('app:check-updates'),
   getInstallerLanguage: () => ipcRenderer.invoke('app:installer-language'),
+  readClipboardText: () => ipcRenderer.invoke('clipboard:read-text'),
+  writeClipboardText: (text) => ipcRenderer.invoke('clipboard:write-text', text),
   minimize: () => ipcRenderer.invoke('window:minimize'),
   toggleMaximize: () => ipcRenderer.invoke('window:toggleMaximize'),
   close: () => ipcRenderer.invoke('window:close'),

@@ -204,6 +204,8 @@ export interface Settings {
   language: string
   /** Показывать ли знакомство при запуске (первый запуск). */
   onboardingDone: boolean
+  /** Тур по приложению пройден или пропущен. */
+  tourDone: boolean
   /** Частота автоматических резервных копий. */
   autoBackup: AutoBackupFrequency
   /** Своя папка для автоматических копий; null — стандартная папка приложения. */

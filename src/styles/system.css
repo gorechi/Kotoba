@@ -778,6 +778,10 @@
   border-top: 1px solid var(--line);
 }
 
+.onboarding-foot--end {
+  justify-content: flex-end;
+}
+
 .onboarding-step {
   flex: 1;
   text-align: center;

@@ -10,6 +10,7 @@ import { ErrorBoundary } from './components/ErrorBoundary'
 import { Onboarding } from './components/Onboarding'
 import { CommandPalette } from './components/CommandPalette'
 import { ContextMenu } from './components/ContextMenu'
+import { Tour } from './components/Tour'
 import { ShortcutsDialog } from './components/ShortcutsDialog'
 import { Home } from './pages/Home'
 
@@ -57,6 +58,7 @@ import {
 } from './lib/tts'
 import { checkForUpdates, type UpdateState } from './lib/updates'
 import { APP_VERSION } from './lib/version'
+import { TOUR_STEPS } from './lib/tour'
 
 const TTS_NOTICE_KEY: Record<TtsFailureReason, string> = {
   unsupported: 'tts.unsupported',
@@ -96,6 +98,9 @@ function Shell() {
   const [zen, setZen] = useState(false)
   const [paletteOpen, setPaletteOpen] = useState(false)
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
+  const [tour, setTour] = useState<'welcome' | 'running' | null>(null)
+  const [tourStep, setTourStep] = useState(0)
+  const tourOfferedRef = useRef(false)
   const [ttsNotice, setTtsNotice] = useState<TtsNotice | null>(null)
   const [updateState, setUpdateState] = useState<UpdateState>({
     status: 'idle',
@@ -127,6 +132,13 @@ function Shell() {
   useEffect(() => {
     warmUpTts()
   }, [])
+
+  useEffect(() => {
+    if (!data.settings.onboardingDone || data.settings.tourDone) return
+    if (tourOfferedRef.current) return
+    tourOfferedRef.current = true
+    setTour('welcome')
+  }, [data.settings.onboardingDone, data.settings.tourDone])
 
   useEffect(() => {
     setTtsPreferences({
@@ -162,6 +174,7 @@ function Shell() {
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
+      if (tour) return
       const target = event.target as HTMLElement | null
       const typing =
         target &&
@@ -188,10 +201,10 @@ function Shell() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [session])
+  }, [session, tour])
 
   useEffect(() => {
-    if (!data.settings.zenAuto || zen) return
+    if (!data.settings.zenAuto || zen || tour) return
 
     const delay = Math.max(1, data.settings.zenIdleMinutes) * 60_000
     let timer: number | undefined
@@ -231,13 +244,54 @@ function Shell() {
       events.forEach((name) => window.removeEventListener(name, onActivity))
       document.removeEventListener('visibilitychange', onVisibility)
     }
-  }, [data.settings.zenAuto, data.settings.zenIdleMinutes, zen])
+  }, [data.settings.zenAuto, data.settings.zenIdleMinutes, zen, tour])
 
   const navigate = (next: Route) => {
     setPaletteOpen(false)
     setShortcutsOpen(false)
     setSession(null)
     setRoute(next)
+  }
+
+  const showTourStep = (index: number) => {
+    const step = TOUR_STEPS[index]
+    if (!step) return
+    setTourStep(index)
+    setPaletteOpen(false)
+    setShortcutsOpen(false)
+    setSession(null)
+    if (step.route) setRoute(step.route)
+  }
+
+  const startTour = () => {
+    setTour('running')
+    showTourStep(0)
+  }
+
+  const nextTourStep = () => {
+    if (tourStep + 1 >= TOUR_STEPS.length) {
+      setTourStep(TOUR_STEPS.length)
+      return
+    }
+    showTourStep(tourStep + 1)
+  }
+
+  const backTourStep = () => {
+    if (tourStep <= 0) return
+    showTourStep(tourStep - 1)
+  }
+
+  const closeTour = () => {
+    setSettings({ tourDone: true })
+    setTour(null)
+    setTourStep(0)
+    setRoute({ name: 'home' })
+  }
+
+  const openTour = () => {
+    setPaletteOpen(false)
+    setShortcutsOpen(false)
+    setTour('welcome')
   }
 
   const closeSession = useCallback(async () => {
@@ -318,9 +372,8 @@ function Shell() {
         ? t('recovery.missingNotice', { parts: missingParts })
         : null
 
-  const finishOnboarding = (deckId?: string) => {
+  const finishOnboarding = () => {
     setSettings({ onboardingDone: true })
-    if (deckId && data.decks.some((deck) => deck.id === deckId)) startStudy(deckId)
   }
 
   if (!data.settings.onboardingDone) {
@@ -413,8 +466,9 @@ function Shell() {
             onNavigate={navigate}
             onZen={() => setZen(true)}
             onSearch={() => setPaletteOpen(true)}
+            forceExpanded={tour !== null}
           />
-          <main className="main" ref={mainRef}>
+          <main className="main" ref={mainRef} data-tour="content">
             <Suspense fallback={<PageLoader />}>
             {route.name === 'home' && (
               <Home
@@ -459,6 +513,7 @@ function Shell() {
             {route.name === 'settings' && (
               <Settings
                 onZen={() => setZen(true)}
+                onStartTour={openTour}
                 onOpenTtsHelp={() =>
                   navigate({ name: 'ttsHelp', returnTo: { name: 'settings' } })
                 }
@@ -469,6 +524,7 @@ function Shell() {
             )}
             {route.name === 'help' && (
               <Help
+                onStartTour={openTour}
                 onOpenTtsHelp={() => navigate({ name: 'ttsHelp' })}
                 onOpenGuide={(guideId) => navigate({ name: 'helpGuide', guideId })}
               />
@@ -508,6 +564,17 @@ function Shell() {
         <CommandPalette onClose={() => setPaletteOpen(false)} onNavigate={navigate} />
       )}
       {shortcutsOpen && <ShortcutsDialog onClose={() => setShortcutsOpen(false)} />}
+      {tour && (
+        <Tour
+          stage={tour}
+          stepIndex={tourStep}
+          onStart={startTour}
+          onNext={nextTourStep}
+          onBack={backTourStep}
+          onSkip={closeTour}
+          onFinish={closeTour}
+        />
+      )}
       {ttsNotice && (
         <div className="app-toast" role="status">
           <Icon name="speaker" size={16} />

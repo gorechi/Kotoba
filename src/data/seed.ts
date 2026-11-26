@@ -76,6 +76,7 @@ export function createBaseSeedData(now = Date.now()) {
       zenIdleMinutes: 5,
       language: detectSystemLocale(),
       onboardingDone: false,
+      tourDone: false,
       autoBackup: 'daily' as const,
       backupFolder: null,
       trashRetentionDays: 10,

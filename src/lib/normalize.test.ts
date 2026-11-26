@@ -40,8 +40,15 @@ describe('normalizeData: настройки', () => {
     expect(settings.sessionSize).toBe(0)
     expect(settings.trashRetentionDays).toBe(10)
     expect(settings.onboardingDone).toBe(true)
+    expect(settings.tourDone).toBe(true)
     expect(settings.ttsAutoplay).toBe('off')
     expect(settings.duplicateAction).toBe('ask')
+  })
+
+  it('включает тур для новой установки и не показывает его существующим данным', () => {
+    expect(normalizeData(null).settings.tourDone).toBe(false)
+    expect(normalizeData({ settings: { tourDone: false } }).settings.tourDone).toBe(false)
+    expect(normalizeData({ settings: { tourDone: true } }).settings.tourDone).toBe(true)
   })
 
   it('нормализует настройку дубликатов', () => {

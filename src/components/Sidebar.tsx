@@ -10,6 +10,8 @@ interface SidebarProps {
   onNavigate: (route: Route) => void
   onZen: () => void
   onSearch: () => void
+  /** Тур временно разворачивает меню, не меняя выбор пользователя. */
+  forceExpanded?: boolean
 }
 
 const NAV: {
@@ -29,7 +31,7 @@ const NAV: {
 
 const SIDEBAR_STORAGE_KEY = 'kotoba.sidebarCollapsed'
 
-export function Sidebar({ route, onNavigate, onZen, onSearch }: SidebarProps) {
+export function Sidebar({ route, onNavigate, onZen, onSearch, forceExpanded }: SidebarProps) {
   const { data } = useStore()
   const { t } = useI18n()
   const days = streak(data.history, Date.now(), data.settings.dayStartHour)
@@ -49,6 +51,8 @@ export function Sidebar({ route, onNavigate, onZen, onSearch }: SidebarProps) {
     }
   }, [collapsed])
 
+  const isCollapsed = collapsed && !forceExpanded
+
   const deckKind = route.name === 'deck'
     ? data.decks.find((deck) => deck.id === route.deckId)?.kind ?? 'kana'
     : null
@@ -64,20 +68,20 @@ export function Sidebar({ route, onNavigate, onZen, onSearch }: SidebarProps) {
   }
 
   return (
-    <aside className={`sidebar${collapsed ? ' is-collapsed' : ''}`}>
+    <aside className={`sidebar${isCollapsed ? ' is-collapsed' : ''}`}>
       <div className="sidebar-top">
         <div className="sidebar-head">
           <button
             type="button"
             className="sidebar-toggle"
             onClick={() => setCollapsed((value) => !value)}
-            aria-label={collapsed ? t('sidebar.expand') : t('sidebar.collapse')}
-            aria-expanded={!collapsed}
+            aria-label={isCollapsed ? t('sidebar.expand') : t('sidebar.collapse')}
+            aria-expanded={!isCollapsed}
             aria-controls="sidebar-nav"
-            data-label={collapsed ? t('sidebar.expand') : t('sidebar.collapse')}
-            title={collapsed ? t('sidebar.expand') : t('sidebar.collapse')}
+            data-label={isCollapsed ? t('sidebar.expand') : t('sidebar.collapse')}
+            title={isCollapsed ? t('sidebar.expand') : t('sidebar.collapse')}
           >
-            <Icon name={collapsed ? 'chevron-right' : 'chevron-left'} size={19} />
+            <Icon name={isCollapsed ? 'chevron-right' : 'chevron-left'} size={19} />
           </button>
         </div>
 
@@ -102,6 +106,7 @@ export function Sidebar({ route, onNavigate, onZen, onSearch }: SidebarProps) {
               onClick={() => onNavigate({ name: item.id } as Route)}
               aria-current={isActive(item.id) ? 'page' : undefined}
               data-label={t(item.labelKey)}
+              data-tour={`nav-${item.id}`}
             >
               <Icon name={item.icon} size={19} />
               <span className="nav-label">{t(item.labelKey)}</span>
@@ -112,6 +117,7 @@ export function Sidebar({ route, onNavigate, onZen, onSearch }: SidebarProps) {
             className="nav-item nav-zen"
             onClick={onZen}
             data-label={t('nav.zen')}
+            data-tour="nav-zen"
           >
             <Icon name="sparkles" size={19} />
             <span className="nav-label">{t('nav.zen')}</span>
@@ -142,6 +148,7 @@ export function Sidebar({ route, onNavigate, onZen, onSearch }: SidebarProps) {
           onClick={() => onNavigate({ name: 'settings' })}
           aria-current={route.name === 'settings' ? 'page' : undefined}
           data-label={t('nav.settings')}
+          data-tour="nav-settings"
         >
           <Icon name="sliders" size={19} />
           <span className="nav-label">{t('nav.settings')}</span>
@@ -165,6 +172,7 @@ export function Sidebar({ route, onNavigate, onZen, onSearch }: SidebarProps) {
               : undefined
           }
           data-label={t('nav.help')}
+          data-tour="nav-help"
         >
           <Icon name="help" size={19} />
           <span className="nav-label">{t('nav.help')}</span>

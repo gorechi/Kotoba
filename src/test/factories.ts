@@ -94,6 +94,7 @@ export function makeSettings(patch: Partial<Settings> = {}): Settings {
     zenIdleMinutes: 5,
     language: 'en',
     onboardingDone: true,
+    tourDone: true,
     autoBackup: 'daily',
     backupFolder: null,
     trashRetentionDays: 10,

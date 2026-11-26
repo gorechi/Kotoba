@@ -20,6 +20,7 @@ const THEMES: { value: Theme; labelKey: string; icon: IconName }[] = [
 
 interface SettingsProps {
   onZen: () => void
+  onStartTour: () => void
   onOpenTtsHelp: () => void
   update: UpdateState
   updateChecking: boolean
@@ -28,6 +29,7 @@ interface SettingsProps {
 
 export function Settings({
   onZen,
+  onStartTour,
   onOpenTtsHelp,
   update,
   updateChecking,
@@ -439,6 +441,21 @@ export function Settings({
                 </option>
               ))}
             </Select>
+          </div>
+
+          <div className="settings-replay">
+            <div>
+              <strong>{t('settings.tour')}</strong>
+              <span>{t('settings.tourHint')}</span>
+            </div>
+            <button
+              type="button"
+              className="btn btn-ghost btn-small"
+              onClick={onStartTour}
+            >
+              <Icon name="sparkles" size={15} />
+              {t('settings.tourAction')}
+            </button>
           </div>
 
           <div className="settings-replay">

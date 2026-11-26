@@ -401,6 +401,8 @@ function normalizeSettings(raw: unknown): Settings {
     language: DEFAULT_LOCALE,
     // Для уже существующих данных знакомство не показываем повторно.
     onboardingDone: true,
+    // Тур автоматически предлагаем только новым установкам.
+    tourDone: true,
     autoBackup: 'daily',
     backupFolder: null,
     trashRetentionDays: DEFAULT_TRASH_RETENTION_DAYS,
@@ -460,6 +462,7 @@ function normalizeSettings(raw: unknown): Settings {
     ),
     language: isLocaleCode(raw.language) ? raw.language : base.language,
     onboardingDone: raw.onboardingDone !== false,
+    tourDone: raw.tourDone !== false,
     autoBackup: AUTO_BACKUP_FREQUENCIES.includes(raw.autoBackup as AutoBackupFrequency)
       ? (raw.autoBackup as AutoBackupFrequency)
       : base.autoBackup,

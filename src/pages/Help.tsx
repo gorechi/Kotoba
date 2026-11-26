@@ -28,9 +28,11 @@ function GuideCard({ icon, title, description, meta, onClick }: GuideCardProps) 
 }
 
 export function Help({
+  onStartTour,
   onOpenTtsHelp,
   onOpenGuide,
 }: {
+  onStartTour: () => void
   onOpenTtsHelp: () => void
   onOpenGuide: (guideId: string) => void
 }) {
@@ -59,6 +61,10 @@ export function Help({
     !search ||
     `${t('help.ttsTitle')} ${t('help.ttsDesc')}`.toLowerCase().includes(search)
 
+  const tourMatches =
+    !search ||
+    `${t('help.tourTitle')} ${t('help.tourDesc')}`.toLowerCase().includes(search)
+
   const system = HELP_GUIDES.filter((guide) => guide.section === 'system' && matches(guide))
   const learning = HELP_GUIDES.filter(
     (guide) => guide.section === 'learning' && matches(guide),
@@ -67,7 +73,8 @@ export function Help({
   const metaFor = (guide: HelpGuide) =>
     `${t('help.stepCount', { n: guide.steps.length })} · ${helpText(guide.time, language)}`
 
-  const nothingFound = !ttsMatches && system.length === 0 && learning.length === 0
+  const nothingFound =
+    !ttsMatches && !tourMatches && system.length === 0 && learning.length === 0
 
   return (
     <div className="page help-page">
@@ -113,13 +120,26 @@ export function Help({
 
       {nothingFound && <p className="help-empty">{t('help.searchEmpty')}</p>}
 
-      {(ttsMatches || system.length > 0) && (
+      {(ttsMatches || tourMatches || system.length > 0) && (
         <section className="help-section">
           <div className="help-section-head">
             <h2>{t('help.sectionSystem')}</h2>
-            <span>{t('help.sectionCount', { n: system.length + (ttsMatches ? 1 : 0) })}</span>
+            <span>
+              {t('help.sectionCount', {
+                n: system.length + (ttsMatches ? 1 : 0) + (tourMatches ? 1 : 0),
+              })}
+            </span>
           </div>
           <div className="help-list">
+            {tourMatches && (
+              <GuideCard
+                icon="sparkles"
+                title={t('help.tourTitle')}
+                description={t('help.tourDesc')}
+                meta={t('help.tourMeta')}
+                onClick={onStartTour}
+              />
+            )}
             {ttsMatches && (
               <GuideCard
                 icon="speaker"

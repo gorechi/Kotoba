@@ -8,7 +8,7 @@ import {
   trashDeck,
 } from './trash'
 import type { TrashCardEntry, TrashEntry } from '../types'
-import { makeCard, makeData, makeDeck, makeDeckSettings } from '../test/factories'
+import { makeCard, makeData, makeDeck } from '../test/factories'
 
 const NOW = new Date(2026, 0, 15, 12, 0, 0).getTime()
 const DAY = 86_400_000
@@ -55,7 +55,7 @@ describe('trashCards', () => {
     expect(next.trash).toHaveLength(1)
     const entry = next.trash[0]
     expect(entry.kind).toBe('card')
-    expect(entry.kind === 'card' && entry.card.srs.interval).toBe(12)
+    expect(entry.card.srs.interval).toBe(12)
   })
 
   it('заменяет старую запись при повторном удалении', () => {
@@ -88,7 +88,7 @@ describe('trashCards', () => {
 })
 
 describe('trashDeck', () => {
-  it('переносит колоду и все её карточки одной записью', () => {
+  it('переносит карточки колоды в корзину по одной', () => {
     const data = makeData({
       decks: [makeDeck({ id: 'deck-1' })],
       cards: [
@@ -101,29 +101,34 @@ describe('trashDeck', () => {
 
     expect(next.decks).toHaveLength(0)
     expect(next.cards).toHaveLength(0)
-    expect(next.trash).toHaveLength(1)
-    const entry = next.trash[0]
-    expect(entry.kind).toBe('deck')
-    expect(entry.kind === 'deck' && entry.cards.map((card) => card.id)).toEqual([
-      'card-1',
-      'card-2',
-    ])
+    expect(next.trash.map((entry) => entry.id).sort()).toEqual(['card-1', 'card-2'])
+    expect(next.trash.every((entry) => entry.kind === 'card')).toBe(true)
+    expect(next.trash.map((entry) => entry.card.deckId)).toEqual(['deck-1', 'deck-1'])
   })
 
-  it('забирает карточки, удалённые по одной раньше', () => {
+  it('сохраняет карточки, удалённые по одной раньше', () => {
     const data = makeData({
       decks: [makeDeck({ id: 'deck-1' })],
       cards: [makeCard({ id: 'card-1', deckId: 'deck-1' })],
-      trash: [cardEntry('card-2', NOW - DAY)],
+      trash: [cardEntry('card-2', Date.now() - DAY)],
     })
 
     const next = trashDeck(data, 'deck-1')
 
-    expect(next.trash).toHaveLength(1)
-    expect(next.trash[0].kind === 'deck' && next.trash[0].cards.map((card) => card.id)).toEqual([
-      'card-1',
-      'card-2',
-    ])
+    expect(next.trash.map((entry) => entry.id).sort()).toEqual(['card-1', 'card-2'])
+    expect(next.trash.every((entry) => entry.kind === 'card')).toBe(true)
+  })
+
+  it('не оставляет запись колоды, если карточек нет', () => {
+    const data = makeData({
+      decks: [makeDeck({ id: 'deck-1' })],
+      cards: [],
+    })
+
+    const next = trashDeck(data, 'deck-1')
+
+    expect(next.decks).toHaveLength(0)
+    expect(next.trash).toHaveLength(0)
   })
 
   it('ничего не делает с неизвестной колодой', () => {
@@ -143,6 +148,7 @@ describe('restoreTrashEntry', () => {
 
     expect(result.restored).toBe(true)
     expect(result.data.cards.map((card) => card.id)).toEqual(['card-1'])
+    expect(result.data.cards[0].deckId).toBe('deck-1')
     expect(result.data.trash).toHaveLength(0)
   })
 
@@ -160,7 +166,7 @@ describe('restoreTrashEntry', () => {
     expect(result.data.trash).toHaveLength(0)
   })
 
-  it('не восстанавливает карточку без колоды', () => {
+  it('не восстанавливает карточку без колоды и без выбора', () => {
     const data = makeData({ decks: [], cards: [], trash: [cardEntry('card-1', NOW)] })
 
     const result = restoreTrashEntry(data, 'card-1')
@@ -170,29 +176,32 @@ describe('restoreTrashEntry', () => {
     expect(result.data.trash).toHaveLength(1)
   })
 
-  it('возвращает колоду вместе с карточками и не дублирует существующие', () => {
+  it('возвращает карточку в выбранную колоду, если исходной нет', () => {
     const data = makeData({
-      decks: [],
-      cards: [makeCard({ id: 'card-1', deckId: 'deck-1' })],
-      trash: [
-        {
-          id: 'deck-1',
-          kind: 'deck',
-          deletedAt: NOW,
-          deck: makeDeck({ id: 'deck-1', settings: makeDeckSettings() }),
-          cards: [
-            makeCard({ id: 'card-1', deckId: 'deck-1' }),
-            makeCard({ id: 'card-2', deckId: 'deck-1' }),
-          ],
-        },
-      ],
+      decks: [makeDeck({ id: 'target' })],
+      cards: [],
+      trash: [cardEntry('card-1', NOW)],
     })
 
-    const result = restoreTrashEntry(data, 'deck-1')
+    const result = restoreTrashEntry(data, 'card-1', 'target')
 
     expect(result.restored).toBe(true)
-    expect(result.data.decks.map((deck) => deck.id)).toEqual(['deck-1'])
-    expect(result.data.cards.map((card) => card.id).sort()).toEqual(['card-1', 'card-2'])
+    expect(result.data.cards[0].deckId).toBe('target')
+    expect(result.data.trash).toHaveLength(0)
+  })
+
+  it('не восстанавливает в несуществующую колоду', () => {
+    const data = makeData({
+      decks: [makeDeck({ id: 'target' })],
+      cards: [],
+      trash: [cardEntry('card-1', NOW)],
+    })
+
+    const result = restoreTrashEntry(data, 'card-1', 'missing')
+
+    expect(result.restored).toBe(false)
+    expect(result.reason).toBe('deck-missing')
+    expect(result.data.trash).toHaveLength(1)
   })
 
   it('возвращает false для неизвестной записи', () => {

@@ -227,7 +227,7 @@ function normalizeCard(raw: unknown): Card | null {
   }
 }
 
-/** Читает корзину: удалённые карточки и колоды со снимками прогресса. */
+/** Читает корзину. Старые записи колод раскладываются на отдельные карточки. */
 function normalizeTrash(raw: unknown, retentionDays: number): TrashEntry[] {
   if (!Array.isArray(raw)) return []
   const entries: TrashEntry[] = []
@@ -248,15 +248,12 @@ function normalizeTrash(raw: unknown, retentionDays: number): TrashEntry[] {
       const deck = normalizeDeck(item.deck)
       if (!deck) continue
       const seen = new Set<string>()
-      const cards = (Array.isArray(item.cards) ? item.cards : [])
-        .map(normalizeCard)
-        .filter((card): card is Card => card !== null)
-        .filter((card) => {
-          if (card.deckId !== deck.id || seen.has(card.id)) return false
-          seen.add(card.id)
-          return true
-        })
-      entries.push({ id: deck.id, kind: 'deck', deletedAt, deck, cards })
+      for (const rawCard of Array.isArray(item.cards) ? item.cards : []) {
+        const card = normalizeCard(rawCard)
+        if (!card || card.deckId !== deck.id || seen.has(card.id)) continue
+        seen.add(card.id)
+        entries.push({ id: card.id, kind: 'card', deletedAt, card })
+      }
     }
   }
 

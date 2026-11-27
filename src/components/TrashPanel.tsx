@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { TrashEntry } from '../types'
+import type { TrashCardEntry } from '../types'
 import { useStore } from '../state/store'
 import { useI18n } from '../lib/i18n-react'
 import { deckTitle } from '../lib/content'
@@ -8,15 +8,18 @@ import {
   removeTrashEntry,
   restoreTrashEntry,
 } from '../lib/trash'
-import { ConfirmDialog } from './Modal'
+import { ConfirmDialog, Modal } from './Modal'
 import { Icon } from './Icon'
+import { Select } from './Select'
 
-type PendingConfirm = { kind: 'all' } | { kind: 'entry'; entry: TrashEntry }
+type PendingConfirm = { kind: 'all' } | { kind: 'entry'; entry: TrashCardEntry }
 
 export function TrashPanel() {
   const { data, update, trackWork } = useStore()
   const { t, locale } = useI18n()
   const [confirm, setConfirm] = useState<PendingConfirm | null>(null)
+  const [restoreTarget, setRestoreTarget] = useState<TrashCardEntry | null>(null)
+  const [targetDeckId, setTargetDeckId] = useState('')
   const [notice, setNotice] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -31,21 +34,39 @@ export function TrashPanel() {
   const deckMap = new Map(data.decks.map((deck) => [deck.id, deck]))
   const dateFormat = new Intl.DateTimeFormat(locale.intl, { dateStyle: 'medium' })
 
-  const restore = (entry: TrashEntry) => {
-    setError(null)
-    const result = restoreTrashEntry(data, entry.id)
+  const applyRestore = (entry: TrashCardEntry, deckId?: string) => {
+    const result = restoreTrashEntry(data, entry.id, deckId)
     if (!result.restored) {
       setError(t('trash.restoreError'))
-      return
+      return false
     }
     update(() => result.data)
     trackWork()
-    setNotice(
-      entry.kind === 'deck' ? t('trash.restoredDeck') : t('trash.restoredCard'),
-    )
+    setNotice(t('trash.restoredCard'))
+    return true
   }
 
-  const removeEntry = (entry: TrashEntry) => {
+  const restore = (entry: TrashCardEntry) => {
+    setError(null)
+    const originalDeck = data.decks.some((deck) => deck.id === entry.card.deckId)
+    if (originalDeck) {
+      applyRestore(entry)
+      return
+    }
+    if (data.decks.length === 0) {
+      setError(t('trash.noDecks'))
+      return
+    }
+    setTargetDeckId(data.decks[0].id)
+    setRestoreTarget(entry)
+  }
+
+  const confirmRestore = () => {
+    if (!restoreTarget || !targetDeckId) return
+    if (applyRestore(restoreTarget, targetDeckId)) setRestoreTarget(null)
+  }
+
+  const removeEntry = (entry: TrashCardEntry) => {
     update((current) => removeTrashEntry(current, entry.id))
     setNotice(t('trash.deletedForever'))
   }
@@ -55,13 +76,9 @@ export function TrashPanel() {
     setNotice(t('trash.cleared'))
   }
 
-  const entryTitle = (entry: TrashEntry) => {
-    if (entry.kind === 'deck') return deckTitle(entry.deck, t)
-    return entry.card.front
-  }
+  const entryTitle = (entry: TrashCardEntry) => entry.card.front
 
-  const entrySubtitle = (entry: TrashEntry) => {
-    if (entry.kind === 'deck') return t('count.cards', { n: entry.cards.length })
+  const entrySubtitle = (entry: TrashCardEntry) => {
     const deck = deckMap.get(entry.card.deckId)
     return deck
       ? t('trash.cardInDeck', { deck: deckTitle(deck, t) })
@@ -115,10 +132,10 @@ export function TrashPanel() {
                 <div className="trash-item-main">
                   <div className="trash-item-title">
                     <span className="trash-item-kind" aria-hidden="true">
-                      <Icon name={entry.kind === 'deck' ? 'layers' : 'book'} size={15} />
+                      <Icon name="book" size={15} />
                     </span>
                     <strong>{entryTitle(entry)}</strong>
-                    {entry.kind === 'card' && entry.card.reading.trim() && (
+                    {entry.card.reading.trim() && (
                       <span className="trash-item-reading">{entry.card.reading}</span>
                     )}
                   </div>
@@ -182,6 +199,45 @@ export function TrashPanel() {
           onClose={() => setConfirm(null)}
           onConfirm={() => removeEntry(confirm.entry)}
         />
+      )}
+
+      {restoreTarget && (
+        <Modal
+          title={t('trash.restoreDeckTitle')}
+          onClose={() => setRestoreTarget(null)}
+          footer={
+            <>
+              <button className="btn btn-ghost" onClick={() => setRestoreTarget(null)}>
+                {t('confirm.cancel')}
+              </button>
+              <button
+                className="btn btn-primary"
+                onClick={confirmRestore}
+                disabled={!targetDeckId}
+              >
+                {t('trash.restore')}
+              </button>
+            </>
+          }
+        >
+          <p className="modal-text">
+            {t('trash.restoreDeckText', { front: restoreTarget.card.front })}
+          </p>
+          <div className="field">
+            <label htmlFor="trash-restore-deck">{t('trash.restoreDeckLabel')}</label>
+            <Select
+              id="trash-restore-deck"
+              value={targetDeckId}
+              onChange={(event) => setTargetDeckId(event.target.value)}
+            >
+              {data.decks.map((deck) => (
+                <option key={deck.id} value={deck.id}>
+                  {deckTitle(deck, t)}
+                </option>
+              ))}
+            </Select>
+          </div>
+        </Modal>
       )}
     </>
   )

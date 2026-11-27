@@ -223,17 +223,7 @@ export interface TrashCardEntry {
   card: Card
 }
 
-/** Удалённая колода вместе со всеми её карточками. */
-export interface TrashDeckEntry {
-  /** Совпадает с id колоды: одна запись на колоду. */
-  id: string
-  kind: 'deck'
-  deletedAt: number
-  deck: Deck
-  cards: Card[]
-}
-
-export type TrashEntry = TrashCardEntry | TrashDeckEntry
+export type TrashEntry = TrashCardEntry
 
 export interface AppData {
   version: 2
@@ -242,7 +232,7 @@ export interface AppData {
   studySets: StudySet[]
   /** Идентификаторы готовых наборов, которые уже установлены один раз. */
   installedPacks: string[]
-  /** Удалённые карточки и колоды, доступные для восстановления. */
+  /** Удалённые карточки, доступные для восстановления. */
   trash: TrashEntry[]
   history: Record<string, DayStat>
   settings: Settings

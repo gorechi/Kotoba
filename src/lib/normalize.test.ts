@@ -206,7 +206,7 @@ describe('normalizeData: карточки', () => {
 })
 
 describe('normalizeData: корзина', () => {
-  it('читает карточки и колоды, отбрасывая мусор', () => {
+  it('раскладывает старые записи колод на отдельные карточки', () => {
     const now = Date.now()
     const trash: unknown[] = [
       {
@@ -231,10 +231,8 @@ describe('normalizeData: корзина', () => {
 
     const data = normalizeData({ trash })
     expect(data.trash).toHaveLength(2)
-    const deckEntry = data.trash.find((entry) => entry.kind === 'deck')
-    expect(deckEntry?.kind === 'deck' && deckEntry.cards.map((card) => card.id)).toEqual([
-      'deck-card',
-    ])
+    expect(data.trash.map((entry) => entry.id).sort()).toEqual(['card-1', 'deck-card'])
+    expect(data.trash.every((entry) => entry.kind === 'card')).toBe(true)
   })
 
   it('удаляет записи старше срока хранения', () => {

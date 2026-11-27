@@ -1,4 +1,4 @@
-import type { AppData, Card, TrashDeckEntry, TrashEntry } from '../types'
+import type { AppData, TrashEntry } from '../types'
 
 /** Сколько дней корзина хранится по умолчанию. */
 export const DEFAULT_TRASH_RETENTION_DAYS = 10
@@ -56,9 +56,8 @@ export function trashCards(current: AppData, ids: Iterable<string>): AppData {
 }
 
 /**
- * Переносит колоду в корзину вместе со всеми карточками.
- * Карточки, удалённые по одной раньше, переезжают внутрь записи колоды:
- * так восстановление колоды возвращает её целиком, без «висячих» записей.
+ * Удаляет колоду, а все её карточки переносит в корзину по одной.
+ * Сама колода в корзину не попадает: карточки можно восстанавливать частично.
  */
 export function trashDeck(current: AppData, deckId: string): AppData {
   const deck = current.decks.find((item) => item.id === deckId)
@@ -66,38 +65,22 @@ export function trashDeck(current: AppData, deckId: string): AppData {
 
   const now = Date.now()
   const ownCards = current.cards.filter((card) => card.deckId === deckId)
+  const ownIds = new Set(ownCards.map((card) => card.id))
 
-  const adopted: Card[] = []
-  const kept: TrashEntry[] = []
-  for (const entry of current.trash) {
-    if (entry.kind === 'deck' && entry.id === deckId) continue
-    if (entry.kind === 'card' && entry.card.deckId === deckId) {
-      adopted.push(entry.card)
-      continue
-    }
-    kept.push(entry)
-  }
-
-  const seen = new Set<string>()
-  const cards = [...ownCards, ...adopted].filter((card) => {
-    if (seen.has(card.id)) return false
-    seen.add(card.id)
-    return true
-  })
-
-  const entry: TrashDeckEntry = {
-    id: deckId,
-    kind: 'deck',
+  // Уже удалённые карточки этой колоды остаются в корзине как есть.
+  const kept = current.trash.filter((entry) => !ownIds.has(entry.id))
+  const entries: TrashEntry[] = ownCards.map((card) => ({
+    id: card.id,
+    kind: 'card',
     deletedAt: now,
-    deck,
-    cards,
-  }
+    card,
+  }))
 
   return {
     ...current,
     decks: current.decks.filter((item) => item.id !== deckId),
     cards: current.cards.filter((card) => card.deckId !== deckId),
-    trash: pruneTrash([entry, ...kept], now, current.settings.trashRetentionDays),
+    trash: pruneTrash([...entries, ...kept], now, current.settings.trashRetentionDays),
   }
 }
 
@@ -108,37 +91,33 @@ type RestoreResult = {
   reason?: 'deck-missing'
 }
 
-/** Возвращает запись из корзины в колоды и карточки. */
-export function restoreTrashEntry(current: AppData, entryId: string): RestoreResult {
+/**
+ * Возвращает карточку из корзины.
+ * По умолчанию — в исходную колоду. Если её уже нет, нужна колода-получатель.
+ */
+export function restoreTrashEntry(
+  current: AppData,
+  entryId: string,
+  targetDeckId?: string,
+): RestoreResult {
   const entry = current.trash.find((item) => item.id === entryId)
   if (!entry) return { data: current, restored: false }
 
-  const trash = current.trash.filter((item) => item.id !== entryId)
-
-  if (entry.kind === 'card') {
-    const deckExists = current.decks.some((deck) => deck.id === entry.card.deckId)
-    if (!deckExists) return { data: current, restored: false, reason: 'deck-missing' }
-
-    const cardExists = current.cards.some((card) => card.id === entry.card.id)
-    return {
-      data: {
-        ...current,
-        cards: cardExists ? current.cards : [...current.cards, entry.card],
-        trash,
-      },
-      restored: true,
-    }
+  const deckId = current.decks.some((deck) => deck.id === entry.card.deckId)
+    ? entry.card.deckId
+    : targetDeckId
+  if (!deckId || !current.decks.some((deck) => deck.id === deckId)) {
+    return { data: current, restored: false, reason: 'deck-missing' }
   }
 
-  const deckExists = current.decks.some((deck) => deck.id === entry.deck.id)
-  const cardIds = new Set(current.cards.map((card) => card.id))
-  const cards = entry.cards.filter((card) => !cardIds.has(card.id))
+  const trash = current.trash.filter((item) => item.id !== entryId)
+  const cardExists = current.cards.some((card) => card.id === entry.card.id)
+  const card = deckId === entry.card.deckId ? entry.card : { ...entry.card, deckId }
 
   return {
     data: {
       ...current,
-      decks: deckExists ? current.decks : [...current.decks, entry.deck],
-      cards: [...current.cards, ...cards],
+      cards: cardExists ? current.cards : [...current.cards, card],
       trash,
     },
     restored: true,

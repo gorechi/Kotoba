@@ -31,6 +31,7 @@ const SYLLABLES: Record<string, string> = {
   // с
   са: 'さ',
   си: 'し',
+  ши: 'し',
   су: 'す',
   сэ: 'せ',
   се: 'せ',
@@ -38,6 +39,7 @@ const SYLLABLES: Record<string, string> = {
   // т
   та: 'た',
   ти: 'ち',
+  чи: 'ち',
   цу: 'つ',
   тэ: 'て',
   те: 'て',

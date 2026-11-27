@@ -51,6 +51,14 @@ describe('KanaInput', () => {
     expect((screen.getByRole('textbox') as HTMLInputElement).value).toBe('く')
   })
 
+  it('принимает чи как ち', async () => {
+    const user = userEvent.setup()
+    render(<Harness />)
+
+    await user.type(screen.getByRole('textbox'), 'кочира')
+    expect((screen.getByRole('textbox') as HTMLInputElement).value).toBe('こちら')
+  })
+
   it('удлиняет гласную повтором', async () => {
     const user = userEvent.setup()
     render(<Harness />)

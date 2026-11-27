@@ -9,11 +9,17 @@ describe('convertCyrillicInput', () => {
   it('переводит базовые слоги', () => {
     expect(convertCyrillicInput('ку', 'hiragana')).toBe('く')
     expect(convertCyrillicInput('си', 'hiragana')).toBe('し')
+    expect(convertCyrillicInput('ши', 'hiragana')).toBe('し')
     expect(convertCyrillicInput('ти', 'hiragana')).toBe('ち')
+    expect(convertCyrillicInput('чи', 'hiragana')).toBe('ち')
     expect(convertCyrillicInput('цу', 'hiragana')).toBe('つ')
     expect(convertCyrillicInput('фу', 'hiragana')).toBe('ふ')
     expect(convertCyrillicInput('дзи', 'hiragana')).toBe('じ')
     expect(convertCyrillicInput('дзя', 'hiragana')).toBe('じゃ')
+  })
+
+  it('собирает слово из привычной русской записи', () => {
+    expect(convertCyrillicInput('кочира', 'hiragana')).toBe('こちら')
   })
 
   it('переводит текст в катакану', () => {

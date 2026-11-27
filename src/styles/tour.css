@@ -24,7 +24,6 @@
     0 0 0 2px var(--accent),
     0 0 0 7px color-mix(in srgb, var(--accent) 22%, transparent);
   pointer-events: none;
-  transition: left 0.18s ease, top 0.18s ease, width 0.18s ease, height 0.18s ease;
 }
 
 .tour-card {

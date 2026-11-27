@@ -1,10 +1,10 @@
 import type { AppData, Card, DayStat, Settings, SrsState } from '../types'
 
 /** Карточка в файле контента — без прогресса SRS. */
-export type StoredCard = Omit<Card, 'srs'>
+type StoredCard = Omit<Card, 'srs'>
 
 /** Редко меняющийся контент: колоды, карточки и общие метаданные. */
-export interface StoredContent {
+interface StoredContent {
   version: 2
   decks: AppData['decks']
   cards: StoredCard[]
@@ -19,7 +19,7 @@ export interface StoredContent {
  * Контент, настройки и прогресс хранятся раздельно, чтобы ответ на карточку
  * не перезаписывал тысячи карточек.
  */
-export interface StorageParts {
+interface StorageParts {
   content?: StoredContent
   settings?: Settings
   progress?: Record<string, SrsState>
@@ -27,7 +27,7 @@ export interface StorageParts {
 }
 
 /** Данные, прочитанные из хранилища до нормализации. */
-export interface LoadedParts {
+interface LoadedParts {
   content?: unknown
   settings?: unknown
   progress?: unknown
@@ -36,9 +36,9 @@ export interface LoadedParts {
   legacy?: unknown
 }
 
-export type StoragePart = 'content' | 'settings' | 'progress' | 'history' | 'legacy'
+type StoragePart = 'content' | 'settings' | 'progress' | 'history' | 'legacy'
 
-export type StorageIssueKind = 'recovered' | 'corrupt' | 'missing' | 'load-error'
+type StorageIssueKind = 'recovered' | 'corrupt' | 'missing' | 'load-error'
 
 export interface StorageIssue {
   part: StoragePart
@@ -77,13 +77,13 @@ function isObj(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
-export function progressFromAppData(data: AppData): Record<string, SrsState> {
+function progressFromAppData(data: AppData): Record<string, SrsState> {
   const progress: Record<string, SrsState> = {}
   for (const card of data.cards) progress[card.id] = card.srs
   return progress
 }
 
-export function splitAppData(data: AppData): Required<StorageParts> {
+function splitAppData(data: AppData): Required<StorageParts> {
   const cards: StoredCard[] = data.cards.map((card) => {
     const { srs: _srs, ...content } = card
     return content
@@ -146,7 +146,7 @@ export function partsForFlags(data: AppData, flags: DirtyFlags): StorageParts {
   return parts
 }
 
-export function hasParts(parts: StorageParts): boolean {
+function hasParts(parts: StorageParts): boolean {
   return (
     parts.content !== undefined ||
     parts.settings !== undefined ||

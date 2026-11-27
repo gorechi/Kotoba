@@ -6,7 +6,7 @@ import { getActiveLocale } from './i18n'
 const ZERO_TOTALS: StudyTotals = { reviews: 0, correct: 0, newCards: 0, ms: 0 }
 
 /** Делит счётчики дня на чтение и письмо. Верхние значения дня — общие. */
-export function splitDayStat(day: DayStat | undefined): {
+function splitDayStat(day: DayStat | undefined): {
   reading: StudyTotals
   writing: StudyTotals
 } {
@@ -196,7 +196,7 @@ export function lastDays(
 /** Сколько недель показывать в календаре активности. */
 export const HEATMAP_WEEKS = 53
 
-export type HeatmapLevel = 0 | 1 | 2 | 3 | 4
+type HeatmapLevel = 0 | 1 | 2 | 3 | 4
 
 export interface HeatmapDay {
   key: string
@@ -210,13 +210,13 @@ export interface HeatmapDay {
   future: boolean
 }
 
-export interface HeatmapMonth {
+interface HeatmapMonth {
   label: string
   week: number
   span: number
 }
 
-export interface Heatmap {
+interface Heatmap {
   weeks: HeatmapDay[][]
   months: HeatmapMonth[]
   weekdays: { row: number; label: string }[]
@@ -427,13 +427,13 @@ export function memoryStrength(cards: Card[]): MemoryStrengthStat {
   return result
 }
 
-export interface DayRecord {
+interface DayRecord {
   key: string
   reviews: number
   accuracy: number
 }
 
-export interface WeekRecord {
+interface WeekRecord {
   startKey: string
   reviews: number
 }

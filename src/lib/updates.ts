@@ -4,7 +4,7 @@ import { APP_VERSION } from './version'
 const RELEASES_API = 'https://api.github.com/repos/gorechi/Kotoba/releases/latest'
 const RELEASES_PAGE = 'https://github.com/gorechi/Kotoba/releases/latest'
 
-export type UpdateStatus = 'idle' | 'checking' | 'current' | 'available' | 'error'
+type UpdateStatus = 'idle' | 'checking' | 'current' | 'available' | 'error'
 
 export interface UpdateState {
   status: UpdateStatus

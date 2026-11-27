@@ -1,7 +1,7 @@
 import type { AppData, Card } from '../types'
 import { isProtectedDeck } from './content'
 
-export interface MergeDecksResult {
+interface MergeDecksResult {
   data: AppData
   merged: boolean
   /** Сколько карточек переехало в целевую колоду. */

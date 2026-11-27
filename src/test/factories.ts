@@ -14,7 +14,7 @@ export function makeSrs(patch: Partial<SrsState> = {}): SrsState {
   return { ...freshSrs(), ...patch }
 }
 
-export function makeTotals(patch: Partial<StudyTotals> = {}): StudyTotals {
+function makeTotals(patch: Partial<StudyTotals> = {}): StudyTotals {
   return { reviews: 0, correct: 0, newCards: 0, ms: 0, ...patch }
 }
 

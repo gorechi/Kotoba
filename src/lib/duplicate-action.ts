@@ -1,6 +1,6 @@
 import type { DuplicateAction } from '../types'
 
-export const DEFAULT_DUPLICATE_ACTION: DuplicateAction = 'ask'
+const DEFAULT_DUPLICATE_ACTION: DuplicateAction = 'ask'
 
 const ACTIONS: DuplicateAction[] = ['ignore', 'ask', 'deny']
 

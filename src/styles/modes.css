@@ -58,44 +58,6 @@
   color: var(--blue);
 }
 
-.mode-switch-small {
-  display: inline-flex;
-  gap: 2px;
-  padding: 2px;
-  border-radius: 8px;
-  border: 1px solid var(--line);
-  background: var(--surface-2);
-}
-
-.mode-switch-small-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 26px;
-  width: 26px;
-  padding: 0;
-  border: 0;
-  border-radius: 7px;
-  background: transparent;
-  color: var(--muted);
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
-}
-
-.mode-switch-small-btn:hover {
-  color: var(--text);
-}
-
-.mode-switch-small-btn.active {
-  background: var(--surface);
-  color: var(--text);
-  box-shadow: var(--shadow-sm);
-}
-
-.mode-switch-small-btn.writing.active {
-  color: var(--blue);
-}
-
 .page-head-actions {
   display: flex;
   align-items: center;

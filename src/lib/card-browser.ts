@@ -13,7 +13,7 @@ export type SortKey =
 
 export type StatusKey = 'all' | 'new' | 'learning' | 'due' | 'learned' | 'suspended'
 export type TypeFilter = 'all' | 'kana' | 'kanji'
-export type CardStatus = 'new' | 'learning' | 'due' | 'learned'
+type CardStatus = 'new' | 'learning' | 'due' | 'learned'
 
 export const MAX_TAGS_COLLAPSED = 8
 export const PAGE_SIZE = 100

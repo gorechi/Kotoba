@@ -28,8 +28,6 @@ interface KanaInputProps {
   inputRef?: RefObject<HTMLInputElement | null>
   tip?: string
   onBlur?: () => void
-  /** Скрывает переключатели режимов и панель дополнительных знаков (для поля «Чтение»). */
-  simple?: boolean
 }
 
 export function KanaInput({
@@ -44,7 +42,6 @@ export function KanaInput({
   inputRef,
   tip,
   onBlur,
-  simple = false,
 }: KanaInputProps) {
   const { t } = useI18n()
   const localRef = useRef<HTMLInputElement>(null)
@@ -130,7 +127,7 @@ export function KanaInput({
   const modes = kanaModes()
 
   return (
-    <div className="kana-input is-kana">
+    <div className="kana-input">
       <div className="kana-input-shell">
         <input
           ref={ref}
@@ -152,27 +149,26 @@ export function KanaInput({
           spellCheck={false}
         />
         <div className="kana-modes" role="group" aria-label={t('kanaInput.modeAria')}>
-          {!simple &&
-            modes.map((option) => (
-              <button
-                key={option.mode}
-                type="button"
-                className={`kana-mode${mode === option.mode ? ' active' : ''}`}
-                aria-pressed={mode === option.mode}
-                tabIndex={-1}
-                title={option.title}
-                onMouseDown={(event) => event.preventDefault()}
-                onClick={() => switchMode(option.mode)}
-              >
-                {option.label}
-              </button>
-            ))}
+          {modes.map((option) => (
+            <button
+              key={option.mode}
+              type="button"
+              className={`kana-mode${mode === option.mode ? ' active' : ''}`}
+              aria-pressed={mode === option.mode}
+              tabIndex={-1}
+              title={option.title}
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => switchMode(option.mode)}
+            >
+              {option.label}
+            </button>
+          ))}
         </div>
       </div>
 
       {tip && <p className="kana-tip">{tip}</p>}
 
-      {!simple && signs.length > 0 && (
+      {signs.length > 0 && (
         <div className="kana-signs" role="group" aria-label={t('kanaInput.extraAria')}>
           <span className="kana-signs-label">{t('kanaInput.signs')}</span>
           {signs.map((sign) => (

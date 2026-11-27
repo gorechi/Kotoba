@@ -3,7 +3,7 @@ import { translate } from './i18n'
 
 export type KanaMode = 'hiragana' | 'katakana'
 
-export interface KanaModeOption {
+interface KanaModeOption {
   mode: KanaMode
   label: string
   title: string

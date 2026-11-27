@@ -561,13 +561,6 @@
   margin-top: 12px;
 }
 
-.deck-foot-left {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-}
-
 .deck-count {
   font-size: 11px;
   color: var(--muted);

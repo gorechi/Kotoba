@@ -2,7 +2,7 @@ import type { StudyMode, TtsAutoplay } from '../types'
 
 export type TtsFailureReason = 'unsupported' | 'missing-voice' | 'error'
 
-export type TtsResult = { ok: true } | { ok: false; reason: TtsFailureReason }
+type TtsResult = { ok: true } | { ok: false; reason: TtsFailureReason }
 
 export interface TtsErrorDetail {
   reason: TtsFailureReason
@@ -10,7 +10,7 @@ export interface TtsErrorDetail {
 
 export const TTS_ERROR_EVENT = 'kotoba:tts-error'
 
-export interface TtsPreferences {
+interface TtsPreferences {
   /** voiceURI выбранного голоса; null — автоматический выбор. */
   voiceURI: string | null
   rate: number
@@ -23,10 +23,6 @@ let pendingVoices: Promise<SpeechSynthesisVoice[]> | null = null
 /** Настройки применяются глобально: озвучка вызывается из разных экранов. */
 export function setTtsPreferences(next: Partial<TtsPreferences>): void {
   preferences = { ...preferences, ...next }
-}
-
-export function getTtsPreferences(): TtsPreferences {
-  return preferences
 }
 
 /** Нужно ли озвучивать карточку при перевороте в текущем режиме. */

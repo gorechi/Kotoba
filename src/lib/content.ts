@@ -97,7 +97,7 @@ export function deckDescription(deck: Deck, t: Translate): string {
 }
 
 /** Перевод примера или заметка для знака каны из локали. */
-export function kanaNote(kana: string, t: Translate): string {
+function kanaNote(kana: string, t: Translate): string {
   const noteKey = `kana.note.${kana}`
   const note = t(noteKey)
   if (note !== noteKey) return note

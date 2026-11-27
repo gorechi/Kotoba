@@ -27,9 +27,9 @@ import { dayKey } from '../lib/utils'
 import { RecoveryScreen } from '../components/RecoveryScreen'
 import { Splash } from '../components/Splash'
 
-export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
+type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
 
-export interface SaveState {
+interface SaveState {
   status: SaveStatus
   error?: string
 }

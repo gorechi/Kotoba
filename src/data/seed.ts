@@ -10,7 +10,7 @@ import {
   type KanaSeed,
 } from './kana'
 
-export function createSeedDecks(now = Date.now()): Deck[] {
+function createSeedDecks(now = Date.now()): Deck[] {
   return [
     {
       id: 'hiragana',

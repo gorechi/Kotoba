@@ -608,27 +608,6 @@
   gap: 9px;
 }
 
-.onboarding-progress {
-  display: flex;
-  gap: 6px;
-}
-
-.onboarding-dot {
-  width: 34px;
-  height: 4px;
-  border-radius: 999px;
-  background: var(--line);
-  transition: background 0.2s ease;
-}
-
-.onboarding-dot.done {
-  background: color-mix(in srgb, var(--accent) 45%, var(--line));
-}
-
-.onboarding-dot.active {
-  background: var(--accent);
-}
-
 .onboarding-copy h1 {
   margin: 8px 0 8px;
   font-size: clamp(26px, 3vw, 34px);
@@ -643,82 +622,6 @@
 
 .onboarding-body {
   min-height: 208px;
-}
-
-.onboarding-languages,
-.onboarding-decks {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.onboarding-choice {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  padding: 14px 16px;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  background: var(--surface-2);
-  color: var(--text);
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
-}
-
-.onboarding-choice:hover {
-  border-color: var(--line-strong);
-}
-
-.onboarding-choice.active {
-  border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
-  background: color-mix(in srgb, var(--accent) 7%, var(--surface));
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 10%, transparent);
-}
-
-.onboarding-choice-label {
-  flex: 1;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.onboarding-choice-note {
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.onboarding-choice > svg:last-child {
-  flex: none;
-  color: var(--accent);
-}
-
-.onboarding-deck {
-  align-items: center;
-}
-
-.onboarding-deck-icon {
-  width: 38px;
-  height: 38px;
-  flex: none;
-  display: grid;
-  place-items: center;
-  border-radius: 11px;
-  background: color-mix(in srgb, var(--accent) 10%, transparent);
-  color: var(--accent);
-}
-
-.onboarding-choice-main {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-  flex: 1;
-}
-
-.onboarding-choice-main .onboarding-choice-label {
-  flex: none;
 }
 
 .onboarding-goal {
@@ -780,13 +683,6 @@
 
 .onboarding-foot--end {
   justify-content: flex-end;
-}
-
-.onboarding-step {
-  flex: 1;
-  text-align: center;
-  color: var(--muted);
-  font-size: 11.5px;
 }
 
 /* ---------- Палитра команд ---------- */
@@ -964,11 +860,6 @@
 
   .onboarding-foot {
     flex-wrap: wrap;
-  }
-
-  .onboarding-step {
-    order: 3;
-    flex-basis: 100%;
   }
 
   .settings-replay {

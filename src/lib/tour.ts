@@ -1,6 +1,6 @@
 import type { Route } from '../types'
 
-export interface TourStep {
+interface TourStep {
   id: string
   titleKey: string
   textKey: string

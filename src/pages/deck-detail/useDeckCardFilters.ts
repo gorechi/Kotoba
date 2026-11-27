@@ -3,7 +3,7 @@ import type { Card } from '../../types'
 import type { Translate } from '../../lib/i18n'
 import { cardExampleTranslation, cardMeaning } from '../../lib/content'
 
-export type DeckStatusFilter = 'all' | 'new' | 'due' | 'learned'
+type DeckStatusFilter = 'all' | 'new' | 'due' | 'learned'
 
 export const DECK_TAGS_COLLAPSED = 6
 

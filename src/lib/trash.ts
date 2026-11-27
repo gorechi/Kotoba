@@ -101,7 +101,7 @@ export function trashDeck(current: AppData, deckId: string): AppData {
   }
 }
 
-export type RestoreResult = {
+type RestoreResult = {
   data: AppData
   restored: boolean
   /** Причина отказа: колода, в которую возвращалась карточка, удалена. */

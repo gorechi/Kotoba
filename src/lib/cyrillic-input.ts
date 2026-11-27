@@ -329,7 +329,7 @@ export function convertCyrillicInput(value: string, mode: KanaMode): string {
 }
 
 /** Дочищает незавершённые хвосты кириллицы — при уходе из поля и сохранении. */
-export function finalizeCyrillicInput(value: string, mode: KanaMode): string {
+function finalizeCyrillicInput(value: string, mode: KanaMode): string {
   return processCyrillic(value, mode, true)
 }
 

@@ -10,7 +10,7 @@ import {
   N4_KANJI_PACK_ID,
 } from './kanji-n4'
 
-export interface ContentPackState {
+interface ContentPackState {
   decks: Deck[]
   cards: Card[]
   installedPacks: string[]

@@ -18,7 +18,6 @@ function Harness({ mode = 'hiragana' }: { mode?: 'hiragana' | 'katakana' }) {
       onChange={setValue}
       mode={mode}
       onModeChange={() => {}}
-      simple
     />
   )
 }

@@ -2,14 +2,14 @@ import type { IconName } from '../components/Icon'
 import type { Route } from '../types'
 import { HELP_ES } from './help-guides.es'
 
-export type HelpSection = 'system' | 'learning'
+type HelpSection = 'system' | 'learning'
 
-export interface HelpText {
+interface HelpText {
   ru: string
   en: string
 }
 
-export interface HelpStep {
+interface HelpStep {
   title: HelpText
   text: HelpText
   tip?: HelpText

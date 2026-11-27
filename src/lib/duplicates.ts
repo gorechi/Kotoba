@@ -7,7 +7,7 @@ export function findDuplicateCards(cards: Card[], front: string): Card[] {
   return cards.filter((card) => card.front.trim().normalize('NFC') === value)
 }
 
-export type DuplicateOutcome = 'create' | 'ask' | 'deny'
+type DuplicateOutcome = 'create' | 'ask' | 'deny'
 
 /** Что делать с найденными дубликатами при текущей настройке. */
 export function duplicateOutcome(

@@ -8,7 +8,7 @@ import { normalizeImported } from './normalize'
 import { freshSrs } from './srs'
 import { uid } from './utils'
 
-export interface DeckTransferFile {
+interface DeckTransferFile {
   format: 'kotoba-deck'
   version: 1
   deck: Deck

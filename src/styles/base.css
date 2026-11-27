@@ -31,9 +31,6 @@
   --accent: #e1523d;
   --accent-ink: #c03e2b;
   --accent-soft: color-mix(in srgb, var(--accent) 12%, transparent);
-  --accent-light: color-mix(in srgb, var(--accent) 25%, transparent);
-  --accent-dark: color-mix(in srgb, var(--accent) 70%, transparent);
-  --accent-bright: #d63031;
   --green: #4e8a62;
   --amber: #c08a2e;
   --red: #d24b3f;
@@ -69,9 +66,6 @@
   --accent: #f0634c;
   --accent-ink: #f47863;
   --accent-soft: color-mix(in srgb, var(--accent) 16%, transparent);
-  --accent-light: color-mix(in srgb, var(--accent) 25%, transparent);
-  --accent-dark: color-mix(in srgb, var(--accent) 70%, transparent);
-  --accent-bright: #ff6b6b;
   --green: #6fa980;
   --amber: #d6a24b;
   --red: #e9665a;

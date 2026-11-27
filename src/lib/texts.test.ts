@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { addText, createTextDocument } from './texts'
-import { makeCard, makeData } from '../test/factories'
+import { makeCard, makeData, makeDeck } from '../test/factories'
 
 describe('createTextDocument', () => {
   it('обрезает внешние пробелы и сохраняет дату', () => {
@@ -34,5 +34,15 @@ describe('addText', () => {
       { start: 0, end: 2, cardIds: ['card-1'] },
       { start: 3, end: 5, cardIds: ['card-1'] },
     ])
+  })
+
+  it('не связывает текст со стандартными азбуками', () => {
+    const deck = makeDeck({ id: 'hiragana', builtin: true, kind: 'kana' })
+    const card = makeCard({ id: 'hira', deckId: 'hiragana', front: 'はい' })
+    const data = makeData({ decks: [deck], cards: [card] })
+
+    const next = addText(data, 'Приветствие', 'はい', 2)
+
+    expect(next.texts[0].marks).toEqual([])
   })
 })

@@ -7,12 +7,14 @@ import {
   type MouseEvent as ReactMouseEvent,
   type ReactNode,
 } from 'react'
+import { createPortal } from 'react-dom'
 import type { Card, TextDocument, TextMark } from '../types'
 import { useStore } from '../state/store'
 import { useI18n } from '../lib/i18n-react'
 import { cardMeaning, deckTitle, isProtectedDeck } from '../lib/content'
 import {
   buildTextMarks,
+  cardsForTextSearch,
   mergeTextMarks,
   sameMarks,
 } from '../lib/text-marks'
@@ -75,6 +77,14 @@ export function TextReader({ text, onBack }: TextReaderProps) {
     () => new Map(data.cards.map((card) => [card.id, card])),
     [data.cards],
   )
+  const searchCards = useMemo(
+    () => cardsForTextSearch(data.cards, data.decks),
+    [data.cards, data.decks],
+  )
+  const searchCardIds = useMemo(
+    () => new Set(searchCards.map((card) => card.id)),
+    [searchCards],
+  )
   const decksById = useMemo(
     () => new Map(data.decks.map((deck) => [deck.id, deck])),
     [data.decks],
@@ -85,8 +95,8 @@ export function TextReader({ text, onBack }: TextReaderProps) {
   )
 
   const automaticMarks = useMemo(
-    () => buildTextMarks(text.body, data.cards),
-    [data.cards, text.body],
+    () => buildTextMarks(text.body, searchCards),
+    [searchCards, text.body],
   )
   const manualMarks = useMemo(
     () =>
@@ -94,10 +104,10 @@ export function TextReader({ text, onBack }: TextReaderProps) {
         .filter((mark) => mark.manual)
         .map((mark) => ({
           ...mark,
-          cardIds: mark.cardIds.filter((id) => cardsById.has(id)),
+          cardIds: mark.cardIds.filter((id) => searchCardIds.has(id)),
         }))
         .filter((mark) => mark.cardIds.length > 0),
-    [cardsById, text.marks],
+    [searchCardIds, text.marks],
   )
   const marks = useMemo(
     () => mergeTextMarks(automaticMarks, manualMarks),
@@ -356,48 +366,53 @@ export function TextReader({ text, onBack }: TextReaderProps) {
         {cardMode ? renderMarked() : renderPlain()}
       </article>
 
-      {selection && (
-        <button
-          ref={selectionRef}
-          type="button"
-          className="text-selection-action"
-          style={{ left: selection.x, top: selection.y }}
-          onClick={openDeckPicker}
-        >
-          <Icon name="plus" size={15} />
-          {t('texts.createCard')}
-        </button>
-      )}
+      {createPortal(
+        <>
+          {selection && (
+            <button
+              ref={selectionRef}
+              type="button"
+              className="text-selection-action"
+              style={{ left: selection.x, top: selection.y }}
+              onClick={openDeckPicker}
+            >
+              <Icon name="plus" size={15} />
+              {t('texts.createCard')}
+            </button>
+          )}
 
-      {popover && popoverCards.length > 0 && (
-        <div
-          ref={popoverRef}
-          className="text-popover"
-          style={
-            {
-              left: popover.x,
-              top: popover.y,
-            } as CSSProperties
-          }
-          role="dialog"
-          aria-label={t('texts.cardPopoverAria')}
-        >
-          {popoverCards.map((card) => {
-            const deck = decksById.get(card.deckId)
-            return (
-              <div className="text-popover-item" key={card.id}>
-                <div className="text-popover-head">
-                  <strong>{card.front}</strong>
-                  {card.reading && <span>{card.reading}</span>}
-                </div>
-                <p>{cardMeaning(card, t) || t('browser.noValue')}</p>
-                <span className="text-popover-deck">
-                  {deck ? deckTitle(deck, t) : t('trash.unknownDeck')}
-                </span>
-              </div>
-            )
-          })}
-        </div>
+          {popover && popoverCards.length > 0 && (
+            <div
+              ref={popoverRef}
+              className="text-popover"
+              style={
+                {
+                  left: popover.x,
+                  top: popover.y,
+                } as CSSProperties
+              }
+              role="dialog"
+              aria-label={t('texts.cardPopoverAria')}
+            >
+              {popoverCards.map((card) => {
+                const deck = decksById.get(card.deckId)
+                return (
+                  <div className="text-popover-item" key={card.id}>
+                    <div className="text-popover-head">
+                      <strong>{card.front}</strong>
+                      {card.reading && <span>{card.reading}</span>}
+                    </div>
+                    <p>{cardMeaning(card, t) || t('browser.noValue')}</p>
+                    <span className="text-popover-deck">
+                      {deck ? deckTitle(deck, t) : t('trash.unknownDeck')}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </>,
+        document.body,
       )}
 
       {cardTarget && (

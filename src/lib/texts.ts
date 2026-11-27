@@ -1,5 +1,5 @@
 import type { AppData, TextDocument, TextMark } from '../types'
-import { buildTextMarks } from './text-marks'
+import { buildTextMarks, cardsForTextSearch } from './text-marks'
 import { uid } from './utils'
 
 /** Создаёт запись загруженного текста. */
@@ -26,7 +26,10 @@ export function addText(
   now = Date.now(),
 ): AppData {
   const cleanBody = body.trim()
-  const marks = buildTextMarks(cleanBody, current.cards)
+  const marks = buildTextMarks(
+    cleanBody,
+    cardsForTextSearch(current.cards, current.decks),
+  )
   return {
     ...current,
     texts: [createTextDocument(title, cleanBody, now, marks), ...current.texts],

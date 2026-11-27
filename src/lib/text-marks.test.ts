@@ -1,6 +1,33 @@
 import { describe, expect, it } from 'vitest'
-import { buildTextMarks, mergeTextMarks, sameMarks } from './text-marks'
-import { makeCard } from '../test/factories'
+import {
+  buildTextMarks,
+  cardsForTextSearch,
+  mergeTextMarks,
+  sameMarks,
+} from './text-marks'
+import { makeCard, makeDeck } from '../test/factories'
+
+describe('cardsForTextSearch', () => {
+  it('исключает стандартные хирагану и катакану, но оставляет кандзи и свои колоды', () => {
+    const decks = [
+      makeDeck({ id: 'hiragana', builtin: true, kind: 'kana' }),
+      makeDeck({ id: 'katakana', builtin: true, kind: 'kana' }),
+      makeDeck({ id: 'kanji', builtin: true, kind: 'kanji' }),
+      makeDeck({ id: 'custom', builtin: false, kind: 'kana' }),
+    ]
+    const cards = [
+      makeCard({ id: 'hira', deckId: 'hiragana' }),
+      makeCard({ id: 'kata', deckId: 'katakana' }),
+      makeCard({ id: 'kanji', deckId: 'kanji' }),
+      makeCard({ id: 'custom', deckId: 'custom' }),
+    ]
+
+    expect(cardsForTextSearch(cards, decks).map((card) => card.id)).toEqual([
+      'kanji',
+      'custom',
+    ])
+  })
+})
 
 describe('buildTextMarks', () => {
   it('находит все вхождения и группирует карточки с одинаковым написанием', () => {

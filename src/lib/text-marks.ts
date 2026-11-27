@@ -1,8 +1,18 @@
-import type { Card, TextMark } from '../types'
+import type { Card, Deck, TextMark } from '../types'
 
 interface Candidate {
   front: string
   cardIds: string[]
+}
+
+/** Карточки, которые участвуют в связывании текста. Стандартные азбуки не считаем. */
+export function cardsForTextSearch(cards: Card[], decks: Deck[]): Card[] {
+  const ignored = new Set(
+    decks
+      .filter((deck) => deck.builtin && deck.kind === 'kana')
+      .map((deck) => deck.id),
+  )
+  return cards.filter((card) => !ignored.has(card.deckId))
 }
 
 /**

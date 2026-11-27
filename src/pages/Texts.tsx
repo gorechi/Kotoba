@@ -44,30 +44,34 @@ export function Texts() {
           <h2>{t('texts.listTitle')}</h2>
         </div>
 
-        {texts.length === 0 ? (
-          <p className="empty-note">{t('texts.empty')}</p>
-        ) : (
-          <div className="texts-grid">
-            {texts.map((text) => (
-              <article key={text.id} className="text-card">
-                <div className="text-card-head">
-                  <span className="text-card-icon" aria-hidden="true">
-                    <Icon name="text" size={19} />
+        <div className="texts-grid">
+          {texts.map((text) => (
+            <article key={text.id} className="text-card">
+              <div className="text-card-head">
+                <span className="text-card-icon" aria-hidden="true">
+                  <Icon name="text" size={19} />
+                </span>
+                <div className="text-card-copy">
+                  <h3>{text.title}</h3>
+                  <span>
+                    {t('texts.createdAt', {
+                      date: dateFormat.format(text.createdAt),
+                    })}
                   </span>
-                  <div className="text-card-copy">
-                    <h3>{text.title}</h3>
-                    <span>
-                      {t('texts.createdAt', {
-                        date: dateFormat.format(text.createdAt),
-                      })}
-                    </span>
-                  </div>
                 </div>
-                <p className="text-card-preview">{textPreview(text.body)}</p>
-              </article>
-            ))}
-          </div>
-        )}
+              </div>
+              <p className="text-card-preview">{textPreview(text.body)}</p>
+            </article>
+          ))}
+
+          <button className="deck-new text-new" onClick={() => setCreating(true)}>
+            <span className="deck-new-icon">
+              <Icon name="plus" size={20} />
+            </span>
+            <strong>{t('texts.newCardTitle')}</strong>
+            <span>{t('texts.newCardHint')}</span>
+          </button>
+        </div>
       </section>
 
       {creating && <TextForm onClose={() => setCreating(false)} />}

@@ -40,6 +40,13 @@ describe('Texts', () => {
     expect(screen.getByLabelText('texts.nameLabel')).toBeTruthy()
   })
 
+  it('показывает пустую карточку создания текста', () => {
+    render(<Texts />)
+
+    fireEvent.click(screen.getByText('texts.newCardTitle'))
+    expect(screen.getByLabelText('texts.nameLabel')).toBeTruthy()
+  })
+
   it('добавляет вставленный текст', () => {
     render(<Texts />)
     fireEvent.click(screen.getByText('texts.new'))

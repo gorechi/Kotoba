@@ -60,6 +60,10 @@
   box-shadow: var(--shadow-sm);
 }
 
+.text-new {
+  min-height: 170px;
+}
+
 .text-card::before {
   content: '';
   position: absolute;

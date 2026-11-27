@@ -5,7 +5,8 @@ import { useI18n } from '../lib/i18n-react'
 import { cardExampleTranslation, cardMeaning, deckTitle } from '../lib/content'
 import { freshSrs } from '../lib/srs'
 import { detectKanaScript } from '../lib/kana-script'
-import { convertRomajiTail, guessKanaMode } from '../lib/romaji'
+import { convertKanaInput, finalizeKanaInput } from '../lib/cyrillic-input'
+import { guessKanaMode } from '../lib/romaji'
 import { toCyrillic } from '../lib/cyrillic'
 import { findDuplicateCards, duplicateOutcome } from '../lib/duplicates'
 import { uid } from '../lib/utils'
@@ -79,7 +80,7 @@ export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
   }
 
   const changeReadingKana = (id: string, value: string) => {
-    const kana = convertRomajiTail(value, guessKanaMode(value, 'hiragana'))
+    const kana = convertKanaInput(value, guessKanaMode(value, 'hiragana'))
     updateReading(id, { kana, transcription: transcriptionFor(kana) })
   }
 
@@ -88,7 +89,7 @@ export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
   }
 
   const changeExampleText = (id: string, value: string) => {
-    const text = convertRomajiTail(value, guessKanaMode(value, 'hiragana'))
+    const text = convertKanaInput(value, guessKanaMode(value, 'hiragana'))
     updateExample(id, { text })
   }
 
@@ -111,14 +112,20 @@ export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
     const cleanReadings = readings
       .map((item) => ({
         ...item,
-        kana: item.kana.trim(),
+        kana: finalizeKanaInput(
+          item.kana,
+          guessKanaMode(item.kana, 'hiragana'),
+        ).trim(),
         transcription: item.transcription.trim(),
       }))
       .filter((item) => item.kana || item.transcription)
     const cleanExamples = examples
       .map((item) => ({
         ...item,
-        text: item.text.trim(),
+        text: finalizeKanaInput(
+          item.text,
+          guessKanaMode(item.text, 'hiragana'),
+        ).trim(),
         transcription: item.transcription.trim(),
         translation: item.translation.trim(),
       }))

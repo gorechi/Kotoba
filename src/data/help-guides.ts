@@ -232,8 +232,8 @@ export const HELP_GUIDES: HelpGuide[] = [
       step(
         'Введите знак',
         'Enter the character',
-        'В поле «Слово или знак» наберите ромадзи. Переключатели «abc / あ / ア» задают режим ввода; поле само превратит текст в кану.',
-        'Type romaji in the Word or character field. The “abc / あ / ア” toggles set the input mode; the field converts text to kana automatically.',
+        'В поле «Слово или знак» наберите ромадзи или кириллицу — например, mizu или мидзу. Переключатели «abc / あ / ア» задают режим ввода; поле само превратит текст в кану.',
+        'Type romaji or Cyrillic in the Word or character field — for example, mizu or мидзу. The “abc / あ / ア” toggles set the input mode; the field converts text to kana automatically.',
       ),
       step(
         'Проверьте чтение',

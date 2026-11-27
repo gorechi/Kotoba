@@ -43,4 +43,47 @@ describe('KanaInput', () => {
     await user.type(screen.getByRole('textbox'), 'genki?')
     expect((screen.getByRole('textbox') as HTMLInputElement).value).toBe('ゲンキ？')
   })
+
+  it('принимает кириллицу', async () => {
+    const user = userEvent.setup()
+    render(<Harness />)
+
+    await user.type(screen.getByRole('textbox'), 'ку')
+    expect((screen.getByRole('textbox') as HTMLInputElement).value).toBe('く')
+  })
+
+  it('удлиняет гласную повтором', async () => {
+    const user = userEvent.setup()
+    render(<Harness />)
+
+    await user.type(screen.getByRole('textbox'), 'каа')
+    expect((screen.getByRole('textbox') as HTMLInputElement).value).toBe('かー')
+  })
+
+  it('понимает разделитель для ん', async () => {
+    const user = userEvent.setup()
+    render(<Harness />)
+
+    await user.type(screen.getByRole('textbox'), 'нъа')
+    expect((screen.getByRole('textbox') as HTMLInputElement).value).toBe('んあ')
+  })
+
+  it('доканчивает висящую н при уходе из поля', async () => {
+    const user = userEvent.setup()
+    render(<Harness />)
+
+    await user.type(screen.getByRole('textbox'), 'кун')
+    expect((screen.getByRole('textbox') as HTMLInputElement).value).toBe('くн')
+
+    await user.tab()
+    expect((screen.getByRole('textbox') as HTMLInputElement).value).toBe('くん')
+  })
+
+  it('учитывает режим для ди', async () => {
+    const user = userEvent.setup()
+    render(<Harness mode="katakana" />)
+
+    await user.type(screen.getByRole('textbox'), 'ди')
+    expect((screen.getByRole('textbox') as HTMLInputElement).value).toBe('ディ')
+  })
 })

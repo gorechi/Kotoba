@@ -4,7 +4,8 @@ import { useStore } from '../state/store'
 import { useI18n } from '../lib/i18n-react'
 import { DEFAULT_DECK_ACCENT, DECK_ACCENTS } from '../lib/deck-accents'
 import { deckDescription, deckTitle } from '../lib/content'
-import { finalizeRomajiTail, guessKanaMode, type KanaMode } from '../lib/romaji'
+import { finalizeKanaInput } from '../lib/cyrillic-input'
+import { guessKanaMode, type KanaMode } from '../lib/romaji'
 import { uid } from '../lib/utils'
 import { KanaInput } from './KanaInput'
 import { Modal } from './Modal'
@@ -39,7 +40,7 @@ export function DeckForm({ deck, kind = 'kana', onClose, onCreated }: DeckFormPr
       setError(t('deckForm.nameError'))
       return
     }
-    const cleanNameJp = finalizeRomajiTail(nameJp, nameJpMode).trim()
+    const cleanNameJp = finalizeKanaInput(nameJp, nameJpMode).trim()
     const trimmedDescription = description.trim()
     // Новую колоду создаём до update: React может вызвать updater позже
     // и не один раз, а id должен остаться стабильным.

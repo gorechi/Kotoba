@@ -5,7 +5,8 @@ import { useI18n } from '../lib/i18n-react'
 import { deckTitle } from '../lib/content'
 import { freshSrs } from '../lib/srs'
 import { detectKanaScript } from '../lib/kana-script'
-import { finalizeRomajiTail, guessKanaMode, suggestReading, type KanaMode } from '../lib/romaji'
+import { guessKanaMode, suggestReading, type KanaMode } from '../lib/romaji'
+import { finalizeKanaInput } from '../lib/cyrillic-input'
 import { toCyrillic } from '../lib/cyrillic'
 import { findDuplicateCards, duplicateOutcome } from '../lib/duplicates'
 import { uid } from '../lib/utils'
@@ -150,7 +151,7 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
   }
 
   const save = (keepOpen: boolean) => {
-    const cleanFront = finalizeRomajiTail(front, frontMode).trim()
+    const cleanFront = finalizeKanaInput(front, frontMode).trim()
     if (!cleanFront) {
       setError(t('cardForm.frontError'))
       frontRef.current?.focus()

@@ -8,13 +8,12 @@ import {
 } from 'react'
 import {
   convertForModeSwitch,
-  convertRomajiTail,
   extraSigns,
-  finalizeRomajiTail,
   kanaModes,
   toJapanesePunctuation,
   type KanaMode,
 } from '../lib/romaji'
+import { convertKanaInput, finalizeKanaInput } from '../lib/cyrillic-input'
 import { useI18n } from '../lib/i18n-react'
 
 interface KanaInputProps {
@@ -83,7 +82,7 @@ export function KanaInput({
       onChange(toJapanesePunctuation(next))
       return
     }
-    const converted = convertRomajiTail(next, mode)
+    const converted = convertKanaInput(next, mode)
     if (converted !== next) caretToEndRef.current = true
     onChange(converted)
   }
@@ -92,7 +91,7 @@ export function KanaInput({
     composingRef.current = false
     if (mode === 'abc') return
     const next = event.currentTarget.value
-    const converted = convertRomajiTail(next, mode)
+    const converted = convertKanaInput(next, mode)
     if (converted !== next) {
       caretToEndRef.current = true
       onChange(converted)
@@ -100,14 +99,15 @@ export function KanaInput({
   }
 
   const handleBlur = (event: FocusEvent<HTMLInputElement>) => {
-    const final = finalizeRomajiTail(event.currentTarget.value, mode)
+    const final = finalizeKanaInput(event.currentTarget.value, mode)
     if (final !== event.currentTarget.value) onChange(final)
     onBlur?.()
   }
 
   const switchMode = (next: KanaMode) => {
     if (next === mode) return
-    const converted = convertForModeSwitch(value, mode, next)
+    const prepared = finalizeKanaInput(value, next === 'abc' ? mode : next)
+    const converted = convertForModeSwitch(prepared, mode, next)
     if (converted !== value) {
       caretToEndRef.current = true
       onChange(converted)

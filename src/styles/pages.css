@@ -868,7 +868,7 @@
 }
 
 .card-row:hover .row-actions,
-.row-actions:focus-within {
+.row-actions:has(:focus-visible) {
   opacity: 1;
 }
 

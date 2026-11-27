@@ -20,10 +20,12 @@ import { Modal } from './Modal'
 interface CardFormProps {
   deckId: string
   card?: Card | null
+  initialFront?: string
+  onSaved?: (card: Card) => void
   onClose: () => void
 }
 
-export function CardForm({ deckId, card, onClose }: CardFormProps) {
+export function CardForm({ deckId, card, initialFront, onSaved, onClose }: CardFormProps) {
   const { data, update, trackWork } = useStore()
   const { t } = useI18n()
   const deck = data.decks.find((item) => item.id === deckId)
@@ -36,7 +38,8 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
     return [...set].sort()
   }, [data.cards, deckId])
 
-  const [front, setFront] = useState(card?.front ?? '')
+  const startFront = card?.front ?? initialFront ?? ''
+  const [front, setFront] = useState(startFront)
   const [reading, setReading] = useState(card?.reading ?? '')
   const [meaning, setMeaning] = useState(card?.meaning ?? '')
   const [note, setNote] = useState(card?.note ?? '')
@@ -45,7 +48,7 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
     card?.frequency ? String(card.frequency) : '',
   )
   const [tags, setTags] = useState<string[]>(card?.tags ?? [])
-  const [frontMode, setFrontMode] = useState<KanaMode>(() => guessKanaMode(card?.front, 'hiragana'))
+  const [frontMode, setFrontMode] = useState<KanaMode>(() => guessKanaMode(startFront, 'hiragana'))
   const [error, setError] = useState('')
   const [duplicateDialog, setDuplicateDialog] = useState<{
     mode: 'ask' | 'deny'
@@ -82,6 +85,31 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
   const commit = (cleanFront: string, keepOpen: boolean) => {
     const cleanReading = reading.trim()
     const parsedFrequency = Math.round(Number(frequency))
+    const maxOrder = data.cards.reduce(
+      (max, item) => (item.deckId === deckId ? Math.max(max, item.order) : max),
+      0,
+    )
+    const createdCard: Card | null = card
+      ? null
+      : {
+          id: uid('card'),
+          deckId,
+          front: cleanFront,
+          reading: cleanReading,
+          meaning: meaning.trim(),
+          note: note.trim(),
+          mnemonic: '',
+          tags,
+          script: detectKanaScript(cleanFront) ?? undefined,
+          jlpt: jlpt >= 1 && jlpt <= 5 ? jlpt : undefined,
+          frequency: parsedFrequency > 0 ? parsedFrequency : undefined,
+          readings: [],
+          examples: [],
+          group: 'custom',
+          order: maxOrder + 1,
+          srs: freshSrs(),
+          createdAt: Date.now(),
+        }
     update((current) => {
       if (card) {
         return {
@@ -103,37 +131,14 @@ export function CardForm({ deckId, card, onClose }: CardFormProps) {
           ),
         }
       }
-      const maxOrder = current.cards.reduce(
-        (max, item) => (item.deckId === deckId ? Math.max(max, item.order) : max),
-        0,
-      )
+      if (!createdCard) return current
       return {
         ...current,
-        cards: [
-          ...current.cards,
-          {
-            id: uid('card'),
-            deckId,
-            front: cleanFront,
-            reading: cleanReading,
-            meaning: meaning.trim(),
-            note: note.trim(),
-            mnemonic: '',
-            tags,
-            script: detectKanaScript(cleanFront) ?? undefined,
-            jlpt: jlpt >= 1 && jlpt <= 5 ? jlpt : undefined,
-            frequency: parsedFrequency > 0 ? parsedFrequency : undefined,
-            readings: [],
-            examples: [],
-            group: 'custom',
-            order: maxOrder + 1,
-            srs: freshSrs(),
-            createdAt: Date.now(),
-          },
-        ],
+        cards: [...current.cards, createdCard],
       }
     })
     trackWork()
+    if (createdCard) onSaved?.(createdCard)
 
     if (!keepOpen) {
       onClose()

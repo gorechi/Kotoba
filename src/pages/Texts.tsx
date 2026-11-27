@@ -3,6 +3,7 @@ import { useStore } from '../state/store'
 import { useI18n } from '../lib/i18n-react'
 import { Icon } from '../components/Icon'
 import { TextForm } from '../components/TextForm'
+import { TextReader } from '../components/TextReader'
 
 function textPreview(body: string): string {
   const compact = body.replace(/\s+/g, ' ').trim()
@@ -13,6 +14,7 @@ export function Texts() {
   const { data } = useStore()
   const { t, locale } = useI18n()
   const [creating, setCreating] = useState(false)
+  const [openTextId, setOpenTextId] = useState<string | null>(null)
 
   const dateFormat = useMemo(
     () => new Intl.DateTimeFormat(locale.intl, { dateStyle: 'medium' }),
@@ -22,6 +24,13 @@ export function Texts() {
     () => [...data.texts].sort((a, b) => b.createdAt - a.createdAt),
     [data.texts],
   )
+  const openText = openTextId
+    ? data.texts.find((text) => text.id === openTextId)
+    : undefined
+
+  if (openText) {
+    return <TextReader text={openText} onBack={() => setOpenTextId(null)} />
+  }
 
   return (
     <div className="page texts-page">
@@ -46,22 +55,27 @@ export function Texts() {
 
         <div className="texts-grid">
           {texts.map((text) => (
-            <article key={text.id} className="text-card">
-              <div className="text-card-head">
+            <button
+              key={text.id}
+              type="button"
+              className="text-card"
+              onClick={() => setOpenTextId(text.id)}
+            >
+              <span className="text-card-head">
                 <span className="text-card-icon" aria-hidden="true">
                   <Icon name="text" size={19} />
                 </span>
-                <div className="text-card-copy">
-                  <h3>{text.title}</h3>
-                  <span>
+                <span className="text-card-copy">
+                  <span className="text-card-title">{text.title}</span>
+                  <span className="text-card-date">
                     {t('texts.createdAt', {
                       date: dateFormat.format(text.createdAt),
                     })}
                   </span>
-                </div>
-              </div>
-              <p className="text-card-preview">{textPreview(text.body)}</p>
-            </article>
+                </span>
+              </span>
+              <span className="text-card-preview">{textPreview(text.body)}</span>
+            </button>
           ))}
 
           <button className="deck-new text-new" onClick={() => setCreating(true)}>

@@ -21,6 +21,8 @@ import { Modal } from './Modal'
 interface KanjiCardFormProps {
   deckId: string
   card?: Card | null
+  initialFront?: string
+  onSaved?: (card: Card) => void
   onClose: () => void
 }
 
@@ -32,7 +34,13 @@ function emptyExample(): CardExample {
   return { id: uid('example'), text: '', transcription: '', translation: '' }
 }
 
-export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
+export function KanjiCardForm({
+  deckId,
+  card,
+  initialFront,
+  onSaved,
+  onClose,
+}: KanjiCardFormProps) {
   const { data, update, trackWork } = useStore()
   const { t } = useI18n()
   const deck = data.decks.find((item) => item.id === deckId)
@@ -45,7 +53,7 @@ export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
     return [...set].sort()
   }, [data.cards, deckId])
 
-  const [front, setFront] = useState(card?.front ?? '')
+  const [front, setFront] = useState(card?.front ?? initialFront ?? '')
   const [meaning, setMeaning] = useState(() => (card ? cardMeaning(card, t) : ''))
   const [note, setNote] = useState(card?.note ?? '')
   const [jlpt, setJlpt] = useState(card?.jlpt ?? 0)
@@ -186,6 +194,32 @@ export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
       parsedFrequency,
     } = payload
 
+    const maxOrder = data.cards.reduce(
+      (max, item) => (item.deckId === deckId ? Math.max(max, item.order) : max),
+      0,
+    )
+    const createdCard: Card | null = card
+      ? null
+      : {
+          id: uid('card'),
+          deckId,
+          front: cleanFront,
+          reading: '',
+          meaning: cleanMeaning,
+          note: note.trim(),
+          mnemonic: '',
+          tags,
+          script: detectKanaScript(cleanFront) ?? undefined,
+          jlpt: jlpt >= 1 && jlpt <= 5 ? jlpt : undefined,
+          frequency: parsedFrequency > 0 ? parsedFrequency : undefined,
+          readings: cleanReadings,
+          examples: cleanExamples,
+          group: 'custom',
+          order: maxOrder + 1,
+          srs: freshSrs(),
+          createdAt: Date.now(),
+        }
+
     update((current) => {
       if (card) {
         return {
@@ -208,37 +242,14 @@ export function KanjiCardForm({ deckId, card, onClose }: KanjiCardFormProps) {
           ),
         }
       }
-      const maxOrder = current.cards.reduce(
-        (max, item) => (item.deckId === deckId ? Math.max(max, item.order) : max),
-        0,
-      )
+      if (!createdCard) return current
       return {
         ...current,
-        cards: [
-          ...current.cards,
-          {
-            id: uid('card'),
-            deckId,
-            front: cleanFront,
-            reading: '',
-            meaning: cleanMeaning,
-            note: note.trim(),
-            mnemonic: '',
-            tags,
-            script: detectKanaScript(cleanFront) ?? undefined,
-            jlpt: jlpt >= 1 && jlpt <= 5 ? jlpt : undefined,
-            frequency: parsedFrequency > 0 ? parsedFrequency : undefined,
-            readings: cleanReadings,
-            examples: cleanExamples,
-            group: 'custom',
-            order: maxOrder + 1,
-            srs: freshSrs(),
-            createdAt: Date.now(),
-          },
-        ],
+        cards: [...current.cards, createdCard],
       }
     })
     trackWork()
+    if (createdCard) onSaved?.(createdCard)
 
     if (!keepOpen) {
       onClose()

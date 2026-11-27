@@ -24,6 +24,7 @@ import type {
   StudySet,
   StudyTotals,
   TextDocument,
+  TextMark,
   Theme,
   TrashEntry,
   TtsAutoplay,
@@ -280,11 +281,35 @@ function normalizeTexts(raw: unknown): TextDocument[] {
       id,
       title,
       body,
+      marks: normalizeTextMarks(item.marks, body),
       createdAt: num(item.createdAt, Date.now()),
     })
   }
 
   return texts
+}
+
+function normalizeTextMarks(raw: unknown, body: string): TextMark[] {
+  if (!Array.isArray(raw)) return []
+  const marks: TextMark[] = []
+  const items = raw
+    .filter(isObj)
+    .map((item) => ({
+      start: Math.round(num(item.start, -1)),
+      end: Math.round(num(item.end, -1)),
+      cardIds: [...new Set(strArray(item.cardIds).filter(Boolean))],
+      manual: item.manual === true,
+    }))
+    .sort((a, b) => a.start - b.start)
+
+  let lastEnd = 0
+  for (const item of items) {
+    if (item.start < lastEnd || item.start < 0 || item.end > body.length) continue
+    if (item.start >= item.end || item.cardIds.length === 0) continue
+    marks.push(item)
+    lastEnd = item.end
+  }
+  return marks
 }
 
 function normalizeStudySetOptions(raw: unknown): CustomStudyOptions {

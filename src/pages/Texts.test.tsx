@@ -6,7 +6,7 @@ import { createTextDocument } from '../lib/texts'
 
 const { store } = vi.hoisted(() => ({
   store: {
-    data: { texts: [] as unknown[] },
+    data: { texts: [] as unknown[], cards: [] as unknown[], decks: [] as unknown[] },
     update: vi.fn(),
     trackWork: vi.fn(),
   },
@@ -24,7 +24,7 @@ vi.mock('../lib/i18n-react', () => ({
 }))
 
 beforeEach(() => {
-  store.data = { texts: [] }
+  store.data = { texts: [], cards: [], decks: [] }
   store.update.mockClear()
   store.trackWork.mockClear()
 })
@@ -86,11 +86,16 @@ describe('Texts', () => {
   it('показывает загруженные тексты карточками', () => {
     store.data = {
       texts: [createTextDocument('吾輩は猫である', '吾輩は猫である。名前はまだ無い。', 1)],
+      cards: [],
+      decks: [],
     }
     render(<Texts />)
 
     expect(screen.getByText('吾輩は猫である')).toBeTruthy()
     expect(screen.getByText(/吾輩は猫である。名前はまだ無い。/)).toBeTruthy()
+
+    fireEvent.click(screen.getByText('吾輩は猫である'))
+    expect(screen.getByText('texts.back')).toBeTruthy()
   })
 
   it('загружает текст из .txt файла', async () => {

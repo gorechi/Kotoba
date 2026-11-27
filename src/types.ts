@@ -227,10 +227,19 @@ export interface TrashCardEntry {
 export type TrashEntry = TrashCardEntry
 
 /** Загруженный пользователем текст. Пока хранится без разбора и привязки к карточкам. */
+export interface TextMark {
+  start: number
+  end: number
+  cardIds: string[]
+  /** Пометка, созданная вручную при создании карточки из текста. */
+  manual?: boolean
+}
+
 export interface TextDocument {
   id: string
   title: string
   body: string
+  marks: TextMark[]
   createdAt: number
 }
 

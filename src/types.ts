@@ -53,6 +53,7 @@ export type Route =
   | { name: 'kanji' }
   | { name: 'deck'; deckId: string }
   | { name: 'cards'; cardId?: string; query?: string; returnTo?: Route }
+  | { name: 'texts' }
   | { name: 'problems' }
   | { name: 'kanamap' }
   | { name: 'stats' }
@@ -225,10 +226,19 @@ export interface TrashCardEntry {
 
 export type TrashEntry = TrashCardEntry
 
+/** Загруженный пользователем текст. Пока хранится без разбора и привязки к карточкам. */
+export interface TextDocument {
+  id: string
+  title: string
+  body: string
+  createdAt: number
+}
+
 export interface AppData {
   version: 2
   decks: Deck[]
   cards: Card[]
+  texts: TextDocument[]
   studySets: StudySet[]
   /** Идентификаторы готовых наборов, которые уже установлены один раз. */
   installedPacks: string[]

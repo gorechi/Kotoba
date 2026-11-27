@@ -251,6 +251,34 @@ describe('normalizeData: корзина', () => {
   })
 })
 
+describe('normalizeData: тексты', () => {
+  it('читает тексты и отбрасывает пустые и повторяющиеся записи', () => {
+    const data = normalizeData({
+      texts: [
+        { id: 'text-1', title: '  Заголовок ', body: ' 本文 ', createdAt: 5 },
+        { id: 'empty-title', title: '   ', body: 'текст' },
+        { id: 'empty-body', title: 'Заголовок', body: '   ' },
+        { id: 'text-1', title: 'Повтор', body: 'другой' },
+        { title: 'Без id', body: 'текст' },
+        'мусор',
+      ],
+    })
+
+    expect(data.texts).toHaveLength(2)
+    expect(data.texts[0]).toMatchObject({
+      id: 'text-1',
+      title: 'Заголовок',
+      body: ' 本文 ',
+      createdAt: 5,
+    })
+    expect(data.texts[1].id).toMatch(/^text-/)
+  })
+
+  it('по умолчанию создаёт пустую библиотеку', () => {
+    expect(normalizeData({}).texts).toEqual([])
+  })
+})
+
 describe('normalizeData: свои наборы', () => {
   it('сохраняет письменность и сбрасывает её для кандзи', () => {
     const data = normalizeData({

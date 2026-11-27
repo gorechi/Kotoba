@@ -42,6 +42,7 @@ const TtsHelp = lazy(() =>
 const ProblemCards = lazy(() =>
   import('./pages/ProblemCards').then((module) => ({ default: module.ProblemCards })),
 )
+const Texts = lazy(() => import('./pages/Texts').then((module) => ({ default: module.Texts })))
 import { ZenMode } from './components/ZenMode'
 import { effectiveStudyMode, sessionSizeForDeck } from './lib/deck-settings'
 import { practiceQueue, buildStudyQueue, limitStudySession } from './lib/study'
@@ -486,6 +487,7 @@ function Shell() {
                 onCloseFocus={route.returnTo ? () => navigate(route.returnTo!) : undefined}
               />
             )}
+            {route.name === 'texts' && <Texts />}
             {route.name === 'problems' && (
               <ProblemCards
                 onStudy={() =>

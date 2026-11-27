@@ -107,6 +107,7 @@ export function makeData(patch: Partial<AppData> = {}): AppData {
     version: 2,
     decks: [makeDeck()],
     cards: [makeCard()],
+    texts: [],
     studySets: [],
     installedPacks: [],
     trash: [],

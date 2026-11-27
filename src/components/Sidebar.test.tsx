@@ -50,7 +50,7 @@ describe('Sidebar', () => {
 
     const label = screen.getByText('nav.study')
     expect(label.className).toBe('nav-label')
-    expect(container.querySelectorAll('.nav-label').length).toBe(13)
+    expect(container.querySelectorAll('.nav-label').length).toBe(14)
   })
 
   it('помечает активный пункт', () => {

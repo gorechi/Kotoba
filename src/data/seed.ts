@@ -48,6 +48,7 @@ export function createBaseSeedData(now = Date.now()) {
     version: 2 as const,
     decks,
     cards,
+    texts: [],
     studySets: [] as StudySet[],
     installedPacks: [] as string[],
     trash: [] as TrashEntry[],

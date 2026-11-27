@@ -23,6 +23,7 @@ import type {
   StudyMode,
   StudySet,
   StudyTotals,
+  TextDocument,
   Theme,
   TrashEntry,
   TtsAutoplay,
@@ -258,6 +259,32 @@ function normalizeTrash(raw: unknown, retentionDays: number): TrashEntry[] {
   }
 
   return pruneTrash(entries, Date.now(), retentionDays)
+}
+
+/** Читает загруженные тексты, отбрасывая пустые и повторяющиеся записи. */
+function normalizeTexts(raw: unknown): TextDocument[] {
+  if (!Array.isArray(raw)) return []
+  const seen = new Set<string>()
+  const texts: TextDocument[] = []
+
+  for (const item of raw) {
+    if (!isObj(item)) continue
+    const title = str(item.title).trim()
+    const body = str(item.body)
+    if (!title || !body.trim()) continue
+    const id =
+      typeof item.id === 'string' && item.id.trim() ? item.id.trim() : uid('text')
+    if (seen.has(id)) continue
+    seen.add(id)
+    texts.push({
+      id,
+      title,
+      body,
+      createdAt: num(item.createdAt, Date.now()),
+    })
+  }
+
+  return texts
 }
 
 function normalizeStudySetOptions(raw: unknown): CustomStudyOptions {
@@ -577,6 +604,7 @@ export function normalizeData(raw: unknown): AppData {
     version: 2,
     decks: mergedDecks,
     cards: mergedCards,
+    texts: normalizeTexts(raw.texts),
     studySets: normalizeStudySets(raw.studySets),
     installedPacks: [...new Set(strArray(raw.installedPacks))],
     trash: normalizeTrash(raw.trash, settings.trashRetentionDays),

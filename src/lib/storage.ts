@@ -8,6 +8,7 @@ interface StoredContent {
   version: 2
   decks: AppData['decks']
   cards: StoredCard[]
+  texts: AppData['texts']
   studySets: AppData['studySets']
   installedPacks: AppData['installedPacks']
   trash: AppData['trash']
@@ -94,6 +95,7 @@ function splitAppData(data: AppData): Required<StorageParts> {
       version: 2,
       decks: data.decks,
       cards,
+      texts: data.texts ?? [],
       studySets: data.studySets ?? [],
       installedPacks: data.installedPacks ?? [],
       trash: data.trash ?? [],

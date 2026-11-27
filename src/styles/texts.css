@@ -1,0 +1,124 @@
+.text-form-panel {
+  margin-bottom: 28px;
+}
+
+.text-body-input {
+  min-height: 190px;
+  resize: vertical;
+  font-family: var(--font-jp);
+  line-height: 1.7;
+}
+
+.text-form-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.text-file-button {
+  cursor: pointer;
+}
+
+.text-file-button input {
+  display: none;
+}
+
+.text-file-hint {
+  margin-right: auto;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.texts-library {
+  margin-top: 6px;
+}
+
+.texts-list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.texts-list-head h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.texts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+}
+
+.text-card {
+  position: relative;
+  min-height: 170px;
+  padding: 19px 20px 20px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.text-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent), transparent);
+  opacity: 0.55;
+}
+
+.text-card-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.text-card-icon {
+  width: 38px;
+  height: 38px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  color: var(--accent);
+}
+
+.text-card-copy {
+  min-width: 0;
+}
+
+.text-card-copy h3 {
+  margin: 1px 0 4px;
+  font-family: var(--font-jp);
+  font-size: 15px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.text-card-copy span {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.text-card-preview {
+  margin: 15px 0 0;
+  color: var(--text-soft);
+  font-family: var(--font-jp);
+  font-size: 12.5px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 720px) {
+  .text-file-hint {
+    order: 3;
+    flex-basis: 100%;
+  }
+}

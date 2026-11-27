@@ -90,7 +90,12 @@ const SYLLABLES: Record<string, string> = {
   дзэ: 'ぜ',
   дзе: 'ぜ',
   дзо: 'ぞ',
+  за: 'ざ',
+  зи: 'じ',
+  зу: 'ず',
+  зэ: 'ぜ',
   зе: 'ぜ',
+  зо: 'ぞ',
   // д
   да: 'だ',
   дэ: 'で',
@@ -138,6 +143,9 @@ const SYLLABLES: Record<string, string> = {
   дзя: 'じゃ',
   дзю: 'じゅ',
   дзё: 'じょ',
+  зя: 'じゃ',
+  зю: 'じゅ',
+  зё: 'じょ',
   бя: 'びゃ',
   бю: 'びゅ',
   бё: 'びょ',
@@ -177,7 +185,25 @@ const VOWEL_SOUND: Record<string, string> = {
 const VOWELS = new Set(Object.keys(VOWEL_SOUND))
 const SEPARATORS = new Set(['ъ', 'ь', "'", '-'])
 const DOUBLING_CONSONANTS = new Set('бвгджзклмпрстфхцчшщ'.split(''))
-const CYRILLIC_RUN = /[а-яё][а-яёъь'\-:]*/gi
+const CYRILLIC_RUN = /[ъь'\-:]*[а-яё][а-яёъь'\-:]*|[ъь'\-:]+/gi
+
+/** Если после ん сразу вводят гласную, ん переосмысляется как начало слога. */
+const N_MERGE: Record<string, string> = {
+  а: 'な',
+  и: 'に',
+  у: 'ぬ',
+  э: 'ね',
+  е: 'ね',
+  о: 'の',
+  я: 'にゃ',
+  ю: 'にゅ',
+  ё: 'にょ',
+}
+
+interface ConvertedRun {
+  text: string
+  mergePreviousN: boolean
+}
 
 function kanaFor(key: string, mode: KanaMode): string | undefined {
   const special = MODE_SYLLABLES[key]
@@ -204,11 +230,34 @@ function convertRun(
   mode: KanaMode,
   before: string,
   atEnd: boolean,
-): string {
+): ConvertedRun {
   const text = run.toLowerCase()
   let out = ''
   let lastVowel = lastKanaVowel(before)
+  let mergePreviousN = false
   let index = 0
+
+  // Разделитель после ん оставляем видимым до следующего ввода:
+  // он не даёт переосмыслить ん как な/に/… при вводе гласной.
+  if (atEnd && /^[ъь'\-]+$/.test(text)) {
+    return { text: run, mergePreviousN: false }
+  }
+
+  // ん + гласная без разделителя = слог ряда な.
+  if (
+    (before.endsWith('ん') || before.endsWith('ン')) &&
+    text[0] &&
+    !SEPARATORS.has(text[0]) &&
+    VOWELS.has(text[0])
+  ) {
+    const merged = N_MERGE[text[0]]
+    if (merged) {
+      mergePreviousN = true
+      out += merged
+      lastVowel = VOWEL_SOUND[text[0]] ?? null
+      index = 1
+    }
+  }
 
   while (index < text.length) {
     const char = text[index]
@@ -246,9 +295,6 @@ function convertRun(
         index += 1
         continue
       }
-      if (!next && atEnd) {
-        return out + run.slice(index)
-      }
       out += 'ん'
       lastVowel = null
       index += 1
@@ -264,7 +310,7 @@ function convertRun(
         continue
       }
       const kana = SYLLABLES[char]
-      if (!kana) return out + run.slice(index)
+      if (!kana) return { text: out + run.slice(index), mergePreviousN }
       out += kana
       lastVowel = sound ?? null
       index += 1
@@ -300,10 +346,10 @@ function convertRun(
     }
 
     // Незавершённый слог оставляем кириллицей до следующего ввода.
-    return out + run.slice(index)
+    return { text: out + run.slice(index), mergePreviousN }
   }
 
-  return out
+  return { text: out, mergePreviousN }
 }
 
 function processCyrillic(value: string, mode: KanaMode, finalize: boolean): string {
@@ -317,7 +363,9 @@ function processCyrillic(value: string, mode: KanaMode, finalize: boolean): stri
     result += value.slice(lastIndex, index)
     const atEnd = !finalize && index + run.length === value.length
     const converted = convertRun(run, mode, result, atEnd)
-    result += mode === 'katakana' ? toKatakana(converted) : converted
+    if (converted.mergePreviousN) result = result.slice(0, -1)
+    const text = mode === 'katakana' ? toKatakana(converted.text) : converted.text
+    result += text
     lastIndex = index + run.length
   }
 

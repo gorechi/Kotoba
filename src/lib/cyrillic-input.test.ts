@@ -68,10 +68,26 @@ describe('convertCyrillicInput', () => {
     expect(convertCyrillicInput('н-а', 'hiragana')).toBe('んあ')
   })
 
-  it('оставляет незавершённый хвост кириллицей', () => {
-    expect(convertCyrillicInput('кун', 'hiragana')).toBe('くн')
+  it('сразу превращает конечную н в ん', () => {
+    expect(convertCyrillicInput('кун', 'hiragana')).toBe('くん')
+    expect(convertCyrillicInput('ун', 'hiragana')).toBe('うん')
     expect(convertCyrillicInput('к', 'hiragana')).toBe('к')
     expect(convertCyrillicInput('кука', 'hiragana')).toBe('くか')
+  })
+
+  it('переосмысляет ん как начало слога перед гласной', () => {
+    expect(convertCyrillicInput('くんа', 'hiragana')).toBe('くな')
+    expect(convertCyrillicInput('くんя', 'hiragana')).toBe('くにゃ')
+    expect(convertCyrillicInput('んъ', 'hiragana')).toBe('んъ')
+    expect(convertCyrillicInput('んъа', 'hiragana')).toBe('んあ')
+  })
+
+  it('принимает дз как з', () => {
+    expect(convertCyrillicInput('за', 'hiragana')).toBe('ざ')
+    expect(convertCyrillicInput('зи', 'hiragana')).toBe('じ')
+    expect(convertCyrillicInput('зу', 'hiragana')).toBe('ず')
+    expect(convertCyrillicInput('зэ', 'hiragana')).toBe('ぜ')
+    expect(convertCyrillicInput('зя', 'hiragana')).toBe('じゃ')
   })
 
   it('не трогает латиницу и готовые знаки', () => {

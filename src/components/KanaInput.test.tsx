@@ -75,15 +75,20 @@ describe('KanaInput', () => {
     expect((screen.getByRole('textbox') as HTMLInputElement).value).toBe('んあ')
   })
 
-  it('доканчивает висящую н при уходе из поля', async () => {
+  it('сразу превращает конечную н в ん', async () => {
     const user = userEvent.setup()
     render(<Harness />)
 
     await user.type(screen.getByRole('textbox'), 'кун')
-    expect((screen.getByRole('textbox') as HTMLInputElement).value).toBe('くн')
-
-    await user.tab()
     expect((screen.getByRole('textbox') as HTMLInputElement).value).toBe('くん')
+  })
+
+  it('переосмысляет ん при вводе гласной', async () => {
+    const user = userEvent.setup()
+    render(<Harness />)
+
+    await user.type(screen.getByRole('textbox'), 'куна')
+    expect((screen.getByRole('textbox') as HTMLInputElement).value).toBe('くな')
   })
 
   it('учитывает режим для ди', async () => {

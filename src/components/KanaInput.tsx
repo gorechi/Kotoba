@@ -12,6 +12,7 @@ import {
   extraSigns,
   finalizeRomajiTail,
   kanaModes,
+  toJapanesePunctuation,
   type KanaMode,
 } from '../lib/romaji'
 import { useI18n } from '../lib/i18n-react'
@@ -79,7 +80,7 @@ export function KanaInput({
     const atEnd =
       input.selectionStart === next.length && input.selectionEnd === next.length
     if (!atEnd) {
-      onChange(next)
+      onChange(toJapanesePunctuation(next))
       return
     }
     const converted = convertRomajiTail(next, mode)

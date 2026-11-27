@@ -31,9 +31,43 @@ const KANA_AFTER_APOSTROPHE = /'(?=[\u3040-\u30ff])/g
 function cleanKanaApostrophes(value: string): string {
   return value.replace(KANA_AFTER_APOSTROPHE, '')
 }
+
+/** Латинские знаки препинания в японской раскладке. */
+const JAPANESE_PUNCTUATION: Record<string, string> = {
+  ',': '\u3001', // 、
+  '.': '\u3002', // 。
+  '?': '\uFF1F', // ？
+  '!': '\uFF01', // ！
+  ':': '\uFF1A', // ：
+  ';': '\uFF1B', // ；
+  '(': '\uFF08', // （
+  ')': '\uFF09', // ）
+  '[': '\uFF3B', // ［
+  ']': '\uFF3D', // ］
+  '{': '\uFF5B', // ｛
+  '}': '\uFF5D', // ｝
+  '~': '\u301C', // 〜
+  '-': '\u30FC', // ー
+  '/': '\u30FB', // ・
+}
+
+const LATIN_PUNCTUATION = /[,\.\?!:;\(\)\[\]\{\}~\/-]/g
+
+/** Переводит знаки препинания по всей строке, не трогая апостроф-разделитель. */
+export function toJapanesePunctuation(value: string): string {
+  return value.replace(
+    LATIN_PUNCTUATION,
+    (char) => JAPANESE_PUNCTUATION[char] ?? char,
+  )
+}
+
+/** Финальная обработка каны: убираем служебные апострофы и японизируем пунктуацию. */
+function finalizeConverted(value: string): string {
+  return toJapanesePunctuation(cleanKanaApostrophes(value))
+}
 /** После этих символов висящая «n» уже точно читается как ん. */
-const SEPARATOR = /[\s、。！？!?.,:;()[\]{}「」『』・]/
-const KANA_TEXT = /^[\u3000-\u303f\u3040-\u30ff\s]+$/
+const SEPARATOR = /[\s、。，．！？!?.,:;：；()（）\[\]［］{}｛｝「」『』・〜…]/
+const KANA_TEXT = /^[\u3000-\u303f\u3040-\u30ff\s\p{P}\p{S}]+$/u
 const HAS_KANA = /[\u3040-\u309f\u30a0-\u30ff]/
 const HIRAGANA_N = '\u3093'
 const KATAKANA_N = '\u30f3'
@@ -145,12 +179,12 @@ export function convertRomajiTail(value: string, mode: KanaMode): string {
   if (tail) {
     const prefix = value.slice(0, value.length - tail.length)
     const merged = mergeTrailingN(prefix, tail, mode)
-    if (merged !== null) return cleanKanaApostrophes(merged)
+    if (merged !== null) return finalizeConverted(merged)
 
     // Вторая «n» после ん — это начало следующего слога (konn + i → こんに).
-    if (endsWithN(prefix) && /^n$/i.test(tail)) return cleanKanaApostrophes(value)
+    if (endsWithN(prefix) && /^n$/i.test(tail)) return finalizeConverted(value)
 
-    return cleanKanaApostrophes(prefix + convertLiveTail(tail, mode))
+    return finalizeConverted(prefix + convertLiveTail(tail, mode))
   }
 
   // Пробел или знак препинания фиксирует отложенную «n».
@@ -158,11 +192,11 @@ export function convertRomajiTail(value: string, mode: KanaMode): string {
   const before = value.slice(0, -1).match(ROMAJI_TAIL)?.[0]
   if (last && SEPARATOR.test(last) && before && /n$/i.test(before)) {
     const prefix = value.slice(0, value.length - last.length - before.length)
-    if (endsWithN(prefix) && /^n$/i.test(before)) return cleanKanaApostrophes(prefix + last)
-    return cleanKanaApostrophes(prefix + convert(before, mode, false) + last)
+    if (endsWithN(prefix) && /^n$/i.test(before)) return finalizeConverted(prefix + last)
+    return finalizeConverted(prefix + convert(before, mode, false) + last)
   }
 
-  return cleanKanaApostrophes(value)
+  return finalizeConverted(value)
 }
 
 /** Полное превращение хвоста — при уходе из поля, Tab и сохранении. */
@@ -170,17 +204,17 @@ export function finalizeRomajiTail(value: string, mode: KanaMode): string {
   if (mode === 'abc' || !value) return value
   const withoutApostrophes = value.replace(/'/g, '')
   const tail = withoutApostrophes.match(ROMAJI_TAIL)?.[0]
-  if (!tail) return withoutApostrophes
+  if (!tail) return finalizeConverted(withoutApostrophes)
   const prefix = withoutApostrophes.slice(0, withoutApostrophes.length - tail.length)
   // Отложенная вторая «n» после ん уже ничего не добавляет: konn → こん.
-  if (endsWithN(prefix) && /^n$/i.test(tail)) return prefix
-  return prefix + convert(tail, mode, false)
+  if (endsWithN(prefix) && /^n$/i.test(tail)) return finalizeConverted(prefix)
+  return finalizeConverted(prefix + convert(tail, mode, false))
 }
 
 /** Превращает всю латиницу в кане — при переключении abc → あ/ア. */
 export function convertRomajiText(value: string, mode: KanaMode): string {
   if (mode === 'abc' || !value) return value
-  return convert(value, mode, false).replace(/'/g, '')
+  return finalizeConverted(convert(value, mode, false))
 }
 
 /** Аккуратно переводит уже введённый текст в выбранный режим. */
@@ -189,7 +223,9 @@ export function convertForModeSwitch(value: string, from: KanaMode, to: KanaMode
   if (to === 'abc') return finalizeRomajiTail(value, from)
   if (from === 'abc') return convertRomajiText(value, to)
   const converter = to === 'katakana' ? toKatakana : toHiragana
-  return converter(value, { passRomaji: true, convertLongVowelMark: false }).replace(/'/g, '')
+  return finalizeConverted(
+    converter(value, { passRomaji: true, convertLongVowelMark: false }),
+  )
 }
 
 /**

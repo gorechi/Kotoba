@@ -69,6 +69,20 @@ describe('convertRomajiTail', () => {
     expect(convertRomajiTail('kana', 'abc')).toBe('kana')
     expect(convertRomajiTail('', 'hiragana')).toBe('')
   })
+
+  it('переводит знаки препинания в японские по всей строке', () => {
+    expect(convertRomajiTail('はい,', 'hiragana')).toBe('はい、')
+    expect(convertRomajiTail('はい, ', 'hiragana')).toBe('はい、 ')
+    expect(convertRomajiTail('はい.げんき', 'hiragana')).toBe('はい。げんき')
+    expect(convertRomajiTail('はい?', 'hiragana')).toBe('はい？')
+    expect(convertRomajiTail('はい!', 'hiragana')).toBe('はい！')
+    expect(convertRomajiTail('はい;', 'hiragana')).toBe('はい；')
+  })
+
+  it('доканчивает «n» перед знаком препинания', () => {
+    expect(convertRomajiTail('kan,', 'hiragana')).toBe('かん、')
+    expect(convertRomajiTail('kan?', 'hiragana')).toBe('かん？')
+  })
 })
 
 describe('finalizeRomajiTail', () => {
@@ -87,6 +101,11 @@ describe('finalizeRomajiTail', () => {
     expect(finalizeRomajiTail("てん'いん", 'hiragana')).toBe('てんいん')
     expect(finalizeRomajiTail("てん'", 'hiragana')).toBe('てん')
   })
+
+  it('японизирует знаки препинания при завершении ввода', () => {
+    expect(finalizeRomajiTail('はい, げんき', 'hiragana')).toBe('はい、 げんき')
+    expect(finalizeRomajiTail('はい.', 'hiragana')).toBe('はい。')
+  })
 })
 
 describe('convertRomajiText', () => {
@@ -98,6 +117,14 @@ describe('convertRomajiText', () => {
 
   it('убирает служебные апострофы', () => {
     expect(convertRomajiText("ten'in", 'hiragana')).toBe('てんいん')
+  })
+
+  it('переводит знаки препинания вместе с текстом', () => {
+    expect(convertRomajiText('hai, genki desu.', 'hiragana')).toBe(
+      'はい、 げんき です。',
+    )
+    expect(convertRomajiText('genki?', 'katakana')).toBe('ゲンキ？')
+    expect(convertRomajiText('kana;', 'hiragana')).toBe('かな；')
   })
 })
 
@@ -114,6 +141,11 @@ describe('convertForModeSwitch', () => {
   it('не трогает текст при том же режиме', () => {
     expect(convertForModeSwitch('かな', 'hiragana', 'hiragana')).toBe('かな')
   })
+
+  it('переводит знаки препинания при смене латиницы на кану', () => {
+    expect(convertForModeSwitch('hai, genki', 'abc', 'hiragana')).toBe('はい、 げんき')
+    expect(convertForModeSwitch('はい,', 'hiragana', 'katakana')).toBe('ハイ、')
+  })
 })
 
 describe('suggestReading', () => {
@@ -124,6 +156,11 @@ describe('suggestReading', () => {
 
   it('молчит, если в тексте есть кандзи', () => {
     expect(suggestReading('食べる')).toBe('')
+  })
+
+  it('понимает кану со знаками препинания', () => {
+    expect(suggestReading('はい、 げんきです。')).toBe('hai, genkidesu.')
+    expect(suggestReading('はい, げんきです。')).toBe('hai, genkidesu.')
   })
 
   it('возвращает пустую строку для пустого ввода', () => {

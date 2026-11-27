@@ -189,6 +189,9 @@ const CYRILLIC_VOWEL_SOUND: Record<string, string> = {
 /** Малые я/ю/ё, образующие слог с предыдущей каной. */
 const SMALL_Y = '\u3083\u3085\u3087'
 
+/** Знаки препинания и символы разделяют слоги и не входят в дефисную разбивку. */
+const PUNCTUATION = /[\p{P}\p{S}]/u
+
 /** Начальная согласная кириллической транскрипции (для удвоения после っ) */
 function getInitialConsonant(cyr: string): string | null {
   // Digraphs 'дж' и 'дз'
@@ -337,6 +340,7 @@ function tokenize(kana: string): string[] {
  * Транскрибировать japanese kana в кириллицу.
  * Правила:
  * - слоги через дефис, нижний регистр
+ * - знаки препинания разделяют слоги, но сами дефисами не окружаются
  * - っ удваивает начальную согласную следующего слога (っか → к-ка)
  * - повторная гласная после того же звука → : (すう → су:)
  * - ー продлевает предыдущую гласную (かー → ка:)
@@ -349,27 +353,51 @@ export function toCyrillic(kana: string): string {
     String.fromCharCode(char.charCodeAt(0) - 0x60),
   )
   const tokens = tokenize(normalized)
-  const words: string[][] = []
+  let output = ''
   let syllables: string[] = []
   let pendingDouble = false
+  let pendingSpace = false
+
+  const flushWord = () => {
+    if (!syllables.length) return
+    if (pendingSpace && output && !output.endsWith(' ')) output += ' '
+    output += syllables.join('-')
+    syllables = []
+    pendingSpace = false
+  }
 
   for (const token of tokens) {
     // Пробел разделяет слова и не участвует в дефисной разбивке.
     if (/\s/.test(token)) {
-      if (syllables.length > 0) {
-        words.push(syllables)
-        syllables = []
-      }
+      flushWord()
+      pendingSpace = true
+      pendingDouble = false
       continue
     }
 
-    // マルチпликатор удвоения
+    // Знак препинания завершает слово, но приклеивается к нему без дефиса.
+    if (PUNCTUATION.test(token)) {
+      if (syllables.length > 0) flushWord()
+      else if (pendingSpace && output && !output.endsWith(' ')) output += ' '
+      output += token
+      pendingSpace = false
+      pendingDouble = false
+      continue
+    }
+
+    // Первый слог после пробела начинает новое слово.
+    if (pendingSpace && output && !output.endsWith(' ')) {
+      output += ' '
+      pendingSpace = false
+    }
+
+    // Множитель удвоения
     if (token === '\u3063') {
       pendingDouble = true
       continue
     }
 
-    // знак долгого гласного
+    // Знак долгого гласного
     if (token === '\u30FC') {
       if (syllables.length > 0) {
         const last = syllables.pop()
@@ -378,10 +406,10 @@ export function toCyrillic(kana: string): string {
       continue
     }
 
-    // ищем транскрипцию
+    // Ищем транскрипцию
     let cyr = transcribeToken(token)
 
-    // правило удлиннения гласной: отдельная гласная после слога.
+    // Правило удлинения гласной: отдельная гласная после слога.
     // Один слог удлиняем только один раз: в さんしょううお после しょ
     // первый う даёт долгую «о», а второй う уже начинает «уо».
     if (STANDALONE_VOWELS.has(token) && syllables.length > 0) {
@@ -392,7 +420,7 @@ export function toCyrillic(kana: string): string {
       }
     }
 
-    // правило удвоения согласной после っ
+    // Правило удвоения согласной после っ
     if (pendingDouble) {
       const initial = getInitialConsonant(cyr)
       if (initial) {
@@ -404,6 +432,6 @@ export function toCyrillic(kana: string): string {
     syllables.push(cyr)
   }
 
-  if (syllables.length > 0) words.push(syllables)
-  return words.map((word) => word.join('-')).join(' ')
+  flushWord()
+  return output.trim()
 }

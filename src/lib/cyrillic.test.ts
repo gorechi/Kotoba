@@ -60,6 +60,24 @@ describe('toCyrillic', () => {
     expect(toCyrillic(' したの  なまえ ')).toBe('ши-та-но на-ма-э')
   })
 
+  it('не ставит дефисы вокруг знаков препинания', () => {
+    expect(toCyrillic('はい、げんきです')).toBe('ха-и、гэ-н-ки-дэ-су')
+    expect(toCyrillic('はい, げんきです')).toBe('ха-и, гэ-н-ки-дэ-су')
+    expect(toCyrillic('はい。')).toBe('ха-и。')
+    expect(toCyrillic('はい！？げんき')).toBe('ха-и！？гэ-н-ки')
+    expect(toCyrillic('「はい」')).toBe('「ха-и」')
+  })
+
+  it('сохраняет знак долгого гласного перед препинанием', () => {
+    expect(toCyrillic('かー、き')).toBe('ка:、ки')
+    expect(toCyrillic('かー。')).toBe('ка:。')
+  })
+
+  it('не удваивает согласную через знак препинания', () => {
+    expect(toCyrillic('あっ！')).toBe('а！')
+    expect(toCyrillic('ハイ、ゲンキ')).toBe('ха-и、гэ-н-ки')
+  })
+
   it('удлиняет слог только один раз', () => {
     expect(toCyrillic('さんしょううお')).toBe('са-н-шё:-у-о')
     expect(toCyrillic('おおきい')).toBe('о:-ки:')

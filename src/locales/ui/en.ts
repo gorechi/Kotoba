@@ -987,7 +987,6 @@ export const messages: Record<string, string> = {
   "kanaInput.extraAria": "Additional characters",
   "kanaInput.signs": "characters",
   "kanaInput.insert": "Insert {sign}",
-  "kanaMode.abc": "Latin (romaji)",
   "kanaMode.hiragana": "Hiragana",
   "kanaMode.katakana": "Katakana",
   "due.new": "new",

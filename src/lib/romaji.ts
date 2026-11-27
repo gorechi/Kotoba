@@ -1,7 +1,7 @@
 import { toHiragana, toKatakana, toRomaji } from 'wanakana'
 import { translate } from './i18n'
 
-export type KanaMode = 'abc' | 'hiragana' | 'katakana'
+export type KanaMode = 'hiragana' | 'katakana'
 
 export interface KanaModeOption {
   mode: KanaMode
@@ -12,13 +12,12 @@ export interface KanaModeOption {
 /** Варианты ввода каны с подписями на текущем языке. */
 export function kanaModes(): KanaModeOption[] {
   return [
-    { mode: 'abc', label: 'abc', title: translate('kanaMode.abc') },
     { mode: 'hiragana', label: 'あ', title: translate('kanaMode.hiragana') },
     { mode: 'katakana', label: 'ア', title: translate('kanaMode.katakana') },
   ]
 }
 
-const EXTRA_SIGNS: Record<Exclude<KanaMode, 'abc'>, string[]> = {
+const EXTRA_SIGNS: Record<KanaMode, string[]> = {
   hiragana: ['っ', 'ゃ', 'ゅ', 'ょ', 'ぁ', 'ぃ', 'ぅ', 'ぇ', 'ぉ', 'ゔ', 'ー'],
   katakana: ['ッ', 'ャ', 'ュ', 'ョ', 'ァ', 'ィ', 'ゥ', 'ェ', 'ォ', 'ヴ', 'ー'],
 }
@@ -89,7 +88,7 @@ const NY_ROW: Record<string, string> = {
 }
 
 export function extraSigns(mode: KanaMode): string[] {
-  return mode === 'abc' ? [] : EXTRA_SIGNS[mode]
+  return EXTRA_SIGNS[mode]
 }
 
 /** Подбирает раскладку под уже введённый текст. */
@@ -100,7 +99,7 @@ export function guessKanaMode(text: string | undefined, fallback: KanaMode = 'hi
   return fallback
 }
 
-function kanaConverter(mode: Exclude<KanaMode, 'abc'>) {
+function kanaConverter(mode: KanaMode) {
   return mode === 'katakana' ? toKatakana : toHiragana
 }
 
@@ -112,7 +111,7 @@ function normalizeRomaji(text: string): string {
   return text.toLowerCase().replace(/nn/g, "n'n")
 }
 
-function convert(text: string, mode: Exclude<KanaMode, 'abc'>, live: boolean): string {
+function convert(text: string, mode: KanaMode, live: boolean): string {
   const converter = kanaConverter(mode)
   return live ? converter(normalizeRomaji(text), { IMEMode: true }) : converter(normalizeRomaji(text))
 }
@@ -121,7 +120,7 @@ function endsWithN(value: string): boolean {
   return value.endsWith(HIRAGANA_N) || value.endsWith(KATAKANA_N)
 }
 
-function nKana(map: Record<string, string>, vowel: string, mode: Exclude<KanaMode, 'abc'>) {
+function nKana(map: Record<string, string>, vowel: string, mode: KanaMode) {
   const kana = map[vowel.toLowerCase()]
   if (!kana) return null
   return mode === 'katakana' ? toKatakana(kana) : kana
@@ -134,7 +133,7 @@ function nKana(map: Record<string, string>, vowel: string, mode: Exclude<KanaMod
 function mergeTrailingN(
   prefix: string,
   tail: string,
-  mode: Exclude<KanaMode, 'abc'>,
+  mode: KanaMode,
 ): string | null {
   if (!endsWithN(prefix)) return null
   const lower = tail.toLowerCase()
@@ -159,7 +158,7 @@ function mergeTrailingN(
 }
 
 /** IME оставляет конечную «n» латиницей — сразу заменяем её на ん. */
-function convertLiveTail(tail: string, mode: Exclude<KanaMode, 'abc'>): string {
+function convertLiveTail(tail: string, mode: KanaMode): string {
   const converted = convert(tail, mode, true)
   if (/n$/i.test(tail) && /n$/i.test(converted)) {
     return converted.slice(0, -1) + (mode === 'katakana' ? KATAKANA_N : HIRAGANA_N)
@@ -173,7 +172,7 @@ function convertLiveTail(tail: string, mode: Exclude<KanaMode, 'abc'>): string {
  * переосмысляется как начало слога: «kan» → かん, затем «a» → かな.
  */
 export function convertRomajiTail(value: string, mode: KanaMode): string {
-  if (mode === 'abc' || !value) return value
+  if (!value) return value
 
   const tail = value.match(ROMAJI_TAIL)?.[0]
   if (tail) {
@@ -201,7 +200,7 @@ export function convertRomajiTail(value: string, mode: KanaMode): string {
 
 /** Полное превращение хвоста — при уходе из поля, Tab и сохранении. */
 export function finalizeRomajiTail(value: string, mode: KanaMode): string {
-  if (mode === 'abc' || !value) return value
+  if (!value) return value
   const withoutApostrophes = value.replace(/'/g, '')
   const tail = withoutApostrophes.match(ROMAJI_TAIL)?.[0]
   if (!tail) return finalizeConverted(withoutApostrophes)
@@ -211,17 +210,9 @@ export function finalizeRomajiTail(value: string, mode: KanaMode): string {
   return finalizeConverted(prefix + convert(tail, mode, false))
 }
 
-/** Превращает всю латиницу в кане — при переключении abc → あ/ア. */
-export function convertRomajiText(value: string, mode: KanaMode): string {
-  if (mode === 'abc' || !value) return value
-  return finalizeConverted(convert(value, mode, false))
-}
-
 /** Аккуратно переводит уже введённый текст в выбранный режим. */
 export function convertForModeSwitch(value: string, from: KanaMode, to: KanaMode): string {
   if (from === to || !value) return value
-  if (to === 'abc') return finalizeRomajiTail(value, from)
-  if (from === 'abc') return convertRomajiText(value, to)
   const converter = to === 'katakana' ? toKatakana : toHiragana
   return finalizeConverted(
     converter(value, { passRomaji: true, convertLongVowelMark: false }),

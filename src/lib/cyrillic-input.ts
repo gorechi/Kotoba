@@ -5,8 +5,6 @@ import {
   type KanaMode,
 } from './romaji'
 
-type KanaTarget = Exclude<KanaMode, 'abc'>
-
 /**
  * Общепринятая русская запись японских слогов.
  * Основа — си, ти, цу, дзи, дзя, а не варианты из кириллической транскрипции.
@@ -156,7 +154,7 @@ const SYLLABLES: Record<string, string> = {
 }
 
 /** Ди/ду зависят от режима: в хирагане ぢ/づ, в катакане ディ/ドゥ. */
-const MODE_SYLLABLES: Record<string, Record<KanaTarget, string>> = {
+const MODE_SYLLABLES: Record<string, Record<KanaMode, string>> = {
   ди: { hiragana: 'ぢ', katakana: 'でぃ' },
   ду: { hiragana: 'づ', katakana: 'どぅ' },
 }
@@ -179,7 +177,7 @@ const SEPARATORS = new Set(['ъ', 'ь', "'", '-'])
 const DOUBLING_CONSONANTS = new Set('бвгджзклмпрстфхцчшщ'.split(''))
 const CYRILLIC_RUN = /[а-яё][а-яёъь'\-:]*/gi
 
-function kanaFor(key: string, mode: KanaTarget): string | undefined {
+function kanaFor(key: string, mode: KanaMode): string | undefined {
   const special = MODE_SYLLABLES[key]
   if (special) return special[mode]
   return SYLLABLES[key]
@@ -201,7 +199,7 @@ function lastKanaVowel(text: string): string | null {
 
 function convertRun(
   run: string,
-  mode: KanaTarget,
+  mode: KanaMode,
   before: string,
   atEnd: boolean,
 ): string {
@@ -307,7 +305,7 @@ function convertRun(
 }
 
 function processCyrillic(value: string, mode: KanaMode, finalize: boolean): string {
-  if (mode === 'abc' || !value) return value
+  if (!value) return value
   let result = ''
   let lastIndex = 0
 
@@ -337,12 +335,12 @@ export function finalizeCyrillicInput(value: string, mode: KanaMode): string {
 
 /** Общий ввод в режиме каны: кириллица, латиница и пунктуация. */
 export function convertKanaInput(value: string, mode: KanaMode): string {
-  if (mode === 'abc' || !value) return value
+  if (!value) return value
   return convertRomajiTail(convertCyrillicInput(value, mode), mode)
 }
 
 /** Общая финализация ввода в режиме каны. */
 export function finalizeKanaInput(value: string, mode: KanaMode): string {
-  if (mode === 'abc' || !value) return value
+  if (!value) return value
   return finalizeRomajiTail(finalizeCyrillicInput(value, mode), mode)
 }

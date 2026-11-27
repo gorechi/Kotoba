@@ -72,7 +72,7 @@ export function KanaInput({
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const input = event.currentTarget
     const next = input.value
-    if (composingRef.current || mode === 'abc') {
+    if (composingRef.current) {
       onChange(next)
       return
     }
@@ -89,7 +89,6 @@ export function KanaInput({
 
   const handleCompositionEnd = (event: CompositionEvent<HTMLInputElement>) => {
     composingRef.current = false
-    if (mode === 'abc') return
     const next = event.currentTarget.value
     const converted = convertKanaInput(next, mode)
     if (converted !== next) {
@@ -106,7 +105,7 @@ export function KanaInput({
 
   const switchMode = (next: KanaMode) => {
     if (next === mode) return
-    const prepared = finalizeKanaInput(value, next === 'abc' ? mode : next)
+    const prepared = finalizeKanaInput(value, next)
     const converted = convertForModeSwitch(prepared, mode, next)
     if (converted !== value) {
       caretToEndRef.current = true
@@ -131,7 +130,7 @@ export function KanaInput({
   const modes = kanaModes()
 
   return (
-    <div className={`kana-input${mode === 'abc' ? '' : ' is-kana'}`}>
+    <div className="kana-input is-kana">
       <div className="kana-input-shell">
         <input
           ref={ref}
@@ -171,7 +170,7 @@ export function KanaInput({
         </div>
       </div>
 
-      {mode !== 'abc' && tip && <p className="kana-tip">{tip}</p>}
+      {tip && <p className="kana-tip">{tip}</p>}
 
       {!simple && signs.length > 0 && (
         <div className="kana-signs" role="group" aria-label={t('kanaInput.extraAria')}>

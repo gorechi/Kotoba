@@ -53,7 +53,7 @@ export const HELP_ES: Record<string, string> = {
   "Click Add card": "Haz clic en Añadir tarjeta",
   "The card form opens with a live preview.": "Se abre el formulario de la tarjeta con una vista previa en vivo.",
   "Enter the character": "Introduce el carácter",
-  "Type romaji in the Word or character field. The “abc / あ / ア” toggles set the input mode; the field converts text to kana automatically.": "Escribe romaji en el campo Palabra o carácter. Los botones “abc / あ / ア” fijan el modo de entrada; el campo convierte el texto a kana automáticamente.",
+  "Type romaji or Cyrillic in the Word or character field — for example, mizu or мидзу. The “あ / ア” toggles set the kana mode; the field converts text to kana automatically.": "Escribe romaji o cirílico en el campo Palabra o carácter — por ejemplo, mizu o мидзу. Los botones «あ / ア» eligen el tipo de kana; el campo convierte el texto a kana automáticamente.",
   "Check the reading": "Comprueba la lectura",
   "The reading is filled in automatically. Adjust it if needed. Choose romaji or Cyrillic transcription in Settings.": "La lectura se rellena automáticamente. Ajústala si hace falta. Elige la transcripción en romaji o en cirílico en Configuración.",
   "Add meaning and context": "Añade significado y contexto",

@@ -2,10 +2,10 @@ import { describe, expect, it } from 'vitest'
 import {
   convertForModeSwitch,
   convertRomajiTail,
-  convertRomajiText,
   extraSigns,
   finalizeRomajiTail,
   guessKanaMode,
+  kanaModes,
   suggestReading,
 } from './romaji'
 
@@ -19,16 +19,18 @@ describe('guessKanaMode', () => {
   it('возвращает запасной режим для латиницы и пустого текста', () => {
     expect(guessKanaMode('abc')).toBe('hiragana')
     expect(guessKanaMode('abc', 'katakana')).toBe('katakana')
-    expect(guessKanaMode(undefined, 'abc')).toBe('abc')
+    expect(guessKanaMode(undefined, 'katakana')).toBe('katakana')
     expect(guessKanaMode('')).toBe('hiragana')
   })
 })
 
-describe('extraSigns', () => {
-  it('не предлагает дополнительные знаки в режиме abc', () => {
-    expect(extraSigns('abc')).toEqual([])
+describe('kanaModes', () => {
+  it('предлагает только хирагану и катакану', () => {
+    expect(kanaModes().map((item) => item.mode)).toEqual(['hiragana', 'katakana'])
   })
+})
 
+describe('extraSigns', () => {
   it('предлагает знаки для выбранной каны', () => {
     expect(extraSigns('hiragana')).toContain('っ')
     expect(extraSigns('hiragana')).toContain('ー')
@@ -65,8 +67,7 @@ describe('convertRomajiTail', () => {
     expect(convertRomajiTail('かな', 'hiragana')).toBe('かな')
   })
 
-  it('возвращает ввод без изменений в режиме abc', () => {
-    expect(convertRomajiTail('kana', 'abc')).toBe('kana')
+  it('возвращает пустой ввод без изменений', () => {
     expect(convertRomajiTail('', 'hiragana')).toBe('')
   })
 
@@ -92,9 +93,8 @@ describe('finalizeRomajiTail', () => {
     expect(finalizeRomajiTail('ka', 'katakana')).toBe('カ')
   })
 
-  it('не меняет готовую кану и режим abc', () => {
+  it('не меняет готовую кану', () => {
     expect(finalizeRomajiTail('かな', 'hiragana')).toBe('かな')
-    expect(finalizeRomajiTail('kana', 'abc')).toBe('kana')
   })
 
   it('убирает служебные апострофы при завершении ввода', () => {
@@ -108,31 +108,7 @@ describe('finalizeRomajiTail', () => {
   })
 })
 
-describe('convertRomajiText', () => {
-  it('переводит всю латиницу в кану', () => {
-    expect(convertRomajiText('kana', 'hiragana')).toBe('かな')
-    expect(convertRomajiText('kana', 'katakana')).toBe('カナ')
-    expect(convertRomajiText('kana', 'abc')).toBe('kana')
-  })
-
-  it('убирает служебные апострофы', () => {
-    expect(convertRomajiText("ten'in", 'hiragana')).toBe('てんいん')
-  })
-
-  it('переводит знаки препинания вместе с текстом', () => {
-    expect(convertRomajiText('hai, genki desu.', 'hiragana')).toBe(
-      'はい、 げんき です。',
-    )
-    expect(convertRomajiText('genki?', 'katakana')).toBe('ゲンキ？')
-    expect(convertRomajiText('kana;', 'hiragana')).toBe('かな；')
-  })
-})
-
 describe('convertForModeSwitch', () => {
-  it('переводит латиницу в выбранную кану', () => {
-    expect(convertForModeSwitch('kana', 'abc', 'hiragana')).toBe('かな')
-  })
-
   it('переводит одну кану в другую', () => {
     expect(convertForModeSwitch('かな', 'hiragana', 'katakana')).toBe('カナ')
     expect(convertForModeSwitch('カナ', 'katakana', 'hiragana')).toBe('かな')
@@ -142,8 +118,7 @@ describe('convertForModeSwitch', () => {
     expect(convertForModeSwitch('かな', 'hiragana', 'hiragana')).toBe('かな')
   })
 
-  it('переводит знаки препинания при смене латиницы на кану', () => {
-    expect(convertForModeSwitch('hai, genki', 'abc', 'hiragana')).toBe('はい、 げんき')
+  it('сохраняет знаки препинания при смене режима', () => {
     expect(convertForModeSwitch('はい,', 'hiragana', 'katakana')).toBe('ハイ、')
   })
 })

@@ -993,7 +993,6 @@ export const messages: Record<string, string> = {
   "kanaInput.extraAria": "Дополнительные знаки",
   "kanaInput.signs": "знаки",
   "kanaInput.insert": "Вставить {sign}",
-  "kanaMode.abc": "Латиница (ромадзи)",
   "kanaMode.hiragana": "Хирагана",
   "kanaMode.katakana": "Катакана",
   "due.new": "новое",

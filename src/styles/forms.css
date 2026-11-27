@@ -401,9 +401,9 @@
   align-items: center;
 }
 
-/* место под переключатель abc / あ / ア */
+/* место под переключатель あ / ア */
 .field .kana-input-shell > input {
-  padding-right: 104px;
+  padding-right: 76px;
 }
 
 .kana-modes {

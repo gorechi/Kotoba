@@ -71,7 +71,6 @@ describe('convertCyrillicInput', () => {
   it('не трогает латиницу и готовые знаки', () => {
     expect(convertCyrillicInput('куka', 'hiragana')).toBe('くka')
     expect(convertCyrillicInput('かな', 'hiragana')).toBe('かな')
-    expect(convertCyrillicInput('ку', 'abc')).toBe('ку')
     expect(convertCyrillicInput('КУ', 'hiragana')).toBe('く')
   })
 })

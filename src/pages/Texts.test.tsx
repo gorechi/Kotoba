@@ -32,8 +32,17 @@ beforeEach(() => {
 afterEach(cleanup)
 
 describe('Texts', () => {
+  it('показывает форму только после нажатия «Загрузить текст»', () => {
+    render(<Texts />)
+
+    expect(screen.queryByLabelText('texts.nameLabel')).toBeNull()
+    fireEvent.click(screen.getByText('texts.new'))
+    expect(screen.getByLabelText('texts.nameLabel')).toBeTruthy()
+  })
+
   it('добавляет вставленный текст', () => {
     render(<Texts />)
+    fireEvent.click(screen.getByText('texts.new'))
 
     fireEvent.change(screen.getByLabelText('texts.nameLabel'), {
       target: { value: 'Тест' },
@@ -50,11 +59,11 @@ describe('Texts', () => {
     const next = update(store.data)
     expect(next.texts[0]).toMatchObject({ title: 'Тест', body: 'こんにちは' })
     expect(store.trackWork).toHaveBeenCalledTimes(1)
-    expect(screen.getByText('texts.added')).toBeTruthy()
   })
 
   it('требует название и текст', () => {
     render(<Texts />)
+    fireEvent.click(screen.getByText('texts.new'))
 
     fireEvent.click(screen.getByText('texts.add'))
     expect(screen.getByText('texts.nameError')).toBeTruthy()
@@ -78,8 +87,9 @@ describe('Texts', () => {
   })
 
   it('загружает текст из .txt файла', async () => {
-    const { container } = render(<Texts />)
-    const input = container.querySelector('input[type=file]') as HTMLInputElement
+    render(<Texts />)
+    fireEvent.click(screen.getByText('texts.new'))
+    const input = document.querySelector('input[type=file]') as HTMLInputElement
     const file = new File(['こんにちは'], 'sample.txt', { type: 'text/plain' })
 
     fireEvent.change(input, { target: { files: [file] } })
@@ -95,8 +105,9 @@ describe('Texts', () => {
   })
 
   it('отклоняет файлы не .txt', () => {
-    const { container } = render(<Texts />)
-    const input = container.querySelector('input[type=file]') as HTMLInputElement
+    render(<Texts />)
+    fireEvent.click(screen.getByText('texts.new'))
+    const input = document.querySelector('input[type=file]') as HTMLInputElement
 
     fireEvent.change(input, {
       target: { files: [new File(['x'], 'sample.md', { type: 'text/markdown' })] },

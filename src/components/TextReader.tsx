@@ -328,27 +328,31 @@ export function TextReader({ text, onBack }: TextReaderProps) {
           </p>
         </div>
         <div className="page-head-actions">
-          <div className="segmented">
+          <div className="segmented text-reader-modes">
             <button
               type="button"
               className={cardMode ? '' : 'active'}
+              aria-pressed={!cardMode}
               onClick={() => {
                 setCardMode(false)
                 setPopover(null)
                 setSelection(null)
               }}
             >
+              <Icon name="text" size={15} />
               {t('texts.readMode')}
             </button>
             <button
               type="button"
               className={cardMode ? 'active' : ''}
+              aria-pressed={cardMode}
               onClick={() => {
                 setCardMode(true)
                 setPopover(null)
                 setSelection(null)
               }}
             >
+              <Icon name="layers" size={15} />
               {t('texts.cardsMode')}
             </button>
           </div>

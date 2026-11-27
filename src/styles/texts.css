@@ -145,6 +145,36 @@
   overflow-wrap: anywhere;
 }
 
+.text-reader-modes {
+  gap: 3px;
+  padding: 3px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface-2) 72%, var(--surface));
+}
+
+.text-reader-modes button {
+  min-width: 110px;
+  height: 34px;
+  font-weight: 600;
+}
+
+.text-reader-modes button svg {
+  opacity: 0.62;
+  transition: opacity 0.15s, color 0.15s;
+}
+
+.text-reader-modes button.active {
+  color: var(--accent-ink);
+  box-shadow:
+    var(--shadow-sm),
+    inset 0 0 0 1px color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+.text-reader-modes button.active svg {
+  color: var(--accent);
+  opacity: 1;
+}
+
 .text-mark {
   display: inline;
   margin: 0;

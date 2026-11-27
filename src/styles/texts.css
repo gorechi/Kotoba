@@ -139,8 +139,8 @@
   box-shadow: var(--shadow-sm);
   color: var(--text-soft);
   font-family: var(--font-jp);
-  font-size: 17px;
-  line-height: 2;
+  font-size: 24px;
+  line-height: 1.95;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
@@ -151,19 +151,29 @@
   padding: 0;
   border: 0;
   background: none;
-  color: var(--accent-ink);
+  color: inherit;
   font: inherit;
-  font-style: italic;
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 3px;
+  font-style: normal;
+  line-height: inherit;
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-decoration-thickness: 2.5px;
+  text-decoration-color: color-mix(in srgb, var(--text-soft) 78%, transparent);
+  text-underline-offset: 0.24em;
+  text-decoration-skip-ink: none;
   cursor: pointer;
 }
 
 .text-mark:hover,
 .text-mark:focus-visible {
-  color: var(--accent);
-  outline: none;
+  color: inherit;
+  text-decoration-color: var(--text-soft);
+}
+
+.text-mark:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  outline-offset: 2px;
+  border-radius: 2px;
 }
 
 .text-selection-action {
@@ -240,6 +250,7 @@
 
   .text-reader {
     padding: 22px 20px;
-    font-size: 15.5px;
+    font-size: 20px;
+    line-height: 1.9;
   }
 }
